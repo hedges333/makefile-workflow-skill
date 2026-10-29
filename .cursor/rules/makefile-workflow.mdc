@@ -1,0 +1,21 @@
+---
+description: Makefile Workflow rules for Cursor AI
+globs: *
+alwaysApply: true
+---
+
+# Makefile Workflow for Cursor
+
+Follow this lifecycle for all development tasks:
+
+1. **Intake & Branching**: Make sure that `git status` is clean. Create a branch named `ticket/<id>-<slug>`.
+2. **Archaeology & Detection**: Scan the repository. Detect all subprojects and test runners. If no tests exist, scaffold basic tests before feature work.
+3. **Plan Approval**: Present an implementation plan. If any existing tests must be modified, state this with clear reasons. Wait for user approval.
+4. **TDD & Test Isolation**: Write failing unit tests first. Point tests to isolated test databases or mocks, never production data. Run targeted tests in the subproject.
+5. **Six Pillars Review**: Audit your diff against Intent, Verification, Architecture, Blast Radius, Reviewer Defense, and Immune Defenses.
+   - **Model Switch Reminder**: Prompt the user in chat: "👉 **Please switch the model dropdown to your deep-reasoning model (such as Claude 3.5 Sonnet or o1)** to run the Six-Pillar review."
+   - Once approved at Target 45, remind the user: "👉 You may switch back to your faster model."
+6. **Pre-Commit Sweep**: Run formatting, linting, and the full test suite across all subprojects before asking to commit.
+7. **Human Approval**: Never commit, push, or merge without explicit user consent.
+8. **Simple English**: Apply short sentences and active voice to all documentation and PR summaries.
+9. **Workflow Configuration**: Check `.workflow/config.json` or `~/.gemini/config/makefile-workflow.json` if present for user settings.

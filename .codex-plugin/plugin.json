@@ -1,0 +1,10 @@
+{
+  "name": "makefile-workflow",
+  "version": "1.2.0",
+  "description": "Compaction-immune, DAG-based ticket resolution workflow with human pause gates, subagent isolation, 22-language polyglot TDD, and adversarial review.",
+  "author": "hedges333",
+  "repository": "https://github.com/hedges333/makefile-workflow-skill",
+  "skills": [
+    "skills/makefile-workflow"
+  ]
+}

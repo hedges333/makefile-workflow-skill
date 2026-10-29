@@ -1,0 +1,21 @@
+{
+  "name": "makefile-workflow",
+  "displayName": "Makefile Workflow for AI Agents",
+  "version": "1.3.0",
+  "description": "Compaction-immune, DAG-based ticket resolution workflow with hardware hooks, cross-agent MCP server, human pause gates, 22-language polyglot TDD, and adversarial review. Implements Randal Schwartz's Synthetic Scars methodology.",
+  "author": {
+    "name": "Randal L. Schwartz (methodology) / hedges333 (packaging)",
+    "url": "https://github.com/hedges333/makefile-workflow-skill"
+  },
+  "homepage": "https://github.com/hedges333/makefile-workflow-skill",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hedges333/makefile-workflow-skill"
+  },
+  "logo": "assets/logo.svg",
+  "suggestedPrompts": [
+    "Resolve ticket using the makefile workflow",
+    "Show current workflow readerboard and request history",
+    "Perform archaeology on the codebase before planning"
+  ]
+}

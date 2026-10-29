@@ -1,0 +1,18 @@
+# Cursor Rules: Makefile Workflow
+
+When executing coding tasks in Cursor (Agent or Composer mode), follow these rules:
+
+1. **Check Prerequisites First**: Never jump straight into code edits. Check existing files, identify project languages, and follow the 9-target Makefile DAG.
+2. **Dedicated Branches**: Create a dedicated git branch for each ticket (`ticket/<id>-<slug>`).
+3. **Review Before Edit**: Read existing files thoroughly before editing. Apply minimal, confident changes. Do not touch unrelated code.
+4. **Hermetic Test Isolation**: Never connect tests to production databases. Use test databases (`*_test`), in-memory databases, or mocks.
+5. **TDD Methodology**: Write failing tests before writing feature logic. Run targeted tests in the active subproject folder.
+6. **Human Approval Gates**: Never run `git commit`, `git push`, or merge code without explicit user permission.
+7. **Monorepo Discipline**: In multi-language repositories, run targeted tests during implementation and the full suite before committing.
+8. **Simple English**: Use ASD-STE100 principles for all text output: short sentences, active voice, terms defined at first use.
+9. **Workflow Configuration**: Inspect `.workflow/config.json` or `~/.gemini/config/makefile-workflow.json` if present for user-specific model preferences and review settings.
+10. **Interactive Model Switch Reminder**:
+    - At Target 40 (Adversarial Review): Explicitly prompt the user in chat:
+      "👉 **Please switch the model dropdown to your deep-reasoning model (such as Claude 3.5 Sonnet or o1)** to run the Six-Pillar review."
+    - At Target 45 (Review Approval): Remind the user:
+      "👉 Review approved. You may switch the model dropdown back to your fast coding model."

@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Validate cross-agent compatibility
+      run: python3 scripts/test_cross_agent_compatibility.py
+
+    - name: Test MCP Server JSON-RPC
+      run: python3 scripts/test_mcp_server.py
+
+    - name: Run Makefile test suite
+      run: make test
+
+    - name: Check installer script syntax
+      run: bash -n install.sh

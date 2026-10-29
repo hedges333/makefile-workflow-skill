@@ -1,0 +1,157 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b0f19"/>
+      <stop offset="50%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e1b4b"/>
+    </linearGradient>
+
+    <!-- Vector Flow Gradients -->
+    <linearGradient id="flowCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#818cf8"/>
+    </linearGradient>
+
+    <linearGradient id="flowAmber" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#ef4444"/>
+    </linearGradient>
+
+    <linearGradient id="flowPurple" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+
+    <!-- Node Color Gradients -->
+    <linearGradient id="gradEmerald" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+
+    <linearGradient id="gradCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+
+    <linearGradient id="gradAmber" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+
+    <linearGradient id="gradBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60a5fa"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+
+    <linearGradient id="gradPurple" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a855f7"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+
+    <!-- Core Center Hexagon -->
+    <linearGradient id="coreHexGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e1b4b"/>
+      <stop offset="100%" stop-color="#022c22"/>
+    </linearGradient>
+
+    <!-- Glow Filter -->
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+
+    <!-- Marker Arrowheads -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8"/>
+    </marker>
+    <marker id="arrowAmber" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#f59e0b"/>
+    </marker>
+    <marker id="arrowPurple" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#8b5cf6"/>
+    </marker>
+    <marker id="arrowEmerald" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#10b981"/>
+    </marker>
+  </defs>
+
+  <!-- Background with 10% breathing margin -->
+  <rect x="24" y="24" width="464" height="464" rx="96" fill="url(#bgGrad)" stroke="#334155" stroke-width="3"/>
+  <rect x="36" y="36" width="440" height="440" rx="84" fill="none" stroke="#1e293b" stroke-width="2"/>
+
+  <!-- Supervisor Cross-Connection Circuit Arcs (Subtle dashed rays to center) -->
+  <g stroke="#334155" stroke-width="2" stroke-dasharray="6 6" opacity="0.45">
+    <line x1="110" y1="110" x2="256" y2="256"/>
+    <line x1="256" y1="110" x2="256" y2="256"/>
+    <line x1="402" y1="110" x2="256" y2="256"/>
+    <line x1="402" y1="256" x2="256" y2="256"/>
+    <line x1="402" y1="402" x2="256" y2="256"/>
+    <line x1="256" y1="402" x2="256" y2="256"/>
+    <line x1="110" y1="402" x2="256" y2="256"/>
+    <line x1="110" y1="256" x2="256" y2="256"/>
+  </g>
+
+  <!-- Directed DAG Flow Pipeline (Continuous, Connected Vector Edges) -->
+
+  <!-- Top Pipeline: T0 -> T1 -> T2 -->
+  <path d="M 138 110 L 226 110" fill="none" stroke="#38bdf8" stroke-width="5" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <path d="M 284 110 L 372 110" fill="none" stroke="#38bdf8" stroke-width="5" stroke-linecap="round" marker-end="url(#arrowAmber)"/>
+
+  <!-- Right Pipeline: T2 -> T3 -> T4 -->
+  <path d="M 402 138 L 402 226" fill="none" stroke="#f59e0b" stroke-width="5" stroke-linecap="round" marker-end="url(#arrow)"/>
+  <path d="M 402 284 L 402 372" fill="none" stroke="#38bdf8" stroke-width="5" stroke-linecap="round" marker-end="url(#arrowPurple)"/>
+
+  <!-- Blocker Remediation Loop: T4 -.-> T3 -->
+  <path d="M 378 390 C 340 330 340 280 378 266" fill="none" stroke="#f59e0b" stroke-width="3" stroke-dasharray="5 5" marker-end="url(#arrowAmber)"/>
+
+  <!-- Bottom Pipeline: T4 -> T5 -> T6 -->
+  <path d="M 374 402 L 286 402" fill="none" stroke="#8b5cf6" stroke-width="5" stroke-linecap="round" marker-end="url(#arrowAmber)"/>
+  <path d="M 226 402 L 138 402" fill="none" stroke="#f59e0b" stroke-width="5" stroke-linecap="round" marker-end="url(#arrowAmber)"/>
+
+  <!-- Left Pipeline: T6 -> T7 -->
+  <path d="M 110 374 L 110 286" fill="none" stroke="#f59e0b" stroke-width="5" stroke-linecap="round" marker-end="url(#arrow)"/>
+
+  <!-- Final Landing Pipeline: T7 -> Center Core -->
+  <path d="M 138 256 L 198 256" fill="none" stroke="#38bdf8" stroke-width="5" stroke-linecap="round" marker-end="url(#arrowEmerald)"/>
+
+  <!-- Central Orchestrator Core: Hexagonal Shield & Verification Emblem -->
+  <polygon points="256,198 306,227 306,285 256,314 206,285 206,227" fill="url(#coreHexGrad)" stroke="#10b981" stroke-width="4" filter="url(#glow)"/>
+  <!-- Stuart Feldman Wrench & Checkmark -->
+  <path d="M 240 256 L 252 268 L 274 244" fill="none" stroke="#34d399" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="256" cy="256" r="46" fill="none" stroke="#6366f1" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+  <!-- ================= Milestone Nodes (T0 through T7) ================= -->
+
+  <!-- T0: read-init-d (Top-Left: Emerald) -->
+  <circle cx="110" cy="110" r="28" fill="url(#gradEmerald)" stroke="#ecfdf5" stroke-width="3.5" filter="url(#glow)"/>
+  <text x="110" y="117" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="900" fill="#ffffff" text-anchor="middle">T0</text>
+
+  <!-- T1: ticket-assigned (Top-Center: Electric Blue) -->
+  <circle cx="256" cy="110" r="27" fill="url(#gradCyan)" stroke="#e0f2fe" stroke-width="3" filter="url(#glow)"/>
+  <text x="256" y="117" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="900" fill="#ffffff" text-anchor="middle">T1</text>
+
+  <!-- T2: approved-plan (Top-Right: Amber Gate) -->
+  <circle cx="402" cy="110" r="27" fill="url(#gradAmber)" stroke="#fef3c7" stroke-width="3" filter="url(#glow)"/>
+  <text x="402" y="117" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="900" fill="#ffffff" text-anchor="middle">T2</text>
+
+  <!-- T3: implementation-diff (Right-Center: Cobalt Blue) -->
+  <circle cx="402" cy="256" r="27" fill="url(#gradBlue)" stroke="#eff6ff" stroke-width="3" filter="url(#glow)"/>
+  <text x="402" y="263" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="900" fill="#ffffff" text-anchor="middle">T3</text>
+
+  <!-- T4: adversarial-review (Bottom-Right: Royal Purple) -->
+  <circle cx="402" cy="402" r="28" fill="url(#gradPurple)" stroke="#f5f3ff" stroke-width="3" filter="url(#glow)"/>
+  <text x="402" y="409" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="900" fill="#ffffff" text-anchor="middle">T4</text>
+
+  <!-- T5: commit (Bottom-Center: Amber Gate) -->
+  <circle cx="256" cy="402" r="27" fill="url(#gradAmber)" stroke="#fef3c7" stroke-width="3" filter="url(#glow)"/>
+  <text x="256" y="409" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="900" fill="#ffffff" text-anchor="middle">T5</text>
+
+  <!-- T6: push (Bottom-Left: Amber Gate) -->
+  <circle cx="110" cy="402" r="27" fill="url(#gradAmber)" stroke="#fef3c7" stroke-width="3" filter="url(#glow)"/>
+  <text x="110" y="409" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="900" fill="#ffffff" text-anchor="middle">T6</text>
+
+  <!-- T7: bot-quiescence / ready-to-land (Left-Center: Cyan Blue) -->
+  <circle cx="110" cy="256" r="27" fill="url(#gradCyan)" stroke="#e0f2fe" stroke-width="3" filter="url(#glow)"/>
+  <text x="110" y="263" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="900" fill="#ffffff" text-anchor="middle">T7</text>
+</svg>
