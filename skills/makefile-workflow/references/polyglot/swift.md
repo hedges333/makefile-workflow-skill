@@ -1,17 +1,25 @@
 # Polyglot Stack Guide: Swift
 
-This manual details toolchains, test scaffolding, and isolation conventions for Swift.
+This guide covers detection markers, test and lint commands, smoke test templates, and isolation rules for Swift.
 
 ## 1. Detection Markers
+
+Look for these files when scanning a Swift package or Xcode workspace:
+
 - `Package.swift`, `*.xcodeproj`, `*.xcworkspace`
 
 ## 2. Standard Commands
-- **Targeted Test**: `swift test --filter <TestClass>`
-- **Format**: `swiftformat --lint .`
-- **Lint**: `swiftlint`
 
-## 3. Boilerplate Test Scaffolding
-If no test exists, create `Tests/SmokeTests/SmokeTests.swift`:
+Run these commands inside the Swift package directory:
+
+- Targeted Test: `swift test --filter <TestClass>`
+- Format: `swiftformat --lint .`
+- Lint: `swiftlint`
+
+## 3. Smoke Test Template
+
+If no test target exists, create `Tests/SmokeTests/SmokeTests.swift`:
+
 ```swift
 import XCTest
 
@@ -23,6 +31,9 @@ final class SmokeTests: XCTestCase {
 ```
 
 ## 4. Test Isolation
-1. For CoreData or SwiftData tests, instantiate persistent stores with `inMemory` type so no data is written to disk.
-2. Abstract network requests behind protocols and use mock URL sessions (`URLProtocol` stubs).
-3. Use `FileManager.default.temporaryDirectory` for temporary file operations.
+
+Follow three isolation rules in Swift tests:
+
+1. Configure CoreData and SwiftData stores in memory during tests so zero rows write to disk.
+2. Place HTTP calls behind protocols and pass `URLProtocol` stubs in unit tests.
+3. Write temporary test files under unique subdirectories of `FileManager.default.temporaryDirectory`.

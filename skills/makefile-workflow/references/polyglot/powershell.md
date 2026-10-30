@@ -1,25 +1,36 @@
 # Polyglot Stack Guide: PowerShell
 
-This manual details toolchains, test scaffolding, and isolation conventions for PowerShell.
+This guide covers detection markers, test and lint commands, smoke test templates, and isolation rules for PowerShell.
 
 ## 1. Detection Markers
+
+Look for these files when scanning a PowerShell module or script directory:
+
 - `*.ps1`, `*.psm1`, `*.psd1`
 
 ## 2. Standard Commands
-- **Targeted Test**: `pwsh -Command "Invoke-Pester -Path <path> -Output Detailed"`
-- **Lint**: `pwsh -Command "Invoke-ScriptAnalyzer -Path . -Recurse -EnableExit"`
 
-## 3. Boilerplate Test Scaffolding
-If no test exists, create `tests/Smoke.Tests.ps1`:
+Run these commands with `pwsh`:
+
+- Targeted Test: `pwsh -Command "Invoke-Pester -Path <path> -Output Detailed"`
+- Lint: `pwsh -Command "Invoke-ScriptAnalyzer -Path . -Recurse -EnableExit"`
+
+## 3. Smoke Test Template
+
+If no Pester suite exists, create `tests/Smoke.Tests.ps1`:
+
 ```powershell
 Describe 'Smoke Test Harness' {
-    It 'Runs successfully' {
+    It 'Runs cleanly' {
         $true | Should -Be $true
     }
 }
 ```
 
 ## 4. Test Isolation
-1. Use Pester's `Mock` command to mock external cmdlets (such as `Invoke-RestMethod` or `Send-MailMessage`).
-2. Use temporary PSDrives (`New-PSDrive -Name 'TestEnv' -PSProvider FileSystem -Root (New-TemporaryFile).Directory`) for file tests.
-3. Clean up all temporary files and mocked variables in the `AfterAll` block.
+
+Follow three isolation rules in PowerShell tests:
+
+1. Use the `Mock` command in Pester to stub external cmdlets such as `Invoke-RestMethod` or `Send-MailMessage`.
+2. Use Pester `TestDrive:` or temporary `PSDrive` roots for file operations during tests.
+3. Remove temporary variables and drives inside the `AfterAll` block.

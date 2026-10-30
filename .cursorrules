@@ -1,18 +1,20 @@
 # Cursor Rules: Makefile Workflow
 
-When executing coding tasks in Cursor (Agent or Composer mode), follow these rules:
+Follow these rules for every coding task in Cursor:
 
-1. **Check Prerequisites First**: Never jump straight into code edits. Check existing files, identify project languages, and follow the 9-target Makefile DAG.
-2. **Dedicated Branches**: Create a dedicated git branch for each ticket (`ticket/<id>-<slug>`).
-3. **Review Before Edit**: Read existing files thoroughly before editing. Apply minimal, confident changes. Do not touch unrelated code.
-4. **Hermetic Test Isolation**: Never connect tests to production databases. Use test databases (`*_test`), in-memory databases, or mocks.
-5. **TDD Methodology**: Write failing tests before writing feature logic. Run targeted tests in the active subproject folder.
-6. **Human Approval Gates**: Never run `git commit`, `git push`, or merge code without explicit user permission.
-7. **Monorepo Discipline**: In multi-language repositories, run targeted tests during implementation and the full suite before committing.
-8. **Simple English**: Use ASD-STE100 principles for all text output: short sentences, active voice, terms defined at first use.
-9. **Workflow Configuration**: Inspect `.workflow/config.json` or `~/.gemini/config/makefile-workflow.json` if present for user-specific model preferences and review settings.
-10. **Interactive Model Switch Reminder**:
-    - At Target 40 (Adversarial Review): Explicitly prompt the user in chat:
-      "👉 **Please switch the model dropdown to your deep-reasoning model (such as Claude 3.5 Sonnet or o1)** to run the Six-Pillar review."
-    - At Target 45 (Review Approval): Remind the user:
-      "👉 Review approved. You may switch the model dropdown back to your fast coding model."
+1. Read existing files, detect project languages, and follow the 14-target Makefile DAG (a dependency graph without loops) before you edit code.
+2. Create a dedicated Git branch for each task, such as `feat/<id>-<slug>` or `fix/<id>-<slug>`.
+3. Read target files before you edit them. Apply small changes and do not touch unrelated code.
+4. Point tests to `*_test` databases, in-memory databases, or mock fixtures. Never connect to production databases.
+5. Write failing unit tests before you write feature logic, and run tests in the active subproject directory.
+6. Never run `git commit`, `git push`, or merge commands without explicit user approval in chat.
+7. In multi-language repositories, run subproject tests during development and run the full test suite before commit.
+8. Write documentation and commit messages in Simple English: short sentences, active voice, and terms defined at first use.
+9. If `.workflow/config.json` or `~/.gemini/config/makefile-workflow.json` exists, read it to load user configuration.
+
+## Interactive Model Switch Reminder
+
+Cursor cannot switch models through subagent calls. Prompt the user at review boundaries:
+
+1. At Target 40, prompt the user: "Switch the Cursor picker to a deep-reasoning model for the Six-Pillar review."
+2. At Target 45 (Review Approval), tell the user in chat: "Review passed. You can switch the model picker back to your fast coding model."

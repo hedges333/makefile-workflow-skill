@@ -1,28 +1,39 @@
 # Polyglot Stack Guide: Python
 
-This manual details toolchains, test scaffolding, and database isolation for Python.
+This guide covers detection markers, test and lint commands, smoke test templates, and database isolation for Python.
 
 ## 1. Detection Markers
+
+Look for these files when scanning a Python subproject:
+
 - `pyproject.toml`, `requirements.txt`, `setup.py`, `Pipfile`, `tox.ini`
 
 ## 2. Standard Commands
-- **Targeted Test**: `pytest <subproject>/tests/ -v` (fallback: `python -m unittest discover <subproject>/tests`)
-- **Format**: `ruff format .` or `black .`
-- **Lint**: `ruff check .` or `flake8 .`
 
-## 3. Boilerplate Test Scaffolding
-If no test directory exists, create `tests/test_smoke.py`:
+Run these commands inside the Python subproject directory:
+
+- Targeted Test: `pytest <subproject>/tests/ -v` (or `python3 -m unittest discover <subproject>/tests`)
+- Format: `ruff format --check .` or `black --check .`
+- Lint: `ruff check .` or `flake8 .`
+
+## 3. Smoke Test Template
+
+If the subproject has no test directory, create `tests/test_smoke.py`:
+
 ```python
-"""Smoke test scaffold for Python projects."""
+"""Smoke test template for Python subprojects."""
 
 
 def test_smoke():
-  """Verifies that the test harness runs and basic imports succeed."""
+  """Makes sure that the test runner executes cleanly."""
   assert True
 ```
 
-## 4. Test Database Isolation
-1. Use SQLite in-memory databases (`sqlite:///:memory:`) for fast unit tests.
-2. For PostgreSQL/MySQL integration tests, set `TEST_DATABASE_URL=postgres://user:pass@localhost:5432/<app>_test`.
-3. Never point `DATABASE_URL` to production or staging hosts.
-4. Use `pytest-mock` or `unittest.mock` to mock external API requests.
+## 4. Test Database and Network Isolation
+
+Follow four isolation rules in Python tests:
+
+1. Use SQLite in-memory connections (`sqlite:///:memory:`) for unit tests.
+2. For PostgreSQL or MySQL integration tests, set `TEST_DATABASE_URL=postgres://user:pass@localhost:5432/<app>_test`.
+3. Never point `DATABASE_URL` to staging or production hosts.
+4. Mock external HTTP requests with `pytest-mock` or `unittest.mock`.

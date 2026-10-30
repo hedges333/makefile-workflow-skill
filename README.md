@@ -24,55 +24,66 @@
 - [Quickstart](#quickstart)
 - [Usage Guide](#usage-guide)
   - [How to Start a Ticket](#how-to-start-a-ticket)
-  - [The 9-Target Makefile DAG](#the-9-target-makefile-dag)
+  - [The 14-Target Makefile DAG](#the-14-target-makefile-dag)
   - [Human Pause Gates](#human-pause-gates)
-- [Configuration & Custom Models](#configuration--custom-models)
-- [Multi-Agent Setup & Enforcement](#multi-agent-setup--enforcement)
+- [Configuration and Custom Models](#configuration-and-custom-models)
+- [Multi-Agent Setup and Enforcement](#multi-agent-setup-and-enforcement)
 - [Polyglot Support: 22 Languages](#polyglot-support-22-languages)
-- [Architecture & Foundations](#architecture--foundations)
-- [Test Safety & Data Isolation](#test-safety--data-isolation)
+- [Architecture and Foundations](#architecture-and-foundations)
+- [Test Safety and Data Isolation](#test-safety-and-data-isolation)
 - [Request History Ledger](#request-history-ledger)
-- [License & Acknowledgments](#license--acknowledgments)
+- [License and Acknowledgments](#license-and-acknowledgments)
 
 ---
 
 ## About
 
-The **Makefile Workflow** is a disciplined orchestration engine for AI coding assistants. Standard AI coding agents often fail on long tasks:
-1. They run out of context and forget earlier instructions (the 200k-token compaction problem).
-2. They commit or push unreviewed code without permission.
-3. They write tests after the code, which pass only by accident.
-4. They refactor unrelated files and introduce regressions.
+The Makefile Workflow is a task orchestration plugin for AI coding assistants. Unstructured AI coding sessions often fail on long tasks for four reasons:
 
-This workflow solves these problems with four simple techniques:
+1. Context loss: When a session reaches token limits, chat compression drops earlier safety rules.
+2. Unapproved commits: The agent commits or pushes unreviewed code without human permission.
+3. Weak tests: The agent writes tests after writing buggy code, so the tests pass by mistake.
+4. Scope creep: The agent edits unrelated files and introduces regressions.
 
-- **The Recipe Board (Makefile DAG)**: The agent follows a Directed Acyclic Graph. It cannot write code before planning, and cannot commit before testing.
-- **The Memory Tattoo (Memento Pattern)**: The agent saves progress to disk under `.workflow/state/` (`00_governance.md`, `10_ticket.md`, `20_plan_approved.md`, etc.). Because each project repository has its own isolated `.workflow/state/` folder, tasks in different projects or terminal windows never interfere with each other. If the agent loses context or restarts, it resumes in seconds from disk.
-- **Human Pause Gates**: The agent halts at key checkpoints (Plan, Review, Commit, Push, and Land) and waits for your explicit approval in chat.
-- **Ephemeral Subagents (Worker Bees)**: Heavy tasks (file searches, test runs) run in isolated child agents. The main supervisor agent stays small and never runs out of memory.
+This plugin prevents those failures with four mechanisms:
 
-Based on Randal L. Schwartz's [*Synthetic Scars* series on DEV.to](https://dev.to/randalschwartz/series/44156) and public Gist `598a1f2b5760a23c1d70b57e9e85393f`.
+1. Makefile DAG: The agent follows a DAG (a dependency graph without loops). It cannot write code before planning, and it cannot commit before testing.
+2. Memento state files: The agent writes numbered progress cards inside `<workspace>/.workflow/state/`. Each repository keeps its own state directory, so parallel sessions in different projects never collide.
+3. Human pause gates: The agent stops at six checkpoints (Plan, Blocker Triage, Review, Commit, Push, and Landing) and waits for your approval in chat.
+4. Ephemeral subagents: Heavy file scans, test runs, and CI checks run in child workers. The main agent context stays small and avoids chat compression.
+
+This project builds on Randal L. Schwartz's [*Synthetic Scars* series on DEV.to](https://dev.to/randalschwartz/series/44156) and public Gist `598a1f2b5760a23c1d70b57e9e85393f`.
 
 ---
 
 ## Installation
 
-### Option 1: Google Antigravity CLI (`agy`)
-Run this command in your terminal:
+### Method 1: Google Antigravity CLI (`agy`)
+
+Install directly from GitHub in your terminal:
+
 ```bash
 agy plugin install https://github.com/hedges333/makefile-workflow-skill
 ```
-Or install from a local clone:
+
+If you cloned this repository locally, run this command inside the repository directory:
+
 ```bash
 agy plugin install .
 ```
 
-### Option 2: Automated Bash Installer
+### Method 2: Bash Installer Script
+
+Run the installer script with `curl` and `bash`:
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/hedges333/makefile-workflow-skill/main/install.sh | bash
 ```
 
-### Option 3: Using Make
+### Method 3: GNU Make
+
+Run `make install` from a local clone to validate, test, and install the plugin:
+
 ```bash
 make install
 ```
@@ -81,20 +92,13 @@ make install
 
 ## Quickstart
 
-Get started with your first task in 60 seconds:
+Run your first workflow task in five steps:
 
-1. **Open your project** in your terminal or IDE with your AI assistant active.
-2. **Describe your task in chat**:
-   > *"Add a health check endpoint at `/api/health` that returns uptime in seconds."*
-3. **Watch the agent set up the ticket**:
-   - The agent creates a dedicated branch (`ticket/feat-health-endpoint`).
-   - The agent inspects your repository and writes a plan.
-4. **Approve the plan at Target 20**:
-   - The agent prints the plan in chat and pauses.
-   - Reply: `"Plan approved. Proceed."`
-5. **Review and approve**:
-   - The agent writes failing tests first (Red), implements the endpoint (Green), and conducts a Six-Pillar review.
-   - Once the review passes, reply `"Approved. Commit and push."` at the pause gates.
+1. Open your project repository in your terminal or IDE with your AI coding agent active.
+2. Describe your task in chat, for example: `"Add a health endpoint at /api/health that returns uptime in seconds."`
+3. Wait while the agent creates branch `feat/1-health-endpoint`, scans your codebase, and writes `.workflow/state/20_plan.md`.
+4. Read the plan in chat at Target 20 and reply: `"Plan approved. Proceed."`
+5. Review the test results and Six-Pillar code audit, then reply `"Approved"` at each pause gate to commit, push, and merge.
 
 ---
 
@@ -102,58 +106,54 @@ Get started with your first task in 60 seconds:
 
 ### How to Start a Ticket
 
-You do not need an external issue tracker to use this workflow. You can start a ticket in three convenient ways:
+You do not need an external issue tracker to use this plugin. You can start work in three ways.
 
-#### Way 1: Direct Prompt Requirements (Most Common)
-You describe your feature, bug fix, or refactor directly in chat:
-- Example: `"Add an endpoint /api/v1/export that returns user reports in CSV format."`
-- Example: `"Fix the bug where the date picker resets on February 29th."`
+#### Way 1: Describe Requirements in Chat
 
-**What happens:**
-1. The agent synthesizes a ticket slug (such as `feat-export-csv` or `fix-leap-year-picker`).
-2. The agent checks that `git status` is clean on `main`.
-3. The agent creates and checks out a feature branch: `git checkout -b ticket/<slug>`.
-4. The agent writes your requirements to `.workflow/state/10_ticket.md` and displays the live readerboard.
+State your feature, bug fix, or refactor directly in chat, for example `"Add CSV export to /api/v1/reports"` or `"Fix leap-year reset in the date picker."`
 
-#### Way 2: From an Existing GitHub Issue
-If your project tracks issues on GitHub:
-- Example: `"Work on issue #42"` or `"Resolve bug https://github.com/org/repo/issues/42"`.
+1. The agent reads `.workflow/history.json` to assign the next local task number.
+2. The agent makes sure that `git status --short` is clean on `main`.
+3. The agent excludes `.workflow/state/` in `.git/info/exclude` so state cards never pollute commits.
+4. The agent creates branch `feat/<N+1>-<slug>` or `fix/<N+1>-<slug>` and writes `.workflow/state/10_ticket.md`.
 
-**What happens:**
-1. The agent runs `gh issue view 42` to read the issue title, description, and comments.
-2. The agent creates the branch: `git checkout -b ticket/42-fix-auth-timeout`.
-3. The agent records the issue details in `state/10_ticket.md`.
+#### Way 2: Reference a GitHub, Jira, or Linear Issue
 
-#### Way 3: Exploring the Backlog
-If you want the agent to suggest what to work on next:
-- Example: `"What is next on the backlog?"` or `"Check open issues on GitHub."`
+Give an issue number or URL in chat, for example `"Resolve issue #42"` or `"Fix AUTH-102."`
 
-**What happens:**
-1. The agent queries open issues (`gh issue list`).
-2. The agent presents candidates sorted by priority.
-3. You choose one, and the agent begins Target 10.
+1. The agent runs `gh issue view 42` to read the title, body, and comments as untrusted data.
+2. The agent creates branch `fix/42-auth-timeout` or `feat/AUTH-102-jwt-refresh`.
+3. The agent writes the ticket scope to `.workflow/state/10_ticket.md` and advances to Target 15.
+
+#### Way 3: Query the Open Backlog
+
+Ask the agent what to work on next, for example `"Show open issues on GitHub."`
+
+1. The agent queries open issues with `gh issue list` and sorts them by priority (`P0` through `P3`).
+2. The agent lists the candidates in chat so that you can pick one.
+3. After you choose an issue, the agent starts Target 10.
 
 ---
 
-### The 9-Target Makefile DAG
+### The 14-Target Makefile DAG
 
-The workflow progresses through nine milestone targets:
+Every ticket moves through 14 dependency targets grouped into three phases:
 
 ```mermaid
 flowchart TD
-    subgraph P1 ["Phase 1: Intake & Planning"]
+    subgraph P1 ["Phase 1: Intake and Planning"]
         direction LR
-        T0["T0: read-init-d"] --> T1["T1: ticket-assigned"] --> T15["T15: archaeology-verified"] --> T20["T20: approved-plan (GATE)"]
+        T00["T00: read-init-d"] --> T10["T10: ticket-assigned"] --> T15["T15: archaeology-verified"] --> T20["T20: approved-plan (GATE)"]
     end
 
-    subgraph P2 ["Phase 2: TDD & Adversarial Review"]
+    subgraph P2 ["Phase 2: TDD and Adversarial Review"]
         direction LR
         T30["T30: implementation-diff"] --> T40["T40: adversarial-review"]
         T40 -. "BLOCKERS > 0" .-> T42["T42: triaged-blockers (GATE)"] -.-> T30
-        T40 --> T45["T45: review-approved (GATE)"]
+        T40 --> T45["T45: approved-review (GATE)"]
     end
 
-    subgraph P3 ["Phase 3: Integration, CI & Landing"]
+    subgraph P3 ["Phase 3: Integration, CI, and Landing"]
         direction LR
         T50["T50: commit (GATE)"] --> T60["T60: push (GATE)"] --> T70["T70: bot-quiescence (180s)"]
         T70 --> T75["T75: ready-to-land (GATE)"] --> T80["T80: land"] --> T90["T90: finish"]
@@ -162,145 +162,158 @@ flowchart TD
     P1 --> P2 --> P3
 ```
 
-- **Target 00 (`read-init-d`)**: Restores state cards from `.workflow/state/*.md`.
-- **Target 10 (`ticket-assigned`)**: Captures ticket scope and branches `ticket/<id>-<slug>`.
-- **Target 15 (`archaeology-verified`)**: Scans languages, subprojects, and test suites.
-- **Target 20 (`approved-plan`)**: **Human Pause Gate**. Presents plan and notes any test changes.
-- **Target 30 (`implementation-diff`)**: Red-Green-Refactor TDD. Targeted subproject test loops.
-- **Target 40 (`adversarial-review`)**: Runs Six-Pillar code audit (Intent, Verification, Architecture, Blast Radius, Reviewer Defense, Immune Defenses).
-- **Target 42 (`triaged-blockers`)**: **Human Pause Gate** (if review finds blockers).
-- **Target 45 (`approved-review`)**: Review sign-off when 0 blockers remain.
-- **Target 50 (`commit`)**: **Human Pause Gate**. Runs full monorepo tests, formats code, and requests commit approval.
-- **Target 60 (`push`)**: **Human Pause Gate**. Verifies mergeability, pushes branch, opens pull request.
-- **Target 70 (`bot-quiescence`)**: Ephemeral triager polls CI and bots until 180 seconds of silence.
-- **Target 75 (`ready-to-land`)**: **Human Pause Gate**. Evaluates merge policy and asks for landing approval.
-- **Target 80 (`land`)**: Squash-merges PR, deletes remote branch, switches to default branch.
-- **Target 90 (`finish`)**: Writes permanent record to `.workflow/history.json` and `.workflow/history.md`.
+- Target 00 (`read-init-d`): Reads Memento state cards from `.workflow/state/*.md`.
+- Target 10 (`ticket-assigned`): Records ticket scope and creates branch `feat/<id>-<slug>`, `fix/<id>-<slug>`, or `ticket/<id>-<slug>`.
+- Target 15 (`archaeology-verified`): Scans subprojects, detects languages, and checks existing test suites.
+- Target 20 (`approved-plan`): Human Pause Gate. Writes `.workflow/state/20_plan.md` and discloses any test changes.
+- Target 30 (`implementation-diff`): Runs Red-Green-Refactor test-driven development (TDD, writing failing tests before feature code).
+- Target 40 (`adversarial-review`): Locks the Git Merkle tree hash (a cryptographic snapshot of staged files) and runs the Six-Pillar audit.
+- Target 42 (`triaged-blockers`): Human Pause Gate when the code audit reports one or more blockers.
+- Target 45 (`approved-review`): Human Pause Gate for review sign-off when zero blockers remain.
+- Target 50 (`commit`): Human Pause Gate. Formats code, runs all repository tests, and asks to commit.
+- Target 60 (`push`): Human Pause Gate. Tests mergeability with `git merge-tree`, pushes the branch, and opens a pull request.
+- Target 70 (`bot-quiescence`): Polls CI checks and waits 180 seconds for review bots to finish commenting.
+- Target 75 (`ready-to-land`): Human Pause Gate. Presents CI status and the 7-criteria merge policy table.
+- Target 80 (`land`): Squash-merges the pull request, deletes the ticket branch, and updates `main`.
+- Target 90 (`finish`): Records process lessons and appends the task to `.workflow/history.json` and `.workflow/history.md`.
 
 ---
 
 ### Human Pause Gates
 
-The agent pauses at five standard approval checkpoints. Reply in chat to proceed:
+The workflow stops at six human approval checkpoints. Reply in chat to continue:
 
-| Gate | Target | When It Triggers | How to Reply |
+| Gate | Target | Trigger Condition | Example Reply |
 | :--- | :--- | :--- | :--- |
-| **Plan Gate** | `T20` | After archaeology and planning | `"Plan approved. Proceed."` (or request changes) |
-| **Blocker Gate** | `T42` | If code review catches blockers | `"Approved. Fix blockers 1 and 2."` |
-| **Commit Gate** | `T50` | After full tests and formatting | `"Commit message approved. Commit code."` |
-| **Push Gate** | `T60` | After clean tree verification | `"Approved. Push branch and open PR."` |
-| **Landing Gate** | `T75` | After CI passes and bots quiesce | `"All checks green. Squash and merge."` |
+| Plan Gate | `T20` | Archaeology and plan file complete | `"Plan approved. Proceed."` |
+| Blocker Gate | `T42` | Six-Pillar review reports blockers | `"Approved. Fix blockers 1 and 2."` |
+| Review Gate | `T45` | Six-Pillar review reports zero blockers | `"Review approved. Proceed to commit."` |
+| Commit Gate | `T50` | Full test suite and linters pass | `"Commit message approved. Commit."` |
+| Push Gate | `T60` | Branch merges cleanly with `main` | `"Approved. Push branch and open PR."` |
+| Landing Gate | `T75` | Remote CI passes and review bots finish | `"All checks green. Squash and merge."` |
 
 ---
 
-## Configuration & Custom Models
+## Configuration and Custom Models
 
-You can customize which AI models handle specific roles without editing plugin files.
+You can assign specific AI models to each worker role without editing plugin files. The plugin leaves `./agents/*.md` free of hardcoded model names so that every user controls their own cost and reasoning tiers.
 
 ### 1. Workspace or Global Configuration File
-Copy [`.workflow/config.json.example`](./.workflow/config.json.example) to `.workflow/config.json` (workspace) or `~/.gemini/config/makefile-workflow.json` (global):
+
+Copy [`.workflow/config.json.example`](./.workflow/config.json.example) to `<workspace>/.workflow/config.json` (per project) or `~/.gemini/config/makefile-workflow.json` (global):
 
 ```json
 {
   "models": {
-    "adversarial-critic": "gemini-4-argon-high",
-    "archaeology-worker": "gemini-3.8-flash-low",
-    "tdd-worker": "gemini-3.8-flash-medium",
-    "triage-worker": "gemini-3.8-flash-low"
+    "adversarial-critic": "pro",
+    "archaeology-worker": "flash",
+    "tdd-worker": "inherit",
+    "triage-worker": "flash"
   },
   "review": {
     "maxReviewRounds": 3,
     "strictSixPillars": true
+  },
+  "ci": {
+    "pollIntervalSeconds": 30,
+    "quiescenceSeconds": 180
   }
 }
 ```
 
+If you write concrete model names such as `gemini-4-argon-high`, `workflow_get_config` maps them to Antigravity tiers under `agyModelTiers`. Valid Antigravity subagent tiers are `pro`, `flash`, `flash_lite`, and `inherit`.
+
 ### 2. Environment Variables
+
+Set environment variables in your shell profile to override model roles across projects:
+
 ```bash
 export MAKEFILE_WORKFLOW_CRITIC_MODEL="gemini-4-argon-high"
 export MAKEFILE_WORKFLOW_WORKER_MODEL="gemini-3.8-flash-low"
+export MAKEFILE_WORKFLOW_TDD_MODEL="inherit"
+export MAKEFILE_WORKFLOW_TRIAGE_MODEL="gemini-3.8-flash-low"
 ```
 
 ### 3. Interactive IDE Model Switch Reminders
-In interactive tools (Cursor, Copilot, ChatGPT), the agent cannot change models via API. At **Target 40 (Six Pillars Review)**, the agent reminds you in chat:
-> *"👉 Please switch the model picker to your deep-reasoning model (such as Claude 3.5 Sonnet or o1) for the Six-Pillar review."*
 
-Once approved at Target 45, the agent reminds you that you can switch back to your faster model.
-
-For full configuration details, see [13. Configuration & User Preferences](./skills/makefile-workflow/references/13_configuration_and_user_preferences.md).
+Interactive IDE tools (Cursor, GitHub Copilot, ChatGPT) cannot switch models automatically through subagent calls. At Target 40, the agent prompts you to select your deep-reasoning model in the UI picker. At Target 45, the agent tells you that you can switch back. Read [13. Configuration and User Preferences](./skills/makefile-workflow/references/13_configuration_and_user_preferences.md) for full details.
 
 ---
 
-## Multi-Agent Setup & Enforcement
+## Multi-Agent Setup and Enforcement
 
-| Platform | Enforcement Level | Setup Method |
+Each AI platform enforces the workflow with its native extension hooks and rule files:
+
+| Platform | Enforcement Mechanism | Setup Instructions |
 | :--- | :--- | :--- |
-| **Google Antigravity** | **Deterministic Gate (100%)** | `agy plugin install https://github.com/hedges333/makefile-workflow-skill`. Enforced by `hooks.json` and `rules/AGENTS.md`. |
-| **Claude Code** | **Tool-Mediated Gate (80–95%)** | Discovers [`CLAUDE.md`](./CLAUDE.md) automatically. Connect MCP server: `claude mcp add makefile-workflow -- python3 /path/to/mcp/server.py`. |
-| **Cursor** | **Rule Advisory (50–70%)** | Automatically reads [`.cursorrules`](./.cursorrules) and [`.cursor/rules/makefile-workflow.mdc`](./.cursor/rules/makefile-workflow.mdc). Add MCP server in Cursor Settings -> Features -> MCP. |
-| **GitHub Copilot** | **Prompt Advisory (30–50%)** | Automatically reads [`.github/copilot-instructions.md`](./.github/copilot-instructions.md) in VS Code or CLI. |
-| **ChatGPT** | **Prompt Advisory (30–50%)** | Copy prompt from [`adapters/chatgpt/instructions.md`](./adapters/chatgpt/instructions.md) into Custom GPT or system instructions. |
+| Google Antigravity | Lifecycle hooks (`hooks.json`), MCP server, and `rules/AGENTS.md` | Run `agy plugin install https://github.com/hedges333/makefile-workflow-skill`. |
+| Claude Code | Root [`CLAUDE.md`](./CLAUDE.md) instructions and MCP server | Register MCP with `claude mcp add makefile-workflow -- python3 /path/to/mcp/server.py`. |
+| Cursor | [`.cursorrules`](./.cursorrules), [`.cursor/rules/makefile-workflow.mdc`](./.cursor/rules/makefile-workflow.mdc), and MCP | Enable the MCP server in Cursor Settings under Features and MCP. |
+| GitHub Copilot | [`.github/copilot-instructions.md`](./.github/copilot-instructions.md) | Automatic in VS Code and GitHub Copilot Chat when present in the repository. |
+| ChatGPT | [`adapters/chatgpt/instructions.md`](./adapters/chatgpt/instructions.md) | Paste the prompt into Custom GPT instructions or project instructions. |
 
 ---
 
 ## Polyglot Support: 22 Languages
 
-The Archaeology Worker (Target 15) automatically detects languages and subprojects. If no test harness exists, the agent scaffolds standard tests before writing feature code:
+At Target 15, `archaeology-worker` detects every language and subproject in the repository. If a subproject has no test suite, the agent creates a smoke test before writing feature code:
 
-| Language | Test Runner | Scaffolding File | Lint & Format | Guide |
+| Language | Test Runner | Smoke Test File | Lint and Format | Guide |
 | :--- | :--- | :--- | :--- | :--- |
-| **Python** | `pytest` | `tests/test_smoke.py` | `ruff`, `black` | [Python Guide](./skills/makefile-workflow/references/polyglot/python.md) |
-| **TypeScript / JS** | `vitest` / `node --test` | `tests/smoke.test.ts` | `eslint`, `prettier` | [TypeScript Guide](./skills/makefile-workflow/references/polyglot/typescript_javascript.md) |
-| **Rust** | `cargo test` | `tests/smoke_test.rs` | `clippy`, `rustfmt` | [Rust Guide](./skills/makefile-workflow/references/polyglot/rust.md) |
-| **Go** | `go test` | `smoke_test.go` | `golangci-lint`, `gofmt` | [Go Guide](./skills/makefile-workflow/references/polyglot/go.md) |
-| **Dart / Flutter** | `flutter test` | `test/smoke_test.dart` | `dart analyze`, `dart format` | [Dart Guide](./skills/makefile-workflow/references/polyglot/dart_flutter.md) |
-| **PHP** | `phpunit` | `tests/SmokeTest.php` | `phpstan`, `php-cs-fixer` | [PHP Guide](./skills/makefile-workflow/references/polyglot/php.md) |
-| **C / C++** | `ctest` | `tests/smoke_test.c` | `clang-tidy`, `clang-format` | [C/C++ Guide](./skills/makefile-workflow/references/polyglot/c_cpp.md) |
-| **Elixir** | `mix test` | `test/smoke_test.exs` | `credo`, `mix format` | [Elixir Guide](./skills/makefile-workflow/references/polyglot/elixir.md) |
-| **Perl** | `prove` | `t/00-smoke.t` | `perlcritic`, `perltidy` | [Perl Guide](./skills/makefile-workflow/references/polyglot/perl.md) |
-| **Java / Kotlin / Scala** | `mvn` / `gradle` / `sbt` | `SmokeTest.java` / `kt` / `scala` | Spotless, `ktlint`, `scalafmt` | [JVM Guide](./skills/makefile-workflow/references/polyglot/java_kotlin_scala.md) |
-| **C# (.NET)** | `dotnet test` | `tests/SmokeTests.cs` | `dotnet format` | [C# Guide](./skills/makefile-workflow/references/polyglot/csharp_dotnet.md) |
-| **PowerShell** | `Invoke-Pester` | `tests/Smoke.Tests.ps1` | `PSScriptAnalyzer` | [PowerShell Guide](./skills/makefile-workflow/references/polyglot/powershell.md) |
-| **Swift** | `swift test` | `Tests/SmokeTests/SmokeTests.swift` | `swiftlint`, `swiftformat` | [Swift Guide](./skills/makefile-workflow/references/polyglot/swift.md) |
-| **Ruby** | `rspec` | `spec/smoke_spec.rb` | `rubocop` | [Ruby Guide](./skills/makefile-workflow/references/polyglot/ruby.md) |
-| **SQL & Migrations** | `pg_prove` / `dbt` | `tests/test_schema.sql` | `sqlfluff` | [SQL Guide](./skills/makefile-workflow/references/polyglot/sql_migrations.md) |
-| **R, Julia & Lua** | `testthat`, `Pkg.test`, `busted` | `test-smoke.R`, `runtests.jl` | `lintr`, `JuliaFormatter` | [Scientific Guide](./skills/makefile-workflow/references/polyglot/scientific_r_julia_lua.md) |
+| Python | `pytest` | `tests/test_smoke.py` | `ruff`, `black` | [Python Guide](./skills/makefile-workflow/references/polyglot/python.md) |
+| TypeScript and JS | `vitest` / `node --test` | `tests/smoke.test.ts` | `eslint`, `prettier` | [TypeScript Guide](./skills/makefile-workflow/references/polyglot/typescript_javascript.md) |
+| Rust | `cargo test` | `tests/smoke_test.rs` | `clippy`, `rustfmt` | [Rust Guide](./skills/makefile-workflow/references/polyglot/rust.md) |
+| Go | `go test` | `smoke_test.go` | `golangci-lint`, `gofmt` | [Go Guide](./skills/makefile-workflow/references/polyglot/go.md) |
+| Dart and Flutter | `flutter test` | `test/smoke_test.dart` | `dart analyze`, `dart format` | [Dart Guide](./skills/makefile-workflow/references/polyglot/dart_flutter.md) |
+| PHP | `phpunit` | `tests/SmokeTest.php` | `phpstan`, `php-cs-fixer` | [PHP Guide](./skills/makefile-workflow/references/polyglot/php.md) |
+| C and C++ | `ctest` | `tests/smoke_test.c` | `clang-tidy`, `clang-format` | [C/C++ Guide](./skills/makefile-workflow/references/polyglot/c_cpp.md) |
+| Elixir | `mix test` | `test/smoke_test.exs` | `credo`, `mix format` | [Elixir Guide](./skills/makefile-workflow/references/polyglot/elixir.md) |
+| Perl | `prove` | `t/00-smoke.t` | `perlcritic`, `perltidy` | [Perl Guide](./skills/makefile-workflow/references/polyglot/perl.md) |
+| Java, Kotlin, Scala | `mvn` / `gradle` / `sbt` | `SmokeTest.java` / `kt` / `scala` | Spotless, `ktlint`, `scalafmt` | [JVM Guide](./skills/makefile-workflow/references/polyglot/java_kotlin_scala.md) |
+| C# (.NET) | `dotnet test` | `tests/SmokeTests.cs` | `dotnet format` | [C# Guide](./skills/makefile-workflow/references/polyglot/csharp_dotnet.md) |
+| PowerShell | `Invoke-Pester` | `tests/Smoke.Tests.ps1` | `PSScriptAnalyzer` | [PowerShell Guide](./skills/makefile-workflow/references/polyglot/powershell.md) |
+| Swift | `swift test` | `Tests/SmokeTests/SmokeTests.swift` | `swiftlint`, `swiftformat` | [Swift Guide](./skills/makefile-workflow/references/polyglot/swift.md) |
+| Ruby | `rspec` | `spec/smoke_spec.rb` | `rubocop` | [Ruby Guide](./skills/makefile-workflow/references/polyglot/ruby.md) |
+| SQL and Migrations | `pg_prove` / `dbt` | `tests/test_schema.sql` | `sqlfluff` | [SQL Guide](./skills/makefile-workflow/references/polyglot/sql_migrations.md) |
+| R, Julia, and Lua | `testthat`, `Pkg.test`, `busted` | `test-smoke.R`, `runtests.jl` | `lintr`, `JuliaFormatter` | [Scientific Guide](./skills/makefile-workflow/references/polyglot/scientific_r_julia_lua.md) |
 
 ---
 
-## Architecture & Foundations
+## Architecture and Foundations
 
-For senior engineers, the workflow grounds its operational mechanics in computer science and linguistic theory:
+Four computer science and language design models shape this workflow:
 
-* **Stuart Feldman (1976)**: Declarative dependency evaluation via Directed Acyclic Graphs (DAG). Milestones are targets with prerequisites, not loose chronological conversation steps.
-* **Fernando Flores (1986) & John Searle (1985)**: Committed speech acts. Conversation transitions through a formal grammar:
-  `TicketSession ::= !Request Negotiation (!DeclareApprove Execution | !DeclareAbort)`
-* **Nuel Belnap (1977)**: Four-valued epistemic logic. During codebase archaeology, facts are classified as `ESTABLISHED` ($T$), `CONTRADICTED` ($B$), `UNKNOWN` ($N$), or `RETRACTED` ($F$).
-* **AT&T System V `init.d`**: Numbered state cards evaluated in lexical order on session startup to restore system state.
+1. Stuart Feldman (1976): `make` evaluates build targets as a DAG so that prerequisites finish before downstream targets run.
+2. Fernando Flores (1986) and John Searle (1985): Committed speech acts model tasks as explicit requests, promises, assertions, and human declarations.
+3. Nuel Belnap (1977): Four-valued logic classifies repository facts during archaeology as `ESTABLISHED`, `CONTRADICTED`, `UNKNOWN`, or `RETRACTED`.
+4. AT&T System V `init.d`: Lexically numbered files (`00_..` through `99_..`) restore execution state cleanly on startup.
 
 ---
 
-## Test Safety & Data Isolation
+## Test Safety and Data Isolation
 
-The workflow strictly isolates automated test runs from live production environments:
-1. Tests must point to dedicated test databases (`*_test`), in-memory databases, or mock fixtures.
-2. File operations during tests must use temporary scratch directories.
-3. PreToolUse lifecycle hooks intercept commands and block production connection strings before the shell executes them.
+Automated test suites and agent commands must never touch live production systems:
+
+1. Point all database tests to isolated `*_test` databases, local containers, in-memory databases, or mock fixtures.
+2. Write temporary files during tests inside scratch directories that clean up automatically on exit.
+3. In Antigravity, [`scripts/pre_tool_guard.py`](./scripts/pre_tool_guard.py) inspects shell commands before execution, blocks production database names, blocks force-pushes to `main`, and prompts for confirmation on `git commit`, `git push`, and `gh pr merge`.
 
 ---
 
 ## Request History Ledger
 
-Completed tickets are recorded in `.workflow/history.json` and `.workflow/history.md`. This gives your team a permanent, version-controlled audit trail of all tickets, branches, PRs, and failure vaccines earned by AI agents over time.
+At Target 90, the agent appends completed task metadata to `.workflow/history.json` and `.workflow/history.md`. These files give your repository a version-controlled log of resolved issues, branches, pull requests, added tests, and codified process scars.
 
 ---
 
-## License & Acknowledgments
+## License and Acknowledgments
 
 ### License
-This project is licensed under the **MIT License** — see the [`LICENSE`](./LICENSE) file for details.
+
+This repository uses the MIT License. Read [`LICENSE`](./LICENSE) for the full license text.
 
 ### Acknowledgments
-- **Methodology & Architecture**: Designed by [**Randal L. Schwartz**](https://github.com/RandalSchwartz) in the [*Synthetic Scars* series on DEV.to](https://dev.to/randalschwartz/series/44156) and GitHub Gist `598a1f2b5760a23c1d70b57e9e85393f`.
-- **Packaging & Polyglot Implementation**: Packaged and maintained by [**Mark Hedges**](https://github.com/hedges333).
-- **Documentation Standards**: Compliant with **ASD-STE100 Simplified Technical English** via the [SimpleEnglish plugin](https://github.com/AminBlg/SimpleEnglish).
+
+- Methodology: Created by [Randal L. Schwartz](https://github.com/RandalSchwartz) in the [*Synthetic Scars* series on DEV.to](https://dev.to/randalschwartz/series/44156) and GitHub Gist `598a1f2b5760a23c1d70b57e9e85393f`.
+- Plugin Packaging and Polyglot Guides: Maintained by [Mark Hedges](https://github.com/hedges333).
+- Documentation Style: Written in plain English following ASD-STE100 principles from the [SimpleEnglish plugin](https://github.com/AminBlg/SimpleEnglish).

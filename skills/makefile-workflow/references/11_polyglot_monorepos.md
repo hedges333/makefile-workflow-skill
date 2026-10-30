@@ -1,50 +1,56 @@
 # 11. Polyglot Monorepo Orchestration
 
-This manual details how to detect and orchestrate repositories containing multiple programming languages and subprojects.
+This manual explains how to scan and test repositories that contain multiple programming languages and subprojects.
 
 ## 1. Subproject Discovery (Target 15)
 
-In complex repositories (for example, a Rust backend, a TypeScript frontend, and Python maintenance scripts), the Archaeology Worker inspects directory trees for manifest markers:
+In multi-language repositories (for example a Rust backend, a TypeScript web client, and Python scripts), `archaeology-worker` searches for manifest files:
 
-* **Rust**: `Cargo.toml`
-* **TypeScript / JavaScript**: `package.json`, `tsconfig.json`
-* **Python**: `pyproject.toml`, `requirements.txt`, `setup.py`
-* **Go**: `go.mod`
-* **Dart / Flutter**: `pubspec.yaml`
-* **PHP**: `composer.json`
-* **Java / Kotlin / Scala**: `pom.xml`, `build.gradle`, `build.sbt`
-* **C / C++**: `CMakeLists.txt`, `meson.build`, `Makefile`
-* **Elixir**: `mix.exs`
-* **Perl**: `Makefile.PL`, `cpanfile`
-* **C# (.NET)**: `*.csproj`, `*.sln`
-* **PowerShell**: `*.psd1`, `*.psm1`
-* **Swift**: `Package.swift`
-* **Ruby**: `Gemfile`
-* **SQL & Migrations**: `flyway.conf`, `dbt_project.yml`, `migrations/`
-* **R / Julia / Lua**: `DESCRIPTION`, `Project.toml`, `*.rockspec`
+- Rust: `Cargo.toml`
+- TypeScript and JavaScript: `package.json`, `tsconfig.json`
+- Python: `pyproject.toml`, `requirements.txt`, `setup.py`
+- Go: `go.mod`
+- Dart and Flutter: `pubspec.yaml`
+- PHP: `composer.json`
+- Java, Kotlin, and Scala: `pom.xml`, `build.gradle`, `build.gradle.kts`, `build.sbt`
+- C and C++: `CMakeLists.txt`, `meson.build`, `Makefile`
+- Elixir: `mix.exs`
+- Perl: `Makefile.PL`, `cpanfile`
+- C# (.NET): `*.csproj`, `*.sln`
+- PowerShell: `*.psd1`, `*.psm1`
+- Swift: `Package.swift`
+- Ruby: `Gemfile`
+- SQL and Migrations: `flyway.conf`, `dbt_project.yml`, `migrations/`
+- R, Julia, and Lua: `DESCRIPTION`, `Project.toml`, `*.rockspec`
 
-When multiple markers exist in different folders, compile a **Subproject Manifest** in `.workflow/state/15_archaeology_receipt.md`:
-- Subproject name and relative path.
-- Language and runtime.
-- Targeted unit test command.
-- Linter and formatter commands.
-- Test database isolation requirement.
+When manifests appear in multiple directories, record a subproject table in `.workflow/state/15_archaeology_receipt.md` with five fields:
 
-## 2. Directory Layout Standardization
+1. Subproject name and relative directory path.
+2. Language and runtime version.
+3. Targeted unit test command.
+4. Formatter and linter commands.
+5. Test database isolation method.
 
-If a repository has multiple languages scattered in the root directory without clean folder boundaries:
-1. Identify the structural confusion during Target 15 Archaeology.
-2. In Target 20 (`plan.md`), propose organizing files into standardized subproject directories (e.g. `backend/`, `frontend/`, `scripts/`).
-3. **Never move files unilaterally**. Wait for explicit user approval in the plan before moving files.
+## 2. Directory Layout Rules
 
-## 3. Targeted Inner Loops vs Full Outer Sweeps
+If a repository mixes multiple languages in the root directory without clear boundaries, handle layout changes with user approval:
 
-### The Inner Loop (Target 30: Implementation)
-Run tests only in the touched subproject directory:
-- If editing `backend/` (Rust), run `cargo test --package backend`.
-- If editing `scripts/` (Python), run `pytest scripts/`.
-- If editing `frontend/` (TypeScript), run `npm test --prefix frontend`.
-This keeps the test-edit feedback cycle fast (under 10 seconds).
+1. Note the mixed layout in `.workflow/state/15_archaeology_receipt.md` during Target 15.
+2. If moving files helps the ticket, propose clear subproject directories (for example `backend/`, `frontend/`, `scripts/`) in `.workflow/state/20_plan.md`.
+3. Never move directories without explicit user approval at Target 20.
 
-### The Outer Loop (Target 50 Commit & Target 75 Landing)
-Run the full regression test suite across all detected subprojects before asking the human for commit approval or landing approval. This guarantees that a change in the backend did not break contract assumptions in the frontend or utility scripts.
+## 3. Inner Test Loops vs Full Test Sweeps
+
+### Inner Loop (Target 30 Implementation)
+
+Run unit tests only inside the subproject directory that you edited:
+
+- Rust in `backend/`: `cargo test --package backend`
+- Python in `scripts/`: `pytest scripts/`
+- TypeScript in `frontend/`: `npm test --prefix frontend`
+
+Targeted runs keep each Red-Green-Refactor cycle under ten seconds.
+
+### Outer Sweep (Target 50 Commit and Target 75 Landing)
+
+Run the full test suite across every subproject in the repository before asking for commit or landing approval. Full sweeps make sure that backend changes do not break frontend contracts or shared scripts.

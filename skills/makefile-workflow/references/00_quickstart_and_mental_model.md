@@ -1,66 +1,67 @@
 # 00. Quickstart and Mental Model
 
-This manual explains the core mental model of the Makefile Workflow in Simple English.
+This manual explains the mental model of the Makefile Workflow in plain English.
 
-## 1. The Core Problem: Why AI Agents Fail
+## 1. Why Unstructured AI Coding Sessions Fail
 
-AI coding agents struggle with four failure modes during long coding tasks:
+AI coding agents fail on long coding tasks in four common ways:
 
-1. **Context Compaction Loss**: When a conversation hits token limits, runtimes compress history into a short narrative. The agent forgets negative constraints and rules.
-2. **Premature Commit and Push**: The agent modifies files and immediately commits or pushes without human review.
-3. **Tautological Tests**: The agent writes tests after writing code. The tests pass because they assert whatever the buggy code happens to return.
-4. **Scope Creep Regressions**: The agent tries to clean up unrelated code while fixing a bug, introducing regressions.
+1. Context loss: When a session reaches token limits, chat compression removes earlier safety rules.
+2. Premature commits: The agent edits files and runs `git commit` or `git push` without human review.
+3. Weak tests: The agent writes tests after writing buggy code, so the tests pass by mistake.
+4. Scope creep: The agent edits unrelated code during a bug fix and introduces regressions.
 
-## 2. The Four Solutions
+## 2. Four Mechanisms That Prevent Failure
 
-The Makefile Workflow solves these problems with four engineering techniques:
+### Solution 1: Makefile DAG
 
-### Solution 1: The Recipe Board (Makefile DAG)
-Stuart Feldman created `make` in 1976 to manage software builds through a Directed Acyclic Graph (DAG). A DAG is a graph of steps with dependencies and no circular loops. 
+Stuart Feldman created `make` in 1976 to run software builds through a DAG (a dependency graph without loops). Instead of a flat prompt list, the agent evaluates 14 dependency targets. The agent cannot edit source code before planning, and it cannot commit before testing.
 
-Instead of a long prompt with twenty steps, the agent receives a Makefile DAG. The agent cannot bake the cake before mixing the batter. The agent cannot commit before testing, and cannot test before planning.
+### Solution 2: Memento State Files
 
-### Solution 2: The Memory Tattoo (Memento Pattern & State Files)
-In the film *Memento*, the main character has short-term memory loss and tattoos vital facts onto his skin.
+Memento state files are numbered markdown cards inside `<workspace>/.workflow/state/` (`00_governance.md` through `99_next_action.md`). Because each repository stores its own `.workflow/state/` directory, sessions in separate terminal windows or projects never overwrite one another. If chat history resets or compresses, the agent reads `.workflow/state/*.md` and resumes in seconds. In Antigravity sessions, the agent also mirrors the live readerboard to `<brain>/readerboard.md`.
 
-The agent writes state cards to disk under `<workspace>/.workflow/state/` (`00_governance.md`, `10_ticket.md`, `20_plan_approved.md`, `40_critic_review.md`, and `99_next_action.md`). Because each project repository has its own `.workflow/state/` directory, tasks in different terminal windows or projects never interfere with each other. If the conversation resets, compacts, or the terminal restarts, the agent reads the cards and resumes in two seconds without losing state. (In Antigravity sessions, the readerboard is also mirrored to `<brain>/readerboard.md` for UI display).
+### Solution 3: Human Pause Gates
 
-### Solution 3: The Human Safety Switches (Pause Gates)
-The agent never commits, pushes, or merges code autonomously. 
+The agent never commits, pushes, or merges code on its own. At six checkpoints (Targets 20, 42, 45, 50, 60, and 75), the agent prints its findings in chat and stops tool calls until you reply.
 
-At each key milestone (Plan, Review, Commit, Push, and Landing), the agent presents its findings directly in chat and pauses execution. You stay in full control.
+### Solution 4: Ephemeral Subagents
 
-### Solution 4: Worker Bees (Ephemeral Subagents)
-Instead of running heavy test suites and file searches in the main context, the supervisor agent forks small helper subagents. The helper executes the heavy command, writes a receipt, and exits. The main agent context stays small and never runs out of memory.
+Heavy directory scans, test runs, and CI checks run inside isolated child subagents. Each worker writes a short summary and exits so that the supervisor context window stays small.
 
-## 3. The 9 Workflow Milestones
+## 3. The 14 Workflow Targets
 
 ```mermaid
 flowchart LR
-    T0["T0: Read State"] --> T1["T1: Ticket & Branch"]
-    T1 --> T15["T15: Archaeology"]
-    T15 --> T20["T20: Plan Approval (Gate)"]
+    T00["T00: Read State"] --> T10["T10: Ticket and Branch"]
+    T10 --> T15["T15: Archaeology"]
+    T15 --> T20["T20: Plan Gate"]
     T20 --> T30["T30: Red-Green TDD"]
     T30 --> T40["T40: Six Pillars Review"]
-    T40 --> T45["T45: Review Approval (Gate)"]
-    T45 --> T50["T50: Commit (Gate)"]
-    T50 --> T60["T60: Push & PR (Gate)"]
-    T60 --> T70["T70: CI & Bot Quiescence"]
-    T70 --> T75["T75: Landing (Gate)"]
-    T75 --> T80["T80: Merge & Mop-up"]
-    T80 --> T90["T90: Finish & History"]
+    T40 -. "Blockers > 0" .-> T42["T42: Blocker Gate"] -.-> T30
+    T40 --> T45["T45: Review Gate"]
+    T45 --> T50["T50: Commit Gate"]
+    T50 --> T60["T60: Push Gate"]
+    T60 --> T70["T70: CI and Bots"]
+    T70 --> T75["T75: Landing Gate"]
+    T75 --> T80["T80: Merge and Cleanup"]
+    T80 --> T90["T90: Finish and History"]
 ```
 
 ## 4. How to Talk to Your Agent
 
-You can start the workflow with three simple prompts:
+Start a task or query status with direct chat prompts:
 
-* **Start a Ticket**: `"Resolve ticket #123 using the makefile workflow."`
-* **Check Status**: `"Show the current readerboard and active target."`
-* **Backlog Check**: `"What is the next unassigned task on our backlog?"`
+- Start from requirements: `"Add CSV export to /api/reports using the makefile workflow."`
+- Start from an issue: `"Resolve GitHub issue #123."`
+- View progress: `"Show the active target and readerboard."`
+- View backlog: `"List the top open issues by priority."`
 
-When the agent pauses at a Human Pause Gate, reply with standard guidance:
-* At Plan Gate: `"Plan approved. Proceed."` (or request revisions).
-* At Review Gate: `"Review approved. Proceed to commit."`
-* At Commit Gate: `"Approved. Commit the changes."`
-* At Landing Gate: `"CI is green. Go ahead and land."`
+When the agent stops at a human pause gate, reply in chat to continue:
+
+- Plan Gate (`T20`): `"Plan approved. Proceed."`
+- Blocker Gate (`T42`): `"Approved. Fix blockers 1 and 2."`
+- Review Gate (`T45`): `"Review approved. Proceed to commit."`
+- Commit Gate (`T50`): `"Approved. Commit the changes."`
+- Push Gate (`T60`): `"Approved. Push branch and open PR."`
+- Landing Gate (`T75`): `"CI is green. Squash and merge."`

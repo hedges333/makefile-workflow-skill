@@ -1,37 +1,30 @@
-# 08. Subagent Orchestration & Delegation Protocol
+# 08. Subagent Orchestration and Delegation Protocol
 
-This manual details how the supervisor agent coordinates ephemeral subagents to keep context windows small and prevent context compaction.
+This manual explains how the supervisor agent delegates work to child subagents so the main context window stays small.
 
 ## 1. Depth-0 Supervisor Role
 
-The primary orchestrator agent operates at Depth 0 as a supervisor (GNU Make engine):
-1. **Never Run Heavy Operations Directly**:
-   The supervisor must not run massive file searches, long test suites, or large package builds in its own context window.
-2. **Context Window Ceiling**:
-   By delegating heavy commands to subagents, the supervisor's context window stays small ($\le 30\text{k tokens}$). This makes context compaction structurally impossible.
-3. **Exclusive State Directory Ownership (`SCAR-TOOL-13`)**:
-   Only the supervisor writes to `.workflow/state/*.md` and `plan.md`. Subagents write receipts to `<workspace>/.tmp/` or return markdown summaries in their completion messages.
+The main orchestrator agent runs at Depth 0 as a `make` supervisor:
+
+1. Do not run large directory scans, long test suites, or full builds directly in the supervisor context.
+2. Delegate heavy commands to child subagents so the supervisor stays below 30,000 tokens and avoids chat compression.
+3. Only the supervisor writes `.workflow/state/*.md` cards (`SCAR-TOOL-13`). Subagents return concise markdown summaries in their completion messages.
 
 ## 2. Subagent Roles
 
-The workflow defines four specialized subagent roles:
+Four subagent roles handle isolated phases of the workflow:
 
-* **Archaeology Worker** (`archaeology-worker`):
-  Runs during Target 15. Scans for languages, subprojects, API patterns, and existing tests. Read-only tools. Model: `flash`.
-* **TDD Implementation Worker** (`tdd-worker`):
-  Runs during Target 30. Compiles failing tests first (Red), implements minimal code (Green), and runs targeted tests. Model: `inherit`.
-* **Adversarial Code Reviewer** (`adversarial-critic`):
-  Runs during Target 40. Inspects the git diff in an isolated context without authoring bias. Read-only tools. Model: `pro`.
-* **CI & Bot Triager** (`triage-worker`):
-  Runs during Target 70. Polls remote CI checks and bot review comments until 180s quiescence is satisfied. Model: `flash`.
+- `archaeology-worker` (Target 15): Scans languages, subprojects, sibling APIs, and existing tests with read-only tools. Default tier: `flash`.
+- `tdd-worker` (Target 30): Writes failing tests first, writes minimal feature code, and runs subproject test loops. Default tier: `inherit`.
+- `adversarial-critic` (Target 40): Audits the Git tree diff in an isolated read-only context without authoring bias. Default tier: `pro`.
+- `triage-worker` (Target 70): Polls remote CI checks and review bot comments through 180 seconds of quiet time. Default tier: `flash`.
 
-For model configuration overrides and user preferences, see [13. Configuration & User Preferences](13_configuration_and_user_preferences.md).
+Read [13. Configuration and User Preferences](13_configuration_and_user_preferences.md) to override model tiers per role.
 
-## 3. Subagent Lifecycle & Timer Management
+## 3. Subagent Lifecycle and Timers
 
-1. **Paired Schedules**:
-   When launching a long-running subagent (like CI polling or test execution), pair the subagent invocation with a schedule timer (`schedule(DurationSeconds: 60, TimerCondition: "<subagent-id>")`).
-2. **Yield After Dispatch**:
-   After calling `invoke_subagent` and `schedule`, stop calling tools (`tool_calls: []`). Wait for the system notification. Do not poll in a loop with shell sleep commands (`SCAR-PROC-53`).
-3. **Double-Fault Circuit Breaker (`SCAR-PROC-138`)**:
-   If a timer conflict occurs twice consecutively, halt and yield to avoid loop thrashing.
+Follow three rules when launching background subagents:
+
+1. When you start a long subagent task such as CI polling, pair `invoke_subagent` with `schedule(DurationSeconds: 60, TimerCondition: "<subagent-id>")`.
+2. Stop calling tools (`tool_calls: []`) right after dispatch and wait for the system notification. Never poll in a loop with shell `sleep` commands (`SCAR-PROC-53`).
+3. If a timer conflict happens twice in a row, stop and yield to the user (`SCAR-PROC-138`).

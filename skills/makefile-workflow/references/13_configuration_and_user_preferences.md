@@ -1,25 +1,23 @@
-# 13. Configuration & User Preferences
+# 13. Configuration and User Preferences
 
-This manual explains how users configure models and workflow rules for their own environments.
+This manual explains how users assign custom AI models and review limits in their local environments without editing shared plugin files.
 
-## 1. Portability Principle
+## 1. Portability Design
 
-The plugin repository does not force concrete model names on users.
-Different organizations and users have different API keys, access tiers, and cost budgets.
-Users can configure their preferred models locally without modifying the shared plugin repository.
+Different teams use different AI providers, API keys, and cost budgets. For that reason, `./agents/*.md` files omit hardcoded `model:` fields. Each user sets local preferences through JSON configuration files or environment variables.
 
-## 2. Configuration Resolution Order
+## 2. Configuration Precedence Order
 
-When the supervisor agent or MCP server starts, it searches for configuration in this exact order:
+When a session starts or `workflow_get_config` runs, the plugin resolves configuration in this order (later environment variables override JSON values):
 
-1. **Workspace Configuration**: `<workspace>/.workflow/config.json`
-2. **Global User Configuration**: `~/.gemini/config/makefile-workflow.json`
-3. **Environment Variables**:
-   - `MAKEFILE_WORKFLOW_CRITIC_MODEL` (Overrides model for `adversarial-critic`)
-   - `MAKEFILE_WORKFLOW_WORKER_MODEL` (Overrides model for `archaeology-worker`)
-   - `MAKEFILE_WORKFLOW_TDD_MODEL` (Overrides model for `tdd-worker`)
-   - `MAKEFILE_WORKFLOW_TRIAGE_MODEL` (Overrides model for `triage-worker`)
-4. **Default Abstract Tiers**:
+1. Workspace file: `<workspace>/.workflow/config.json` (git-ignored).
+2. Global user file: `~/.gemini/config/makefile-workflow.json`.
+3. Environment variables:
+   - `MAKEFILE_WORKFLOW_CRITIC_MODEL` for `adversarial-critic`.
+   - `MAKEFILE_WORKFLOW_WORKER_MODEL` or `MAKEFILE_WORKFLOW_ARCHAEOLOGY_MODEL` for `archaeology-worker`.
+   - `MAKEFILE_WORKFLOW_TDD_MODEL` for `tdd-worker`.
+   - `MAKEFILE_WORKFLOW_TRIAGE_MODEL` for `triage-worker`.
+4. Built-in defaults:
    - `adversarial-critic`: `pro`
    - `archaeology-worker`: `flash`
    - `tdd-worker`: `inherit`
@@ -27,7 +25,7 @@ When the supervisor agent or MCP server starts, it searches for configuration in
 
 ## 3. Configuration File Schema
 
-To create a configuration file, copy [`.workflow/config.json.example`](../../../.workflow/config.json.example) to `.workflow/config.json` or `~/.gemini/config/makefile-workflow.json`:
+Copy [`.workflow/config.json.example`](../../../.workflow/config.json.example) to `<workspace>/.workflow/config.json` or `~/.gemini/config/makefile-workflow.json`:
 
 ```json
 {
@@ -48,38 +46,30 @@ To create a configuration file, copy [`.workflow/config.json.example`](../../../
 }
 ```
 
-### Supported Values for Models
+### Model Tiers in Antigravity (`agy`)
 
-In Antigravity (`agy`), the subagent dispatcher supports abstract tiers:
-- `pro`: Routes to high-capacity reasoning models (such as Gemini 4 Argon or Claude Opus).
-- `flash`: Routes to high-speed models (such as Gemini 3.8 Flash).
-- `flash_lite`: Routes to lightweight models.
-- `inherit`: Inherits the active model from your parent session.
+Antigravity `invoke_subagent` accepts four model tier names:
 
-If you specify concrete model IDs in `.workflow/config.json` (such as `gemini-4-argon-high`), the orchestrator maps them during invocation.
+- `pro`: High-capacity reasoning models such as Gemini 4 Argon or Claude Opus.
+- `flash`: Fast workhorse models such as Gemini 3.8 Flash.
+- `flash_lite`: Lightweight low-cost models.
+- `inherit`: Uses the active model of the parent session.
 
-## 4. User Customization Shadowing in Antigravity
+If you put a concrete model ID such as `gemini-4-argon-high` in `models`, `workflow_get_config` normalizes it under `agyModelTiers`. Each role maps to `pro`, `flash`, `flash_lite`, or `inherit`.
 
-Antigravity supports hierarchical agent shadowing:
-1. Workspace: `<workspace>/.agents/agents/<name>.md`
-2. Global: `~/.gemini/config/agents/<name>.md`
-3. Plugin: `~/.gemini/config/plugins/<plugin>/agents/<name>.md`
+## 4. Agent File Shadowing in Antigravity
 
-If you want custom instructions for `adversarial-critic`:
-1. Create `~/.gemini/config/agents/adversarial-critic.md`.
-2. Antigravity will load your file instead of the plugin file.
-3. Your local customization survives plugin updates.
+Antigravity loads agent definitions in priority order from three paths:
 
-## 5. Interactive IDE Reminders (Cursor, Copilot, ChatGPT)
+1. Workspace path: `<workspace>/.agents/agents/<name>.md`
+2. Global user path: `~/.gemini/config/agents/<name>.md`
+3. Plugin path: `~/.gemini/config/plugins/makefile-workflow/agents/<name>.md`
 
-In interactive IDE tools, subagent API calls cannot switch models automatically.
-The agent must remind the user in chat:
+If you want custom prompt rules for `adversarial-critic`, create `~/.gemini/config/agents/adversarial-critic.md`. Antigravity loads your file instead of the plugin copy, and your file survives plugin upgrades.
 
-### Target 40 (Six Pillars Adversarial Review)
-- In Cursor: "👉 **Please switch the model dropdown to your deep-reasoning model (such as Claude 3.5 Sonnet or o1)** to run the Six-Pillar review."
-- In GitHub Copilot: "👉 **Please select Claude 3.5 Sonnet or GPT-4o in the Copilot Chat model picker**."
-- In ChatGPT: "👉 **Please switch to o1 or GPT-4o for this deep review step**."
+## 5. Interactive IDE Prompts (Cursor, Copilot, ChatGPT)
 
-### Target 45 (Review Approval)
-- Once the review passes with 0 blockers, remind the user:
-  "👉 Review approved. You may switch back to your faster coding model for remaining steps."
+Interactive chat IDEs cannot switch models through subagent API calls. The agent prints reminders in chat at review boundaries:
+
+1. At Target 40, prompt the user: "Switch the model picker to a deep-reasoning model for the Six-Pillar review."
+2. At Target 45 (Review Sign-Off), prompt the user: "Review passed. You can switch back to your fast coding model for the remaining steps."

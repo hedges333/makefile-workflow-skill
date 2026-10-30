@@ -9,20 +9,20 @@ all: validate test
 
 help:
 	@echo "Available commands:"
-	@echo "  make validate    - Validate plugin manifest and skills with agy plugin validate"
+	@echo "  make validate    - Check plugin manifest, skills, agents, and rules with agy"
 	@echo "  make test        - Run all automated test suites"
 	@echo "  make test-mcp    - Test Model Context Protocol (MCP) server over stdio"
-	@echo "  make test-compat - Validate Claude, Cursor, Copilot, and ChatGPT adapters"
-	@echo "  make test-hooks  - Validate PreToolUse hook assertions"
+	@echo "  make test-compat - Check Claude, Cursor, Copilot, and ChatGPT adapters"
+	@echo "  make test-hooks  - Test SessionStart and PreToolUse hook scripts"
 	@echo "  make install     - Install plugin into ~/.gemini/config/plugins/$(PLUGIN_NAME)"
 	@echo "  make uninstall   - Remove plugin from ~/.gemini/config/plugins/$(PLUGIN_NAME)"
 
 validate:
 	@if command -v agy >/dev/null 2>&1; then \
-		echo "Validating plugin with agy..."; \
+		echo "Checking plugin with agy..."; \
 		agy plugin validate . --strict; \
 	else \
-		echo "agy CLI not found in PATH; skipping CLI validation."; \
+		echo "agy CLI not found in PATH. Skipping CLI check."; \
 	fi
 
 test-mcp:
@@ -34,15 +34,8 @@ test-compat:
 	@python3 scripts/test_cross_agent_compatibility.py
 
 test-hooks:
-	@echo "Testing pre-tool hook assertions..."
-	@python3 -c "import json, subprocess; \
-	p1 = {'toolCall': {'name': 'run_command', 'args': {'CommandLine': 'psql -h production.db.internal myapp'}}}; \
-	r1 = json.loads(subprocess.run(['python3', 'scripts/pre_tool_guard.py'], input=json.dumps(p1), text=True, capture_output=True).stdout); \
-	assert r1['decision'] == 'deny'; \
-	p2 = {'toolCall': {'name': 'run_command', 'args': {'CommandLine': 'git commit -m test'}}}; \
-	r2 = json.loads(subprocess.run(['python3', 'scripts/pre_tool_guard.py'], input=json.dumps(p2), text=True, capture_output=True).stdout); \
-	assert r2['decision'] == 'force_ask'; \
-	print('✔ Pre-tool hook assertions passed.')"
+	@echo "Testing SessionStart and PreToolUse hooks..."
+	@python3 scripts/test_hooks.py
 
 test: test-compat test-mcp test-hooks
 	@echo "Testing file structure..."
@@ -51,16 +44,17 @@ test: test-compat test-mcp test-hooks
 	@test -f mcp_config.json || (echo "Missing mcp_config.json" && exit 1)
 	@test -f skills/makefile-workflow/SKILL.md || (echo "Missing SKILL.md" && exit 1)
 	@test -f rules/AGENTS.md || (echo "Missing rules/AGENTS.md" && exit 1)
-	@echo "All tests passed successfully."
+	@echo "All tests passed."
 
 install: validate test
 	@if command -v agy >/dev/null 2>&1; then \
-		echo "Installing via agy plugin install . ..."; \
+		echo "Installing with agy plugin install . ..."; \
 		agy plugin install .; \
 	else \
 		echo "Copying plugin to $(INSTALL_DIR)..."; \
+		rm -rf $(INSTALL_DIR); \
 		mkdir -p $(INSTALL_DIR); \
-		cp -R ./* $(INSTALL_DIR)/; \
+		tar --exclude='./.git' --exclude='./.tmp' --exclude='./.workflow/state' --exclude='./.workflow/config.json' --exclude='./.workflow/plan.md' --exclude='./.workflow/commit_msg.txt' -cf - . | tar -xf - -C $(INSTALL_DIR); \
 		echo "Installed to $(INSTALL_DIR)"; \
 	fi
 

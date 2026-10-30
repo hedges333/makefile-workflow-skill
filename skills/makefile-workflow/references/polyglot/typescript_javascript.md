@@ -1,31 +1,40 @@
-# Polyglot Stack Guide: TypeScript & JavaScript
+# Polyglot Stack Guide: TypeScript and JavaScript
 
-This manual details toolchains, test scaffolding, and database isolation for TypeScript and Node.js JavaScript.
+This guide covers detection markers, test and lint commands, smoke test templates, and isolation rules for TypeScript and Node.js.
 
 ## 1. Detection Markers
+
+Look for these files when scanning a TypeScript or JavaScript subproject:
+
 - `package.json`, `tsconfig.json`, `pnpm-lock.yaml`, `yarn.lock`, `package-lock.json`
 
 ## 2. Standard Commands
-- **Targeted Test (TypeScript)**: `npm test` or `npx vitest run <path>` or `npx jest <path>`
-- **Targeted Test (Native Node.js)**: `node --test`
-- **Format**: `npx prettier --write .` (check: `npx prettier --check .`)
-- **Lint**: `npx eslint .`
 
-## 3. Boilerplate Test Scaffolding
-If no test directory exists, create `tests/smoke.test.ts` (or `tests/smoke.test.js`):
+Run these commands inside the subproject directory:
 
-### TypeScript (`tests/smoke.test.ts`):
+- Targeted Test (TypeScript): `npm test`, `npx vitest run <path>`, or `npx jest <path>`
+- Targeted Test (Node.js built-in): `node --test`
+- Format: `npx prettier --check .` (write mode: `npx prettier --write .`)
+- Lint: `npx eslint .`
+
+## 3. Smoke Test Templates
+
+If no test directory exists, create `tests/smoke.test.ts` or `tests/smoke.test.js`.
+
+### TypeScript (`tests/smoke.test.ts`)
+
 ```typescript
 import { describe, expect, it } from 'vitest';
 
 describe('Smoke Test Harness', () => {
-  it('runs successfully', () => {
+  it('runs cleanly', () => {
     expect(true).toBe(true);
   });
 });
 ```
 
-### Native Node.js JavaScript (`tests/smoke.test.js`):
+### Node.js JavaScript (`tests/smoke.test.js`)
+
 ```javascript
 const test = require('node:test');
 const assert = require('node:assert');
@@ -35,7 +44,10 @@ test('smoke test harness', () => {
 });
 ```
 
-## 4. Test Database Isolation
-1. Ensure `NODE_ENV=test` is set in all test commands.
-2. Use in-memory SQLite (`better-sqlite3` `:memory:`) or local Docker test instances.
-3. Stub external HTTP calls using `msw` (Mock Service Worker) or `nock`.
+## 4. Test Database and Network Isolation
+
+Follow three isolation rules in Node.js and TypeScript tests:
+
+1. Make sure that `NODE_ENV=test` is set in every test command.
+2. Use in-memory SQLite (`better-sqlite3` with `:memory:`) or local Docker test containers.
+3. Stub external HTTP requests with `msw` (Mock Service Worker) or `nock`.

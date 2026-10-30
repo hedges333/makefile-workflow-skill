@@ -1,44 +1,38 @@
 # Makefile Workflow Plugin Rules
 
-These rules apply whenever the `makefile-workflow` plugin is enabled.
+These rules apply when the `makefile-workflow` plugin is active.
 
-## 1. The Sovereign Presentation Surface Rule
+## 1. Chat Presentation and Input Rules
 
-The chat stream is the primary presentation surface. The interactive modal (`ask_question`) is strictly an ergonomic input tool, never a replacement for chat presentation.
+The chat stream is the main presentation surface. The `ask_question` tool is an input prompt, not a display surface.
 
-1. **Only use `ask_question` for two or more choices ($N \ge 2$)**.
-   Use `ask_question` only when the user must choose between two or more described options (such as selecting a ticket or choosing an architectural alternative).
-2. **Never use `ask_question` for unary approval gates ($N = 1$)**.
-   For single-option approvals (Plan Approval at Target 20, Review Approval at Target 45, Commit Approval at Target 50, Push Approval at Target 60, Landing Approval at Target 75), do not invoke `ask_question`. Instead, print the complete proposal directly in chat with clickable links (`👉 [Inspect Full Plan: plan.md](file:///...)`), and pause with empty tool calls.
-3. **Never ask blind questions**.
-   Never ask the user to make a decision without rendering the full substance of what is being decided directly in the chat message.
-4. **Clickable links required**.
-   Every referenced file, diff, plan, or review card must include a clickable markdown link using the `file://` scheme.
+1. If the user must choose between two or more alternatives ($N \ge 2$), call `ask_question`.
+2. If a gate has one approval action ($N = 1$), do not call `ask_question`. Print the full proposal in chat with `file://` links and stop tool calls. This rule covers Plan Approval (Target 20), Review Approval (Target 45), Commit Approval (Target 50), Push Approval (Target 60), and Landing Approval (Target 75).
+3. Before you ask for a decision, print the full facts in the chat message.
+4. Add a `file://` markdown link for every file, diff, plan, or review card that you name.
 
-## 2. The Production Data Protection Rule
+## 2. Production Data Protection Rules
 
-1. **Zero production database access**.
-   Test suites and automated agents must never connect to live production databases, production cloud storage, or mutable production files.
-2. **Mandatory test isolation**.
-   Tests must point to dedicated test databases (such as `*_test`), in-memory databases, or mock fixtures.
-3. **Hermetic directories**.
-   File operations during tests must use temporary directories or mocked file systems.
+Never connect tests or agent commands to live systems.
 
-## 3. Review Before Edit and Small Edits
+1. Do not connect to live production databases, cloud storage, or mutable production files.
+2. Point tests to isolated test databases (for example `*_test`), in-memory databases, or mock fixtures.
+3. Run file operations during tests inside temporary directories or mocked file systems.
 
-1. **Inspect before edit**.
-   Read target files and understand their types and contracts before making modifications.
-2. **Narrow blast radius**.
-   Apply minimal, confident edits that solve the ticket.
-3. **Ignore out-of-scope code smells**.
-   If you find unrelated defects or style issues during a ticket, do not edit them. Record them in ticket notes for a future task.
+## 3. Code Edit Rules
 
-## 4. Simple English Documentation Standard
+Keep each code change small and within ticket scope.
 
-When you write documentation, plan summaries, changelogs, or PR descriptions:
-1. Apply the rules of the `simple-english` plugin.
-2. Use short sentences (at most 20 words for instructions, at most 25 words for descriptions).
-3. Use active voice and simple tenses.
-4. Put conditions before commands with a comma: "If the build fails, read the log."
-5. Define technical terms at first use.
-6. Delete marketing fluff and vague filler words.
+1. Read target files and their type contracts before you edit them.
+2. Apply minimal edits that solve the active ticket.
+3. If you find unrelated defects during a ticket, do not edit them. Record them in ticket notes for a separate task.
+
+## 4. Simple English Documentation Rules
+
+Apply the rules of the `simple-english` plugin to documentation, plans, changelogs, and pull request descriptions:
+
+1. Keep procedural sentences at 20 words or fewer, with one instruction per sentence.
+2. Keep descriptive sentences at 25 words or fewer, in simple tenses and active voice.
+3. Put the condition before the command with a comma: "If the build fails, read the log."
+4. Define each technical concept term in under ten words at first use.
+5. Delete filler words, contractions, semicolons, and em-dashes.

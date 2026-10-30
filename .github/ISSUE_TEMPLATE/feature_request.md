@@ -1,19 +1,23 @@
 ---
 name: Feature Request
-about: Suggest an idea or new language / stack support for Makefile Workflow
+about: Propose a feature or language guide for Makefile Workflow
 title: '[FEAT] '
 labels: enhancement
 assignees: ''
 ---
 
 ## Feature Summary
-A clear and concise description of the proposed feature or improvement.
 
-## Problem Statement / Motivation
-What limitation or failure mode does this address? (Is there a recurring "wound" that requires a new Synthetic Scar?)
+Write one or two sentences that describe the proposed feature.
 
-## Proposed Solution
-Describe how the feature should fit into the 9-target Makefile DAG or polyglot stack guides.
+## Problem Statement
 
-## Alternatives Considered
-Any alternative approaches or workarounds considered.
+Describe the failure mode or workflow gap that this feature solves.
+
+## Proposed Design
+
+Explain how the feature fits into the 14-target Makefile DAG or the polyglot stack guides.
+
+## Alternatives
+
+List any other approaches or workarounds that you tried.

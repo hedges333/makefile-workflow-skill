@@ -37,3 +37,5 @@ Thumbs.db
 .workflow/config.json
 !.workflow/config.json.example
 .workflow/state/
+.workflow/plan.md
+.workflow/commit_msg.txt

@@ -4,7 +4,7 @@ set -euo pipefail
 # Makefile Workflow Installer
 # Usage:
 #   ./install.sh                # Install locally
-#   ./install.sh --dry-run      # Validate without installing
+#   ./install.sh --dry-run      # Check files without installing
 #   curl -fsSL https://raw.githubusercontent.com/hedges333/makefile-workflow-skill/main/install.sh | bash
 
 PLUGIN_NAME="makefile-workflow"
@@ -18,55 +18,66 @@ for arg in "$@"; do
   fi
 done
 
+copy_plugin_tree() {
+  local src_dir="$1"
+  local dst_dir="$2"
+  rm -rf "${dst_dir}"
+  mkdir -p "${dst_dir}"
+  tar -C "${src_dir}" \
+    --exclude='./.git' \
+    --exclude='./.tmp' \
+    --exclude='./.workflow/state' \
+    --exclude='./.workflow/config.json' \
+    --exclude='./.workflow/plan.md' \
+    --exclude='./.workflow/commit_msg.txt' \
+    -cf - . | tar -xf - -C "${dst_dir}"
+}
+
 echo "=== Installing Makefile Workflow Plugin ==="
 
-# Check for agy CLI
 if command -v agy >/dev/null 2>&1; then
   echo "Found Antigravity CLI (agy)."
-  
-  # If running from inside the cloned repo
+
   if [ -f "plugin.json" ] && [ -d "skills/makefile-workflow" ]; then
-    echo "Running validation from current directory..."
+    echo "Running plugin check from current directory..."
     agy plugin validate . --strict
     if [ "$DRY_RUN" = true ]; then
-      echo "Dry run completed successfully. Skipping install."
+      echo "Dry run passed. Skipping install."
       exit 0
     fi
-    echo "Installing plugin via 'agy plugin install .'..."
+    echo "Installing plugin with 'agy plugin install .'..."
     agy plugin install .
   else
     if [ "$DRY_RUN" = true ]; then
-      echo "Dry run: would run agy plugin install ${REPO_URL}"
+      echo "Dry run: will run agy plugin install ${REPO_URL}"
       exit 0
     fi
-    echo "Installing directly from git repository..."
+    echo "Installing plugin from Git repository..."
     agy plugin install "${REPO_URL}"
   fi
 else
-  echo "agy CLI not found in PATH. Performing manual file installation."
+  echo "agy CLI not found in PATH. Copying plugin files directly."
   if [ "$DRY_RUN" = true ]; then
-    echo "Dry run: would copy files to ${TARGET_DIR}."
+    echo "Dry run: will copy files to ${TARGET_DIR}."
     exit 0
   fi
-  mkdir -p "${TARGET_DIR}"
-  if [ -f "plugin.json" ]; then
-    cp -R ./* "${TARGET_DIR}/"
+  if [ -f "plugin.json" ] && [ -d "skills/makefile-workflow" ]; then
+    copy_plugin_tree "." "${TARGET_DIR}"
   else
     TEMP_DIR=$(mktemp -d)
+    trap 'rm -rf "${TEMP_DIR}"' EXIT
     git clone --depth 1 "${REPO_URL}" "${TEMP_DIR}"
-    cp -R "${TEMP_DIR}/"* "${TARGET_DIR}/"
-    rm -rf "${TEMP_DIR}"
+    copy_plugin_tree "${TEMP_DIR}" "${TARGET_DIR}"
   fi
-  echo "Copied files to ${TARGET_DIR}."
+  echo "Copied plugin files to ${TARGET_DIR}."
 fi
 
-# Make sure SimpleEnglish is also available for documentation rules
 if command -v agy >/dev/null 2>&1; then
   if ! agy plugin list | grep -q "simple-english"; then
-    echo "Notice: SimpleEnglish plugin not found. Installing SimpleEnglish dependency..."
+    echo "SimpleEnglish plugin not found. Installing SimpleEnglish..."
     agy plugin install "https://github.com/AminBlg/SimpleEnglish" || true
   fi
 fi
 
 echo "=== Makefile Workflow Installation Complete ==="
-echo "Restart your agent session or reload your workspace to activate the plugin."
+echo "Restart your agent session to load the plugin."

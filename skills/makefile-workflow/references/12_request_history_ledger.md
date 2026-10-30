@@ -1,22 +1,24 @@
 # 12. Request History Ledger
 
-This manual details the persistent history ledger that records completed work over time.
+This manual describes the version-controlled history ledger that records completed tickets over the life of a repository.
 
-## 1. Purpose of the Request History Ledger
+## 1. Purpose of the Ledger
 
-Conversations end, but repositories endure. The Request History Ledger provides:
-1. A permanent record of tickets resolved by AI agents.
-2. An index of branches, commits, pull requests, and tests added.
-3. A catalog of failure vaccines codified during work.
-4. A quick way for users to ask "What tasks have we completed so far?"
+Chat sessions end, but the repository remains. The Request History Ledger records four things:
 
-## 2. Location & File Formats
+1. Every ticket completed through the Makefile Workflow.
+2. Branch names, commit hashes, pull request links, and added test counts.
+3. Synthetic Scars (process rules learned from past failures) earned during each task.
+4. Next local task numbers when creating branches for ad-hoc chat requests.
 
-Maintain history inside the `.workflow/` directory at the repository root:
-- `.workflow/history.json`: Machine-readable array of task records.
-- `.workflow/history.md`: Human-readable markdown log.
+## 2. File Locations and Formats
 
-### Machine-Readable Schema (`history.json`)
+Store both ledger files inside `.workflow/` at the repository root:
+
+- `.workflow/history.json`: Machine-readable JSON array of completed ticket records.
+- `.workflow/history.md`: Human-readable markdown summary table.
+
+### JSON Schema (`history.json`)
 
 ```json
 [
@@ -24,7 +26,7 @@ Maintain history inside the `.workflow/` directory at the repository root:
     "id": "#42",
     "issue_url": "https://github.com/owner/repo/issues/42",
     "title": "Fix login redirect timeout on HTTPS",
-    "request": "Handle 301/308 redirects without dropping authorization header",
+    "request": "Handle 301 and 308 redirects without dropping authorization header",
     "branch": "fix/42-login-redirect",
     "subprojects": ["backend"],
     "started_at": "2026-10-29T10:00:00Z",
@@ -35,15 +37,15 @@ Maintain history inside the `.workflow/` directory at the repository root:
     "closes_issue": true,
     "tests_added": 3,
     "scars_earned": [
-      "SCAR-AUTH-02: Preserve Authorization header on same-origin 308 redirects"
+      "SCAR-AUTH-02: Keep Authorization header on same-origin 308 redirects"
     ]
   },
   {
     "id": "#1",
     "issue_url": null,
-    "title": "Add health check endpoint",
-    "request": "Implement /api/health endpoint returning uptime and database ping",
-    "branch": "feat/1-health-check",
+    "title": "Add health endpoint",
+    "request": "Add /api/health endpoint returning uptime and database ping",
+    "branch": "feat/1-health-endpoint",
     "subprojects": ["backend"],
     "started_at": "2026-10-29T11:00:00Z",
     "completed_at": "2026-10-29T11:30:00Z",
@@ -57,22 +59,23 @@ Maintain history inside the `.workflow/` directory at the repository root:
 ]
 ```
 
-### Human-Readable Log Format (`history.md`)
+### Markdown Table Format (`history.md`)
 
 ```markdown
 # Repository Request History Log
 
-| Date | Ticket / Issue | Summary | Branch | PR | Tests | Scars Earned |
+| Date | Ticket | Summary | Branch | PR | Tests | Scars Earned |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | 2026-10-29 | [#42](https://github.com/owner/repo/issues/42) | Fix login redirect timeout on HTTPS | `fix/42-login-redirect` | [#45](https://github.com/owner/repo/pull/45) | +3 | `SCAR-AUTH-02` |
-| 2026-10-29 | #1 (Local) | Add health check endpoint | `feat/1-health-check` | [#46](https://github.com/owner/repo/pull/46) | +2 | - |
+| 2026-10-29 | #1 (Local) | Add health endpoint | `feat/1-health-endpoint` | [#46](https://github.com/owner/repo/pull/46) | +2 | - |
 ```
 
-## 3. Maintenance Protocol (Target 90)
+## 3. Update Steps at Target 90
 
-During Target 90 post-mortems:
-1. Create the `.workflow/` directory if it does not exist.
-2. Read existing `.workflow/history.json` (or initialize with `[]`).
-3. Append the completed task record.
-4. Prepend or append the summary row in `.workflow/history.md`.
-5. Stage both files and include them in the terminal commit or release documentation.
+Run these steps during Target 90 after a pull request merges:
+
+1. Create `.workflow/` if the directory does not exist.
+2. Read `.workflow/history.json`, or start with `[]` when the file is new.
+3. Append the completed ticket object to `.workflow/history.json`.
+4. Add a matching summary row to `.workflow/history.md`.
+5. Commit the updated ledger files when the project tracks `.workflow/history.*` in Git.

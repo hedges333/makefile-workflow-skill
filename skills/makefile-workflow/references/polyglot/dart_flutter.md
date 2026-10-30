@@ -1,17 +1,25 @@
-# Polyglot Stack Guide: Dart & Flutter
+# Polyglot Stack Guide: Dart and Flutter
 
-This manual details toolchains, test scaffolding, and specialized failure vaccines for Dart and Flutter.
+This guide covers detection markers, test and lint commands, smoke test templates, and failure rules for Dart and Flutter.
 
 ## 1. Detection Markers
+
+Look for these files when scanning a Dart or Flutter package:
+
 - `pubspec.yaml`, `pubspec.lock`, `analysis_options.yaml`
 
 ## 2. Standard Commands
-- **Targeted Test**: `flutter test <path_to_test>` or `dart test <path_to_test>`
-- **Format**: `dart format --output=none --set-exit-if-changed .`
-- **Lint**: `dart analyze --fatal-infos --fatal-warnings`
 
-## 3. Boilerplate Test Scaffolding
+Run these commands inside the package directory:
+
+- Targeted Test: `flutter test <path_to_test>` or `dart test <path_to_test>`
+- Format: `dart format --output=none --set-exit-if-changed .`
+- Lint: `dart analyze --fatal-infos --fatal-warnings`
+
+## 3. Smoke Test Template
+
 If no test exists, create `test/smoke_test.dart`:
+
 ```dart
 import 'package:test/test.dart';
 
@@ -22,13 +30,11 @@ void main() {
 }
 ```
 
-## 4. Specialized Dart & Flutter Failure Vaccines
+## 4. Dart and Flutter Failure Vaccines
 
-1. **Async & FakeAsync (`SCAR-TEST-23`)**:
-   Always wrap asynchronous microtasks and timer tests in `fakeAsync` or pump widget frames explicitly.
-2. **Completer Guarding (`SCAR-TEST-25`)**:
-   Always check `if (!completer.isCompleted)` before calling `completer.complete()` inside callbacks.
-3. **AST Visitor Cascades (`SCAR-DART-09`)**:
-   When analyzing Dart AST nodes, check for cascade expressions before reading member offsets.
-4. **Widget Disposal Teardown**:
-   Always cancel streams, animations, and focus nodes in the `dispose()` lifecycle method.
+Follow four reliability rules when editing Dart or Flutter code:
+
+1. `SCAR-TEST-23` (Async Timers): Wrap timer and microtask tests in `fakeAsync`, or pump widget frames explicitly.
+2. `SCAR-TEST-25` (Completer Guard): Make sure that `!completer.isCompleted` holds before calling `completer.complete()` in callbacks.
+3. `SCAR-DART-09` (Cascade AST Nodes): Inspect Dart AST nodes for cascade expressions before reading member offsets.
+4. Widget Disposal: Cancel streams, timers, controllers, and focus nodes inside `dispose()`.

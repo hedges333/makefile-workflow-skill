@@ -19,11 +19,14 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Validate cross-agent compatibility
+    - name: Check cross-agent compatibility
       run: python3 scripts/test_cross_agent_compatibility.py
 
-    - name: Test MCP Server JSON-RPC
+    - name: Test MCP server JSON-RPC
       run: python3 scripts/test_mcp_server.py
+
+    - name: Test lifecycle hooks
+      run: python3 scripts/test_hooks.py
 
     - name: Run Makefile test suite
       run: make test

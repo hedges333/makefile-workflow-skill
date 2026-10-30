@@ -1,60 +1,65 @@
-# 07. CI Quiescence, Bot Review Triage & Landing (`Target 70`, `75` & `80`)
+# 07. CI Quiescence, Bot Review Triage, and Landing (`Target 70`, `75`, and `80`)
 
-This manual details remote CI polling, review bot triage, human landing approval, and branch mop-up.
+This manual covers remote CI checks, review bot triage, the human landing gate, and branch cleanup.
 
-## 1. Target 70: CI & Review Bot Quiescence
+## 1. Target 70: CI and Review Bot Quiescence
 
-After pushing a pull request, do not attempt to merge immediately. External CI suites and automated review bots take time to run.
+After you open a pull request, do not merge right away. Wait for remote CI runners and review bots to finish.
 
 ### Phase 1: Fork the Triage Worker
-Spawn a `triage-worker` subagent to monitor CI status:
-1. Poll `gh pr checks` until all remote CI workflows finish.
-2. Maintain a 180-second quiescence timer after the latest push to allow automated bots (Gemini, Copilot, CodeRabbit, SonarQube) to post comments.
-3. If any CI run fails or bots leave comments, compile a 4-part triage matrix:
-   - **Accept**: Valid defect or security vulnerability.
-   - **Defend**: Counterfeit bot comment; draft a technical defense.
-   - **Defer**: Valid idea outside current scope; record as a follow-up ticket.
-   - **Acknowledge**: Informational note requiring no code edits.
-4. Save the triage matrix to `.workflow/state/70_bot_triage.md`.
 
-### Phase 2: Remediation Sub-DAG
-If any accepted bot comment requires code changes:
-1. Return to Target 30: write a test for the bot finding and fix the code.
-2. Advance through Target 40 (Critic review) and Target 45 (Review approval).
-3. Advance through Target 50 (Commit) and Target 60 (Push).
-4. Re-enter Target 70 and restart the quiescence timer.
-5. When CI is 100% green and zero open comments remain, chain to Target 75.
+Fork a `triage-worker` subagent with `Model` set to `agyModelTiers["triage-worker"]` (default `flash`):
+
+1. Poll `gh pr checks` until every remote CI workflow finishes.
+2. Wait through 180 seconds of quiescence (a quiet window with no new bot comments) so Gemini, Copilot, CodeRabbit, and SonarQube finish posting.
+3. Group every bot finding or CI failure into one of four actions:
+   - `Accept`: Real bug or security defect that needs a code fix.
+   - `Defend`: Incorrect bot claim paired with a technical reply.
+   - `Defer`: Valid improvement outside ticket scope, logged for a future ticket.
+   - `Acknowledge`: Informational note that needs no code change.
+4. Write the triage table to `.workflow/state/70_bot_triage.md`.
+
+### Phase 2: Fix Accepted Findings
+
+If any accepted finding needs a code edit, return through the review and commit loop:
+
+1. Return to Target 30, write a failing test for the defect, and fix the code.
+2. Run Target 40 review and wait for Target 45 review sign-off.
+3. Run Target 50 commit and Target 60 push.
+4. Re-enter Target 70 and restart the 180-second timer.
+5. When CI is green and zero open comments remain, advance to Target 75.
 
 ## 2. Target 75: Ready to Land Gate
 
-Target 75 is an impassable Human Pause Gate.
+Target 75 is a mandatory human pause gate.
 
-1. Verify that `gh pr view` reports `mergeable: "MERGEABLE"` and `mergeStateStatus: "CLEAN"`.
-2. Present the mechanical assertions table (CI status, bot threads resolved, zero regressions).
-3. Present the 7-Criteria Human Review Policy Table:
+1. Make sure that `gh pr view` reports `mergeable: "MERGEABLE"` and `mergeStateStatus: "CLEAN"`.
+2. Print the CI status summary and resolved bot comment count in chat.
+3. Print the 7-criteria review policy table:
    - Security impact.
    - Breaking API changes.
    - Database schema changes.
-   - Performance implications.
-   - Documentation synchronization.
-   - Dependency updates.
-   - Test coverage adequacy.
-4. **PAUSE** for `human-landing-approval`.
+   - Performance impact.
+   - Documentation updates.
+   - Dependency changes.
+   - Test coverage.
+4. Stop tool calls (`tool_calls: []`) and wait for `human-landing-approval`.
 
-## 3. Target 80: Merge & Branch Cleanup
+## 3. Target 80: Merge and Branch Cleanup
 
-Upon human landing approval:
-1. Squash-merge the pull request:
+After the user approves landing, merge the pull request and clean up local Git state:
+
+1. Squash-merge the pull request and delete the remote branch:
    ```bash
    gh pr merge <PR_NUMBER> --squash --delete-branch
    ```
-2. Verify that the associated issue is closed.
-3. Switch back to the default branch and pull latest changes:
+2. Make sure that the linked issue is closed.
+3. Switch to the default branch and pull the merged commit:
    ```bash
    git checkout main && git pull --ff-only
    ```
 4. Delete the local feature branch:
    ```bash
-   git branch -D ticket/<id>-<slug>
+   git branch -D <branch-name>
    ```
-5. Chain to Target 90.
+5. Advance to Target 90.

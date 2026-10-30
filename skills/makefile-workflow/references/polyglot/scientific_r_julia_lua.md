@@ -1,18 +1,17 @@
-# Polyglot Stack Guide: Scientific & Scripting (R, Julia & Lua)
+# Polyglot Stack Guide: Scientific and Scripting (R, Julia, and Lua)
 
-This manual details toolchains, test scaffolding, and isolation conventions for R, Julia, and Lua.
+This guide covers detection markers, test and lint commands, and smoke test templates for R, Julia, and Lua.
 
 ## 1. R
 
-### Detection Markers
-- `DESCRIPTION`, `NAMESPACE`, `renv.lock`, `*.R`
+Look for `DESCRIPTION`, `NAMESPACE`, `renv.lock`, or `*.R` files, then run these commands:
 
-### Standard Commands
-- **Test**: `Rscript -e "testthat::test_dir('tests')"` or `Rscript -e "devtools::test()"`
-- **Lint**: `Rscript -e "lintr::lint_package()"`
-- **Format**: `Rscript -e "styler::style_pkg()"`
+- Targeted Test: `Rscript -e "testthat::test_dir('tests')"` or `Rscript -e "devtools::test()"`
+- Lint: `Rscript -e "lintr::lint_package()"`
+- Format: `Rscript -e "styler::style_pkg()"`
 
-### Boilerplate Test Scaffolding (`tests/testthat/test-smoke.R`):
+If no test exists, create `tests/testthat/test-smoke.R`:
+
 ```R
 test_that("smoke test harness runs", {
   expect_true(TRUE)
@@ -23,15 +22,14 @@ test_that("smoke test harness runs", {
 
 ## 2. Julia
 
-### Detection Markers
-- `Project.toml`, `Manifest.toml`, `*.jl`
+Look for `Project.toml`, `Manifest.toml`, or `*.jl` files, then run these commands:
 
-### Standard Commands
-- **Test**: `julia --project -e 'using Pkg; Pkg.test()'`
-- **Format**: `julia --project -e 'using JuliaFormatter; format(".")'`
-- **Lint**: `julia --project -e 'using JET; report_package()'`
+- Targeted Test: `julia --project -e 'using Pkg; Pkg.test()'`
+- Format: `julia --project -e 'using JuliaFormatter; format(".")'`
+- Lint: `julia --project -e 'using JET; report_package()'`
 
-### Boilerplate Test Scaffolding (`test/runtests.jl`):
+If no test exists, create `test/runtests.jl`:
+
 ```julia
 using Test
 
@@ -44,18 +42,17 @@ end
 
 ## 3. Lua
 
-### Detection Markers
-- `*.rockspec`, `busted.json`, `*.lua`
+Look for `*.rockspec`, `busted.json`, or `*.lua` files, then run these commands:
 
-### Standard Commands
-- **Test**: `busted` or `lua test.lua`
-- **Format**: `stylua --check .` (write: `stylua .`)
-- **Lint**: `luacheck .`
+- Targeted Test: `busted` or `lua test.lua`
+- Format: `stylua --check .` (write mode: `stylua .`)
+- Lint: `luacheck .`
 
-### Boilerplate Test Scaffolding (`spec/smoke_spec.lua`):
+If no test exists, create `spec/smoke_spec.lua`:
+
 ```lua
 describe("Smoke Test Harness", function()
-  it("runs successfully", function()
+  it("runs cleanly", function()
     assert.is_true(true)
   end)
 end)

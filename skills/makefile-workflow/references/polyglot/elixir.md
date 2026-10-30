@@ -1,17 +1,25 @@
 # Polyglot Stack Guide: Elixir
 
-This manual details toolchains, test scaffolding, and database isolation for Elixir.
+This guide covers detection markers, test and lint commands, smoke test templates, and database isolation for Elixir.
 
 ## 1. Detection Markers
+
+Look for these files when scanning an Elixir application:
+
 - `mix.exs`, `mix.lock`
 
 ## 2. Standard Commands
-- **Targeted Test**: `mix test <path_to_test>`
-- **Format**: `mix format --check-formatted`
-- **Lint**: `mix credo --strict`
 
-## 3. Boilerplate Test Scaffolding
+Run these commands inside the Mix project directory:
+
+- Targeted Test: `mix test <path_to_test>`
+- Format: `mix format --check-formatted`
+- Lint: `mix credo --strict`
+
+## 3. Smoke Test Template
+
 If no test exists, create `test/smoke_test.exs`:
+
 ```elixir
 defmodule SmokeTest do
   use ExUnit.Case
@@ -23,6 +31,9 @@ end
 ```
 
 ## 4. Test Database Isolation
-1. Always use `Ecto.Adapters.SQL.Sandbox` in tests. The sandbox wraps every test case in an isolated SQL transaction and rolls it back automatically.
-2. In `config/test.exs`, ensure `database:` points to a test database (e.g. `<app>_test`).
-3. Set `pool: Ecto.Adapters.SQL.Sandbox` to prevent database writes from leaking between test runs.
+
+Follow three database isolation rules in Elixir tests:
+
+1. Enable `Ecto.Adapters.SQL.Sandbox` so every test runs inside an isolated SQL transaction that rolls back on exit.
+2. In `config/test.exs`, make sure that `database:` points to a dedicated test database such as `<app>_test`.
+3. Set `pool: Ecto.Adapters.SQL.Sandbox` so database writes never leak across test runs.

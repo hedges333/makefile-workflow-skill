@@ -1,15 +1,67 @@
 #!/usr/bin/env python3
 """PreToolUse hook script for Antigravity.
 
-Enforces:
-1. Zero production database access.
-2. Human pause gates on git commit, git push, and gh pr merge.
+Blocks production database commands and gates git commit, git push, and gh pr merge.
 """
 
 import json
 import os
 import re
 import sys
+
+DB_TOOLS = (
+    "psql",
+    "pg_dump",
+    "pg_restore",
+    "mysql",
+    "mysqldump",
+    "mariadb",
+    "mongo",
+    "mongosh",
+    "redis-cli",
+    "sqlite3",
+    "sqlcmd",
+    "flyway",
+    "liquibase",
+    "alembic",
+    "prisma",
+    "goose",
+    "dbmate",
+)
+
+PROD_TOKEN_RE = re.compile(
+    r"(?:^|[^a-zA-Z0-9])(prod|production)(?:$|[^a-zA-Z0-9])",
+    re.IGNORECASE,
+)
+
+
+def resolve_state_dir(payload):
+  """Finds the active state directory from workspacePaths or artifactDirectoryPath."""
+  workspace_paths = payload.get("workspacePaths") or []
+  for ws in workspace_paths:
+    candidate = os.path.join(ws, ".workflow", "state")
+    if os.path.isdir(candidate):
+      return candidate
+
+  artifact_dir = payload.get("artifactDirectoryPath", "")
+  if artifact_dir:
+    brain_state = os.path.join(artifact_dir, "state")
+    if os.path.isdir(brain_state):
+      return brain_state
+
+  if workspace_paths:
+    return os.path.join(workspace_paths[0], ".workflow", "state")
+
+  return os.path.join(os.getcwd(), ".workflow", "state")
+
+
+def is_database_command(cmd):
+  if "DATABASE_URL" in cmd or "DB_HOST" in cmd:
+    return True
+  for tool in DB_TOOLS:
+    if re.search(rf"(?:^|[^a-zA-Z0-9_-]){re.escape(tool)}(?:$|[^a-zA-Z0-9_-])", cmd):
+      return True
+  return False
 
 
 def evaluate_tool_call(payload):
@@ -24,68 +76,70 @@ def evaluate_tool_call(payload):
   if not cmd:
     return {"decision": "allow"}
 
-  # 1. Database Protection Check
-  # Flag commands attempting to connect to production databases or drop non-test DBs
-  db_commands = ["psql", "mysql", "mongo", "redis-cli", "flyway", "liquibase"]
-  is_db_op = any(tool in cmd for tool in db_commands) or "DATABASE_URL" in cmd
-
-  if is_db_op:
-    prod_match = re.search(r"\b(prod|production)\b", cmd, re.IGNORECASE)
+  # 1. Production database guard
+  if is_database_command(cmd):
+    prod_match = PROD_TOKEN_RE.search(cmd)
     if prod_match:
+      token = prod_match.group(1)
       return {
           "decision": "deny",
           "reason": (
-              "Makefile Workflow Gatekeeper: Production database keywords"
-              f" detected in command: '{prod_match.group(0)}'. Automated tests"
-              " and agent commands must never connect to live production"
-              " databases. Use dedicated test databases (*_test) or in-memory"
-              " mocks."
+              f"Blocked database command with production name '{token}'. "
+              "Do not connect to live databases. "
+              "Point tests to a *_test database or an in-memory mock."
           ),
       }
 
-  # 2. Git Action Safety Check
-  # Check for git commit without Target 45 Review Approval
-  artifact_dir = payload.get("artifactDirectoryPath", "")
-  state_dir = os.path.join(artifact_dir, "state") if artifact_dir else ""
+  # 2. Block force-push to main or master
+  if re.search(r"\bgit\s+push\b", cmd) and re.search(r"(--force\b|-f\b)", cmd):
+    if re.search(r"\b(main|master)\b", cmd):
+      return {
+          "decision": "deny",
+          "reason": (
+              "Blocked force-push to the default branch. "
+              "Push to a ticket branch instead."
+          ),
+      }
 
+  state_dir = resolve_state_dir(payload)
+  review_card = os.path.join(state_dir, "45_review_approved.md")
+  has_review = os.path.isfile(review_card)
+
+  # 3. Target 50 Human Commit Gate
   if re.search(r"\bgit\s+commit\b", cmd):
-    review_card = (
-        os.path.join(state_dir, "45_review_approved.md") if state_dir else ""
-    )
-    if not (review_card and os.path.exists(review_card)):
-      return {
-          "decision": "force_ask",
-          "reason": (
-              "Makefile Workflow Gatekeeper: 'git commit' invoked without"
-              " prior Target 45 Review Approval card"
-              " (45_review_approved.md). Verify that adversarial review passed"
-              " before committing."
-          ),
-      }
+    if has_review:
+      reason = (
+          "Target 50 Commit Gate: 45_review_approved.md is present. "
+          "Approve to create the commit."
+      )
+    else:
+      reason = (
+          "Target 50 Commit Gate: 45_review_approved.md is missing in .workflow/state/. "
+          "Make sure that Target 45 review passed before you approve."
+      )
+    return {"decision": "force_ask", "reason": reason}
 
-  # Check for git push without Target 50 Commit Approval
+  # 4. Target 60 Human Push Gate
   if re.search(r"\bgit\s+push\b", cmd):
-    commit_card = (
-        os.path.join(state_dir, "45_review_approved.md") if state_dir else ""
-    )
-    if not (commit_card and os.path.exists(commit_card)):
-      return {
-          "decision": "force_ask",
-          "reason": (
-              "Makefile Workflow Gatekeeper: 'git push' invoked without prior"
-              " Target 50 Commit Approval. Verify mergeability and commit"
-              " status before pushing."
-          ),
-      }
+    if has_review:
+      reason = (
+          "Target 60 Push Gate: 45_review_approved.md is present. "
+          "Make sure that the branch merges cleanly before you approve."
+      )
+    else:
+      reason = (
+          "Target 60 Push Gate: 45_review_approved.md is missing in .workflow/state/. "
+          "Make sure that review and commit gates passed before you approve."
+      )
+    return {"decision": "force_ask", "reason": reason}
 
-  # Check for gh pr merge without Target 75 Landing Approval
+  # 5. Target 75 Human Landing Gate
   if re.search(r"\bgh\s+pr\s+merge\b", cmd):
     return {
         "decision": "force_ask",
         "reason": (
-            "Makefile Workflow Gatekeeper: 'gh pr merge' invoked. Confirm that"
-            " Target 75 Landing Gate (CI green, 180s quiescence, policy table)"
-            " was presented to the user."
+            "Target 75 Landing Gate: gh pr merge requires operator approval. "
+            "Make sure that CI is green and the 180-second quiet period passed."
         ),
     }
 
@@ -102,9 +156,8 @@ def main():
     payload = json.loads(input_text)
     result = evaluate_tool_call(payload)
     print(json.dumps(result))
-  except Exception as e:
-    # Fail open with warning on unexpected hook crash to avoid stalling session
-    print(json.dumps({"decision": "allow", "reason": f"Hook exception: {e}"}))
+  except Exception as exc:
+    print(json.dumps({"decision": "allow", "reason": f"Hook error: {exc}"}))
 
 
 if __name__ == "__main__":

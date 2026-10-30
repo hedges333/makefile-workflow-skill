@@ -1,23 +1,31 @@
-# Polyglot Stack Guide: JVM (Java, Kotlin & Scala)
+# Polyglot Stack Guide: JVM (Java, Kotlin, and Scala)
 
-This manual details toolchains, test scaffolding, and database isolation for JVM languages.
+This guide covers detection markers, test and lint commands, smoke test templates, and database isolation for JVM subprojects.
 
 ## 1. Detection Markers
-- **Java / Kotlin**: `pom.xml`, `build.gradle`, `build.gradle.kts`, `settings.gradle`
-- **Scala**: `build.sbt`
+
+Look for these files when scanning a JVM subproject:
+
+- Java and Kotlin: `pom.xml`, `build.gradle`, `build.gradle.kts`, `settings.gradle`
+- Scala: `build.sbt`
 
 ## 2. Standard Commands
-- **Maven**: `mvn test -Dtest=<ClassName>`
-- **Gradle**: `./gradlew test --tests <ClassName>`
-- **Scala (SBT)**: `sbt "testOnly <ClassName>"`
-- **Format / Lint**:
-  - Java: `mvn spotless:check` or `./gradlew checkstyleMain`
-  - Kotlin: `./gradlew ktlintCheck` or `./gradlew detekt`
-  - Scala: `sbt scalafmtCheck`
 
-## 3. Boilerplate Test Scaffolding
+Run these commands inside the JVM module directory:
 
-### Java (`src/test/java/com/example/SmokeTest.java`):
+- Maven Test: `mvn test -Dtest=<ClassName>`
+- Gradle Test: `./gradlew test --tests <ClassName>`
+- Scala SBT Test: `sbt "testOnly <ClassName>"`
+- Java Format and Lint: `mvn spotless:check` or `./gradlew checkstyleMain`
+- Kotlin Format and Lint: `./gradlew ktlintCheck` or `./gradlew detekt`
+- Scala Format: `sbt scalafmtCheck`
+
+## 3. Smoke Test Templates
+
+If no unit test exists, create one of the templates below.
+
+### Java (`src/test/java/com/example/SmokeTest.java`)
+
 ```java
 package com.example;
 
@@ -32,7 +40,8 @@ class SmokeTest {
 }
 ```
 
-### Kotlin (`src/test/kotlin/com/example/SmokeTest.kt`):
+### Kotlin (`src/test/kotlin/com/example/SmokeTest.kt`)
+
 ```kotlin
 package com.example
 
@@ -47,7 +56,8 @@ class SmokeTest {
 }
 ```
 
-### Scala (`src/test/scala/com/example/SmokeTest.scala`):
+### Scala (`src/test/scala/com/example/SmokeTest.scala`)
+
 ```scala
 package com.example
 
@@ -61,6 +71,9 @@ class SmokeTest extends AnyFunSuite {
 ```
 
 ## 4. Test Database Isolation
+
+Follow three database isolation rules in JVM tests:
+
 1. Use an embedded H2 database (`jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1`) for fast unit tests.
-2. For integration tests, use Testcontainers with ephemeral Docker instances.
-3. Use Mockito or MockK to isolate business logic from database repositories.
+2. For database integration tests, launch isolated Docker instances with Testcontainers.
+3. Isolate service classes from database repositories with Mockito or MockK.

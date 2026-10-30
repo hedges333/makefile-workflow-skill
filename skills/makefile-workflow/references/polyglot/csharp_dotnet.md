@@ -1,17 +1,25 @@
 # Polyglot Stack Guide: C# (.NET)
 
-This manual details toolchains, test scaffolding, and database isolation for C# and .NET.
+This guide covers detection markers, test and lint commands, smoke test templates, and database isolation for C# and .NET.
 
 ## 1. Detection Markers
+
+Look for these files when scanning a .NET solution or project:
+
 - `*.csproj`, `*.sln`, `global.json`, `Directory.Build.props`
 
 ## 2. Standard Commands
-- **Targeted Test**: `dotnet test --filter <FullyQualifiedName>`
-- **Format**: `dotnet format --verify-no-changes`
-- **Lint**: `dotnet build /warnaserror`
 
-## 3. Boilerplate Test Scaffolding
-If no test exists, create `tests/SmokeTests.cs` (xUnit):
+Run these commands inside the .NET project or solution directory:
+
+- Targeted Test: `dotnet test --filter <FullyQualifiedName>`
+- Format: `dotnet format --verify-no-changes`
+- Lint and Build: `dotnet build /warnaserror`
+
+## 3. Smoke Test Template
+
+If no test project exists, create `tests/SmokeTests.cs` with xUnit:
+
 ```csharp
 using Xunit;
 
@@ -28,6 +36,9 @@ public class SmokeTests
 ```
 
 ## 4. Test Database Isolation
-1. Use the Entity Framework Core In-Memory Database provider (`UseInMemoryDatabase("TestDb")`) or SQLite in-memory provider for unit tests.
-2. For integration tests requiring real SQL Server or PostgreSQL engines, use Testcontainers for .NET.
-3. Configure `appsettings.Testing.json` with local test connection strings. Never point to live servers.
+
+Follow three database safety rules in .NET tests:
+
+1. Use Entity Framework Core `UseInMemoryDatabase("TestDb")` or SQLite `:memory:` connections for unit tests.
+2. For SQL Server or PostgreSQL integration tests, start isolated containers with Testcontainers for .NET.
+3. Point `appsettings.Testing.json` only to local test databases, never to live servers.

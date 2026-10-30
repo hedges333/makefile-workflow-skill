@@ -1,48 +1,57 @@
 # 09. Synthetic Scars Reference Catalog
 
-This manual catalogs the core process failure vaccines. Each Synthetic Scar records a hard-learned failure mode so the agent never repeats it.
+This manual lists core Synthetic Scars (process rules codified from past failures) so agents do not repeat known mistakes.
 
-## 1. Anatomy of a Synthetic Scar
+## 1. Structure of a Synthetic Scar
 
-Every scar follows a three-part structure:
-1. **The Wound**: The exact operational failure, bug, or broken build that occurred.
-2. **The Trap**: The mistaken assumption or shortcut that caused the failure.
-3. **The Permanent Reflex**: The non-negotiable rule or invariant that prevents the failure from recurring.
+Every scar records three facts:
+
+1. Wound: The exact bug, data loss, or broken build that happened.
+2. Trap: The false assumption or shortcut that caused the failure.
+3. Permanent Reflex: The mandatory rule that prevents the failure from happening again.
 
 ## 2. Core Process Scars
 
-### SCAR-PROC-95: Depth-0 Supervisor & Make-Fork Isolation
-* **The Wound**: An orchestrator running heavy file edits and test suites in its own context hits the 200k-token limit, triggers context compaction, and forgets rules.
-* **The Trap**: The convenience of running commands directly in the supervisor context.
-* **The Permanent Reflex**: The orchestrator operates strictly as a Depth-0 supervisor, delegating all code edits, heavy searches, and test suites to ephemeral subagents.
+### SCAR-PROC-95: Depth-0 Supervisor and Subagent Isolation
 
-### SCAR-PROC-99: Single-Page SKILL.md Hardware Ceiling
-* **The Wound**: Monolithic skill files exceeding 46,080 bytes truncate during tool reading, severing cleanup and landing targets from context.
-* **The Permanent Reflex**: Root `SKILL.md` is strictly bounded to $\le 42\text{ KB}$ and $\le 750\text{ lines}$. Detailed reference material lives in modular files under `references/`.
+- Wound: A supervisor that runs large file searches and test suites directly hits token limits, compresses history, and drops rules.
+- Trap: Running heavy shell commands directly inside the main conversation turn for convenience.
+- Permanent Reflex: Keep the orchestrator as a Depth-0 supervisor and delegate searches, TDD loops, reviews, and CI polling to child subagents.
 
-### SCAR-PROC-102: Customer Declaration Authority
-* **The Wound**: An agent self-approves its own plan or code review and commits without waiting for human sign-off.
-* **The Trap**: Treating human pause gates as informative suggestions rather than impassable barriers.
-* **The Permanent Reflex**: Declaration authority belongs strictly to the human operator. Self-declaration by an agent is void.
+### SCAR-PROC-99: Single-Page SKILL.md Size Ceiling
 
-### SCAR-GIT-20: Pre-Push Landability Barrier
-* **The Wound**: An agent pushes a branch that has merge conflicts with `main`, breaking CI and requiring messy force-pushes.
-* **The Trap**: Assuming that because local tests pass, the branch will merge cleanly.
-* **The Permanent Reflex**: Run `git fetch origin main && git merge-tree $(git merge-base HEAD origin/main) HEAD origin/main` before every push.
+- Wound: Large skill files above tool byte limits truncate on read and cut off cleanup targets at the bottom of the file.
+- Trap: Packing every language guide and protocol detail into one giant `SKILL.md` file.
+- Permanent Reflex: Keep `SKILL.md` at or below 24 KB and store phase details in `references/`.
 
-### SCAR-HCI-08: The N-ary Choice Constraint
-* **The Wound**: Calling interactive modals (`ask_question`) on single-option approval gates, or emitting modals without showing the underlying decision substance in chat.
-* **The Trap**: Overusing interactive prompt widgets for simple yes/no checks.
-* **The Permanent Reflex**: Only use `ask_question` when selecting between two or more described alternatives ($N \ge 2$). For unary approvals ($N = 1$), print full proposals in chat markdown and pause with empty tool calls.
+### SCAR-PROC-102: Human Declaration Authority
 
-### SCAR-TEST-05: Hermetic Test Environment Isolation
-* **The Wound**: Test execution connects to a development or production database, corrupting live data rows or altering configuration state.
-* **The Trap**: Relying on default connection strings instead of dedicated test environment configurations.
-* **The Permanent Reflex**: Tests must point strictly to isolated test databases (`*_test`), in-memory databases, or mock fixtures.
+- Wound: An agent approves its own plan or code review and runs `git commit` without waiting for the user.
+- Trap: Treating human pause gates as optional status messages instead of hard stops.
+- Permanent Reflex: Only the human user can declare approval at Targets 20, 42, 45, 50, 60, and 75.
 
-## 3. Codifying New Scars at Target 90
+### SCAR-GIT-20: Pre-Push Merge Check
 
-During Target 90 post-mortems:
-1. Audit the session for any human corrections or nudges ($N_{\text{nudge}} > 0$).
-2. Formulate the lesson into The Wound, The Trap, and The Permanent Reflex.
-3. Append the new scar to the relevant reference manual.
+- Wound: An agent pushes a branch that conflicts with `main`, breaks CI, and needs history rewrites.
+- Trap: Assuming that passing local unit tests means a clean merge with `origin/main`.
+- Permanent Reflex: Run `git fetch origin main` and `git merge-tree $(git merge-base HEAD origin/main) HEAD origin/main` before every push.
+
+### SCAR-HCI-08: Multi-Choice Prompt Rule
+
+- Wound: Calling `ask_question` on single-option gates or opening modal prompts without printing the full proposal in chat.
+- Trap: Using choice widgets for simple single-action approvals.
+- Permanent Reflex: Call `ask_question` only when two or more choices exist ($N \ge 2$). For single approvals ($N = 1$), print the proposal in chat and stop tool calls.
+
+### SCAR-TEST-05: Isolated Test Environments
+
+- Wound: Automated tests connect to a shared or production database and alter live rows.
+- Trap: Running test suites with default environment variables instead of dedicated test database credentials.
+- Permanent Reflex: Point all tests to `*_test` databases, in-memory stores, or mock fixtures.
+
+## 3. Recording New Scars at Target 90
+
+During Target 90 cleanup, capture lessons from the active ticket:
+
+1. Check the session for any user corrections, rejected reviews, or CI surprises.
+2. Write each lesson using the Wound, Trap, and Permanent Reflex fields.
+3. Record the scar ID in `.workflow/history.json` and append the rule to the matching reference manual.
