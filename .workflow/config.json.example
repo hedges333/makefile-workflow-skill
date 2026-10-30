@@ -13,5 +13,10 @@
   "ci": {
     "pollIntervalSeconds": 30,
     "quiescenceSeconds": 180
+  },
+  "database": {
+    "prodDatabases": [],
+    "testDatabases": [],
+    "prodHosts": []
   }
 }

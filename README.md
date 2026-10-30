@@ -8,7 +8,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
   <a href="https://github.com/hedges333/makefile-workflow-skill"><img src="https://img.shields.io/badge/plugin-antigravity-38bdf8.svg" alt="Antigravity Plugin"></a>
   <a href="https://github.com/hedges333/makefile-workflow-skill"><img src="https://img.shields.io/badge/protocols-MCP%20%7C%20Hooks%20%7C%20Rules-818cf8.svg" alt="Protocols"></a>
-  <a href="https://github.com/hedges333/makefile-workflow-skill"><img src="https://img.shields.io/badge/polyglot-22%20languages-10b981.svg" alt="22 Languages"></a>
+  <a href="https://github.com/hedges333/makefile-workflow-skill"><img src="https://img.shields.io/badge/polyglot-27%20languages-10b981.svg" alt="27 Languages"></a>
 </p>
 
 <p align="center">
@@ -28,7 +28,7 @@
   - [Human Pause Gates](#human-pause-gates)
 - [Configuration and Custom Models](#configuration-and-custom-models)
 - [Multi-Agent Setup and Enforcement](#multi-agent-setup-and-enforcement)
-- [Polyglot Support: 22 Languages](#polyglot-support-22-languages)
+- [Polyglot Support: 27 Languages](#polyglot-support-27-languages)
 - [Architecture and Foundations](#architecture-and-foundations)
 - [Test Safety and Data Isolation](#test-safety-and-data-isolation)
 - [Request History Ledger](#request-history-ledger)
@@ -217,21 +217,29 @@ Copy [`.workflow/config.json.example`](./.workflow/config.json.example) to `<wor
   "ci": {
     "pollIntervalSeconds": 30,
     "quiescenceSeconds": 180
+  },
+  "database": {
+    "prodDatabases": [],
+    "testDatabases": [],
+    "prodHosts": []
   }
 }
 ```
 
-If you write concrete model names such as `gemini-4-argon-high`, `workflow_get_config` maps them to Antigravity tiers under `agyModelTiers`. Valid Antigravity subagent tiers are `pro`, `flash`, `flash_lite`, and `inherit`.
+If you write concrete model names such as `gemini-4-argon-high`, `workflow_get_config` maps them to Antigravity tiers under `agyModelTiers`. Valid Antigravity subagent tiers are `pro`, `flash`, `flash_lite`, and `inherit`. You can also list custom live and test database names under `database` so hardware hooks block live databases and allow declared test databases.
 
 ### 2. Environment Variables
 
-Set environment variables in your shell profile to override model roles across projects:
+Set environment variables in your shell profile to override model roles and database guards across projects:
 
 ```bash
 export MAKEFILE_WORKFLOW_CRITIC_MODEL="gemini-4-argon-high"
 export MAKEFILE_WORKFLOW_WORKER_MODEL="gemini-3.8-flash-low"
 export MAKEFILE_WORKFLOW_TDD_MODEL="inherit"
 export MAKEFILE_WORKFLOW_TRIAGE_MODEL="gemini-3.8-flash-low"
+export MAKEFILE_WORKFLOW_PROD_DBS="billing_live,core_main"
+export MAKEFILE_WORKFLOW_TEST_DBS="billing_sandbox,myapp_test"
+export MAKEFILE_WORKFLOW_PROD_HOSTS="db.company.internal"
 ```
 
 ### 3. Interactive IDE Model Switch Reminders
@@ -254,7 +262,7 @@ Each AI platform enforces the workflow with its native extension hooks and rule 
 
 ---
 
-## Polyglot Support: 22 Languages
+## Polyglot Support: 27 Languages
 
 At Target 15, `archaeology-worker` detects every language and subproject in the repository. If a subproject has no test suite, the agent creates a smoke test before writing feature code:
 
@@ -276,17 +284,23 @@ At Target 15, `archaeology-worker` detects every language and subproject in the 
 | Ruby | `rspec` | `spec/smoke_spec.rb` | `rubocop` | [Ruby Guide](./skills/makefile-workflow/references/polyglot/ruby.md) |
 | SQL and Migrations | `pg_prove` / `dbt` | `tests/test_schema.sql` | `sqlfluff` | [SQL Guide](./skills/makefile-workflow/references/polyglot/sql_migrations.md) |
 | R, Julia, and Lua | `testthat`, `Pkg.test`, `busted` | `test-smoke.R`, `runtests.jl` | `lintr`, `JuliaFormatter` | [Scientific Guide](./skills/makefile-workflow/references/polyglot/scientific_r_julia_lua.md) |
+| GDScript (Godot) | `godot --headless` (GUT / GdUnit4) | `test/unit/test_smoke.gd` | `gdlint`, `gdformat` | [GDScript Guide](./skills/makefile-workflow/references/polyglot/gdscript_godot.md) |
+| Nim | `nimble test` / `testament` | `tests/t_smoke.nim` | `nim check`, `nph` / `nimpretty` | [Nim Guide](./skills/makefile-workflow/references/polyglot/nim.md) |
+| Haxe | `haxe` (`utest`) | `test/SmokeTest.hx` | `checkstyle`, `formatter` | [Haxe Guide](./skills/makefile-workflow/references/polyglot/haxe.md) |
+| Odin | `odin test` | `tests/smoke_test.odin` | `odin check -vet`, `odinfmt` | [Odin Guide](./skills/makefile-workflow/references/polyglot/odin.md) |
+| D | `dub test` / `dmd -unittest` | `source/smoke_test.d` | `dscanner`, `dfmt` | [D Guide](./skills/makefile-workflow/references/polyglot/dlang.md) |
 
 ---
 
 ## Architecture and Foundations
 
-Four computer science and language design models shape this workflow:
+Five computer science and software design models shape this workflow:
 
 1. Stuart Feldman (1976): `make` evaluates build targets as a DAG so that prerequisites finish before downstream targets run.
 2. Fernando Flores (1986) and John Searle (1985): Committed speech acts model tasks as explicit requests, promises, assertions, and human declarations.
 3. Nuel Belnap (1977): Four-valued logic classifies repository facts during archaeology as `ESTABLISHED`, `CONTRADICTED`, `UNKNOWN`, or `RETRACTED`.
 4. AT&T System V `init.d`: Lexically numbered files (`00_..` through `99_..`) restore execution state cleanly on startup.
+5. Gang of Four (1994) and Robert Nystrom (2014): Design pattern guides ([`14_design_patterns_and_architecture.md`](./skills/makefile-workflow/references/14_design_patterns_and_architecture.md)) balance object composition, ORM encapsulation, parameterized large-dataset queries, and game frame budgets.
 
 ---
 

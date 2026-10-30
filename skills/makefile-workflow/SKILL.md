@@ -1,6 +1,6 @@
 ---
 name: makefile-workflow
-description: Compaction-immune, DAG-based ticket resolution workflow using Stuart Feldman's Makefile architecture, persistent Memento state files, subagent isolation, 22-language polyglot TDD, adversarial review, and human pause gates. Use whenever resolving tickets, implementing features, fixing bugs, or executing structured coding workflows.
+description: Compaction-immune, DAG-based ticket resolution workflow using Stuart Feldman's Makefile architecture, persistent Memento state files, subagent isolation, 27-language polyglot TDD, design pattern guides, adversarial review, and human pause gates. Use whenever resolving tickets, implementing features, fixing bugs, or executing structured coding workflows.
 compatibility: agy claude-code cursor copilot codex
 ---
 
@@ -81,7 +81,7 @@ At the start of each turn or after context compaction (automatic chat history co
 | :--- | :--- | :--- | :--- |
 | `00` | `.workflow/state/*.md` exists and is unread in this turn | `read-init-d` | Read `.workflow/state/*.md` in alphabetical order and select the active target. |
 | `10` | No active ticket branch exists | `ticket-assigned` | Record ticket scope, exclude `.workflow/state/` in Git, create branch, write `10_ticket.md`. |
-| `15` | `10_ticket.md` exists without `15_archaeology_receipt.md` | `archaeology-verified` | Fork `archaeology-worker` ([`references/02`](./references/02_archaeology_and_planning.md)), scan 22 languages ([`references/11`](./references/11_polyglot_monorepos.md)), write receipt. |
+| `15` | `10_ticket.md` exists without `15_archaeology_receipt.md` | `archaeology-verified` | Fork `archaeology-worker` ([`references/02`](./references/02_archaeology_and_planning.md)), scan 27 languages ([`references/11`](./references/11_polyglot_monorepos.md)), write receipt. |
 | `20` | `15_archaeology_receipt.md` exists without `20_plan_approved.md` | `approved-plan` | Write `.workflow/state/20_plan.md` with test isolation facts, then pause for `human-plan-approval`. |
 | `30` | `20_plan_approved.md` exists and diff is incomplete | `implementation-diff` | Fork `tdd-worker` ([`references/03`](./references/03_tdd_and_code_quality.md)), run Red-Green-Refactor TDD, advance to Target 40. |
 | `40` | Diff is ready without `40_critic_review.md` for current tree | `adversarial-review` | Lock `APPROVED_TREE`, invoke `adversarial-critic` ([`references/04`](./references/04_six_pillars_adversarial_review.md)), write `40_critic_review.md`. |
@@ -123,11 +123,12 @@ Read [`references/01`](./references/01_intake_and_branching.md) for intake modes
 Read [`references/02`](./references/02_archaeology_and_planning.md) and [`references/11`](./references/11_polyglot_monorepos.md) for discovery rules.
 
 1. Fork an `archaeology-worker` subagent with the tier from `agyModelTiers["archaeology-worker"]` (default `flash`).
-2. Scan the repository for subprojects across all 22 supported languages.
+2. Scan the repository for subprojects across all 27 supported languages.
 3. Locate existing test runners, or prepare smoke test templates when no tests exist.
-4. Inspect sibling modules so that new code matches existing names, types, and error patterns.
-5. Tag each technical claim with a Belnap truth state (a four-state fact label: `ESTABLISHED`, `CONTRADICTED`, `UNKNOWN`, or `RETRACTED`).
-6. Write `.workflow/state/15_archaeology_receipt.md` and advance to Target 20.
+4. Inspect `.workflow/config.json` and database manifests. If live versus test database names remain unclear, ask the user before Target 30.
+5. Inspect sibling modules so that new code matches existing names, types, and error patterns.
+6. Tag each technical claim with a Belnap truth state (a four-state fact label: `ESTABLISHED`, `CONTRADICTED`, `UNKNOWN`, or `RETRACTED`).
+7. Write `.workflow/state/15_archaeology_receipt.md` and advance to Target 20.
 
 ### Target 20: `approved-plan` (Plan File and Human Approval)
 
@@ -145,12 +146,12 @@ Read [`references/02`](./references/02_archaeology_and_planning.md) for plan dis
 
 ### Target 30: `implementation-diff` (Red-Green-Refactor TDD)
 
-Read [`references/03`](./references/03_tdd_and_code_quality.md) and [`references/04_testing`](./references/04_testing_isolation.md) for TDD and isolation rules.
+Read [`references/03`](./references/03_tdd_and_code_quality.md), [`references/04_testing`](./references/04_testing_isolation.md), and [`references/14`](./references/14_design_patterns_and_architecture.md) for TDD, isolation, and pattern rules.
 
 1. Fork a `tdd-worker` subagent with the tier from `agyModelTiers["tdd-worker"]` (default `inherit`).
 2. Read target files and type contracts before you edit them, and leave unrelated defects untouched.
 3. Red phase: Write failing unit tests first and make sure that the test command exits non-zero (`red_exit != 0`).
-4. Green phase: Write the smallest production code change that makes the tests pass (`green_exit == 0`).
+4. Green phase: Write minimal code that passes the tests (`green_exit == 0`). Apply Gang of Four or game patterns, and encapsulate ORM or parameterized large-dataset queries.
 5. Run tests only inside the modified subproject directory during development loops.
 6. Update inline docstrings and subproject documentation, then advance to Target 40.
 
@@ -254,6 +255,7 @@ Read these reference manuals when executing each phase:
 - [11: Polyglot Monorepo Orchestration](./references/11_polyglot_monorepos.md)
 - [12: Request History Ledger](./references/12_request_history_ledger.md)
 - [13: Configuration and User Preferences](./references/13_configuration_and_user_preferences.md)
+- [14: Design Patterns, Data Access, and Game Architecture](./references/14_design_patterns_and_architecture.md)
 
 Read these polyglot stack guides for language-specific test and lint commands:
 
@@ -273,3 +275,8 @@ Read these polyglot stack guides for language-specific test and lint commands:
 - [Ruby](./references/polyglot/ruby.md)
 - [SQL and Migrations](./references/polyglot/sql_migrations.md)
 - [Scientific: R, Julia, and Lua](./references/polyglot/scientific_r_julia_lua.md)
+- [GDScript and Godot](./references/polyglot/gdscript_godot.md)
+- [Nim](./references/polyglot/nim.md)
+- [Haxe](./references/polyglot/haxe.md)
+- [Odin](./references/polyglot/odin.md)
+- [D](./references/polyglot/dlang.md)

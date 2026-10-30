@@ -31,10 +31,12 @@ SELECT * FROM finish();
 ROLLBACK;
 ```
 
-## 4. Database Isolation Rules
+## 4. Database Isolation and Query Performance Rules
 
-Follow three mandatory safety rules in SQL projects:
+Follow five mandatory rules in SQL and NoSQL projects:
 
 1. Never run `flyway migrate`, `liquibase update`, or `dbt run` against staging or production database hosts.
-2. Point every migration test to a local Docker container or a database named `<app>_test`.
-3. Wrap SQL test scripts in `BEGIN` and `ROLLBACK` statements so zero test rows persist.
+2. Point every migration test to a local Docker container, a database named `<app>_test`, or a target listed in `database.testDatabases` inside `.workflow/config.json`.
+3. Declare custom live database names and hosts in `.workflow/config.json` or `MAKEFILE_WORKFLOW_PROD_DBS`. If live versus test database names are unclear at Target 15, ask the user.
+4. Wrap SQL test scripts in `BEGIN` and `ROLLBACK` statements so zero test rows persist.
+5. Use an ORM (a library that maps database rows to objects) for standard single-record access. If large datasets outgrow the ORM, encapsulate parameterized SQL or NoSQL queries behind repository methods.

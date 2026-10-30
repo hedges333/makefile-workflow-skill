@@ -16,16 +16,17 @@ The chat stream is the main presentation surface. The `ask_question` tool is an 
 Never connect tests or agent commands to live systems.
 
 1. Do not connect to live production databases, cloud storage, or mutable production files.
-2. Point tests to isolated test databases (for example `*_test`), in-memory databases, or mock fixtures.
+2. Point tests to isolated test databases (for example `*_test` or configured `database.testDatabases`), in-memory databases, or mock fixtures. If live versus test database names are unclear, ask the user before running tests.
 3. Run file operations during tests inside temporary directories or mocked file systems.
 
-## 3. Code Edit Rules
+## 3. Code Edit and Architecture Rules
 
 Keep each code change small and within ticket scope.
 
 1. Read target files and their type contracts before you edit them.
-2. Apply minimal edits that solve the active ticket.
-3. If you find unrelated defects during a ticket, do not edit them. Record them in ticket notes for a separate task.
+2. Apply minimal edits that solve the active ticket. Favor object composition over deep class inheritance.
+3. Use an ORM (a library that maps database rows to objects) by default. If large datasets slow down the ORM, encapsulate parameterized SQL or NoSQL queries behind repository methods.
+4. If you find unrelated defects during a ticket, do not edit them. Record them in ticket notes for a separate task.
 
 ## 4. Simple English Documentation Rules
 

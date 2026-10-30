@@ -7,16 +7,18 @@ This manual covers codebase archaeology, the Belnap fact table, plan file creati
 Do not plan code edits from guesswork. Inspect the repository first to gather facts.
 
 1. Fork an `archaeology-worker` subagent so the supervisor context stays small.
-2. Scan the repository across all 22 supported languages to find every subproject root, manifest, runtime, and test runner.
+2. Scan the repository across all 27 supported languages to find every subproject root, manifest, runtime, and test runner.
 3. Read sibling modules so that new code matches existing names, error handling, and return types.
-4. Tag each technical claim with one Belnap truth state (a four-state fact label):
+4. Inspect `.workflow/config.json`, environment variables, and database manifests to identify live and test database names.
+5. Tag each technical claim with one Belnap truth state (a four-state fact label):
    - `ESTABLISHED`: Proved true by reading source files or test output.
    - `CONTRADICTED`: Proved false by source files or test output.
    - `UNKNOWN`: Not yet checked against source files.
    - `RETRACTED`: Accepted earlier, then disproved by new facts.
-5. Convert user requirements into Given-When-Then scenarios that become unit tests in Target 30.
-6. If the target subproject has no test runner or test directory, prepare a smoke test template.
-7. Write `.workflow/state/15_archaeology_receipt.md` and advance to Target 20.
+6. If a project uses databases and live versus test database names remain `UNKNOWN`, ask the user and offer to save them in `.workflow/config.json`.
+7. Convert user requirements into Given-When-Then scenarios that become unit tests in Target 30.
+8. If the target subproject has no test runner or test directory, prepare a smoke test template.
+9. Write `.workflow/state/15_archaeology_receipt.md` and advance to Target 20.
 
 ## 2. Target 20: Plan File Creation (`20_plan.md`)
 

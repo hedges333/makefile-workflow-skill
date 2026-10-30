@@ -6,8 +6,8 @@ This repository uses the Makefile Workflow. Follow these rules for every coding 
 
 1. If `.workflow/state/` exists, read all `.md` files in alphabetical order (`cat .workflow/state/*.md`) to restore the active target.
 2. Before you write code, make sure that `git status --short` is clean on `main`, then create a ticket branch.
-3. Read target files before you edit them, apply small edits, and leave unrelated files unchanged.
-4. Point tests to isolated `*_test` databases, in-memory databases, or mock fixtures. Never touch production data.
+3. Read target files before you edit them, apply small edits, and favor object composition. If large datasets outgrow an ORM, encapsulate parameterized SQL or NoSQL queries behind repository methods.
+4. Point tests to isolated `*_test` databases, configured `database.testDatabases`, in-memory databases, or mock fixtures. If live versus test database names are unclear, ask the user first.
 5. Write failing unit tests before you write feature code, and run tests in the active subproject directory.
 6. Stop and wait for explicit user approval at all six pause gates:
    - Target 20: Plan approval.

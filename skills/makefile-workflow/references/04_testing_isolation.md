@@ -14,8 +14,9 @@ Automated tests must never connect to live systems:
 
 ## 2. Pre-Test Environment Checks
 
-Run three safety steps before you execute any test suite:
+Run four safety steps before you execute any test suite:
 
 1. Make sure that the test environment variable is active, such as `NODE_ENV=test`, `RAILS_ENV=test`, or `APP_ENV=testing`.
-2. Inspect the database connection string. If it names a cloud host, staging server, or `prod` database, stop at once.
-3. If an integration test fails because a local test container is offline, report that fact to the user. Never fall back to a shared or production database.
+2. Read `.workflow/config.json` (`database` section) or `MAKEFILE_WORKFLOW_*` environment variables for declared `prodDatabases`, `testDatabases`, and `prodHosts`.
+3. Inspect the database connection string. If it names a cloud host, staging server, `prod` database, or configured `prodDatabases` entry, stop at once.
+4. If live versus test database names remain unclear, ask the user before running tests. Never fall back to a shared or production database.

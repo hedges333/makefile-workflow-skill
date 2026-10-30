@@ -24,9 +24,10 @@ Move through these targets in dependency order:
 - Target 80 (land): Merge the pull request, delete the ticket branch, and update `main`.
 - Target 90 (finish): Record lessons learned and update `.workflow/history.json` and `.workflow/history.md`.
 
-2. DATABASE ISOLATION
+2. DATABASE ISOLATION AND QUERY SPEED
 - Never connect tests to live production databases.
-- Point tests to `*_test` databases, in-memory databases, or mock fixtures.
+- Point tests to `*_test` databases, configured `database.testDatabases`, in-memory databases, or mock fixtures. If live versus test database roles are unclear, ask the user first.
+- Use an ORM by default. If large datasets need higher speed, encapsulate parameterized SQL or NoSQL queries behind repository methods.
 
 3. BLAST RADIUS CONTROL
 - Read target files before you edit them.

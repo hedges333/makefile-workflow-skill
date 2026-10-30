@@ -15,52 +15,86 @@ ENV_MAPPINGS = {
     "MAKEFILE_WORKFLOW_TRIAGE_MODEL": "triage-worker",
 }
 
+DB_ENV_MAPPINGS = {
+    "MAKEFILE_WORKFLOW_PROD_DBS": "prodDatabases",
+    "MAKEFILE_WORKFLOW_TEST_DBS": "testDatabases",
+    "MAKEFILE_WORKFLOW_PROD_HOSTS": "prodHosts",
+}
+
+
+def _normalize_str_list(items):
+  if not isinstance(items, list):
+    return []
+  return [x.strip() for x in items if isinstance(x, str) and x.strip()]
+
 
 def get_workflow_config(workspace_paths):
-  cfg = {}
+  raw_cfg = {}
   source = None
 
+  candidates = []
   for ws in workspace_paths:
-    local_cfg = os.path.join(ws, ".workflow", "config.json")
-    if os.path.isfile(local_cfg):
+    candidates.append((os.path.join(ws, ".workflow", "config.json"), None))
+  candidates.append((os.path.join(os.getcwd(), ".workflow", "config.json"), None))
+  candidates.append((
+      os.path.expanduser("~/.gemini/config/makefile-workflow.json"),
+      "~/.gemini/config/makefile-workflow.json",
+  ))
+
+  for cfg_path, label in candidates:
+    if os.path.isfile(cfg_path):
       try:
-        with open(local_cfg, "r", encoding="utf-8") as f:
-          cfg = json.load(f)
-          source = local_cfg
+        with open(cfg_path, "r", encoding="utf-8") as f:
+          loaded = json.load(f)
+        if isinstance(loaded, dict):
+          raw_cfg = loaded
+          source = label or cfg_path
           break
       except Exception:
         pass
 
-  if source is None:
-    cwd_cfg = os.path.join(os.getcwd(), ".workflow", "config.json")
-    global_cfg = os.path.expanduser("~/.gemini/config/makefile-workflow.json")
-    if os.path.isfile(cwd_cfg):
-      try:
-        with open(cwd_cfg, "r", encoding="utf-8") as f:
-          cfg = json.load(f)
-          source = cwd_cfg
-      except Exception:
-        pass
-    elif os.path.isfile(global_cfg):
-      try:
-        with open(global_cfg, "r", encoding="utf-8") as f:
-          cfg = json.load(f)
-          source = "~/.gemini/config/makefile-workflow.json"
-      except Exception:
-        pass
+  models = {}
+  raw_models = raw_cfg.get("models")
+  if isinstance(raw_models, dict):
+    for m_key, m_val in raw_models.items():
+      if isinstance(m_key, str) and isinstance(m_val, str) and m_val.strip():
+        models[m_key] = m_val.strip()
+
+  db_cfg = {
+      "prodDatabases": [],
+      "testDatabases": [],
+      "prodHosts": [],
+  }
+  raw_db = raw_cfg.get("database")
+  if isinstance(raw_db, dict):
+    for db_key in ("prodDatabases", "testDatabases", "prodHosts"):
+      if db_key in raw_db:
+        db_cfg[db_key] = _normalize_str_list(raw_db[db_key])
 
   env_applied = []
   for env_var, agent_key in ENV_MAPPINGS.items():
     val = os.getenv(env_var)
-    if val:
-      cfg.setdefault("models", {})[agent_key] = val.strip()
+    if val and val.strip():
+      models[agent_key] = val.strip()
       env_applied.append(env_var)
+
+  for env_var, db_key in DB_ENV_MAPPINGS.items():
+    val = os.getenv(env_var)
+    if val:
+      items = [x.strip() for x in val.split(",") if x.strip()]
+      if items:
+        merged = list(db_cfg[db_key])
+        for item in items:
+          if item not in merged:
+            merged.append(item)
+        db_cfg[db_key] = merged
+        env_applied.append(env_var)
 
   if env_applied:
     env_label = "env (" + ", ".join(env_applied) + ")"
     source = (source + " + " + env_label) if source else env_label
 
-  return cfg, source
+  return {"models": models, "database": db_cfg}, source
 
 
 def find_state_dir(workspace_paths, artifact_dir):
@@ -85,13 +119,21 @@ def main():
   try:
     input_text = sys.stdin.read()
     payload = json.loads(input_text) if input_text.strip() else {}
+    if not isinstance(payload, dict):
+      payload = {}
 
-    workspace_paths = payload.get("workspacePaths") or []
+    workspace_paths = payload.get("workspacePaths")
+    if not isinstance(workspace_paths, list):
+      workspace_paths = []
+    workspace_paths = [p for p in workspace_paths if isinstance(p, str) and p]
+
     artifact_dir = payload.get("artifactDirectoryPath", "")
+    if not isinstance(artifact_dir, str):
+      artifact_dir = ""
 
     state_dir = find_state_dir(workspace_paths, artifact_dir)
     cfg, cfg_source = get_workflow_config(workspace_paths)
-    models = cfg.get("models", {})
+    models = cfg.get("models") if isinstance(cfg.get("models"), dict) else {}
     critic_model = models.get("adversarial-critic", "pro")
     tdd_model = models.get("tdd-worker", "inherit")
 
@@ -105,9 +147,18 @@ def main():
         )
 
     if cfg_source:
+      db_cfg = cfg.get("database") if isinstance(cfg.get("database"), dict) else {}
+      prod_dbs = db_cfg.get("prodDatabases") or []
+      test_dbs = db_cfg.get("testDatabases") or []
+      prod_hosts = db_cfg.get("prodHosts") or []
+      db_summary = ""
+      if prod_dbs or test_dbs or prod_hosts:
+        db_summary = (
+            f", prodDatabases={prod_dbs}, testDatabases={test_dbs}, prodHosts={prod_hosts}"
+        )
       notes.append(
           f"Makefile Workflow loaded configuration from {cfg_source} "
-          f"(critic={critic_model}, tdd={tdd_model})."
+          f"(critic={critic_model}, tdd={tdd_model}{db_summary})."
       )
 
     if notes:

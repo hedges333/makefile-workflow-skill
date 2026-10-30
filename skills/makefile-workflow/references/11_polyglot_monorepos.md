@@ -22,6 +22,11 @@ In multi-language repositories (for example a Rust backend, a TypeScript web cli
 - Ruby: `Gemfile`
 - SQL and Migrations: `flyway.conf`, `dbt_project.yml`, `migrations/`
 - R, Julia, and Lua: `DESCRIPTION`, `Project.toml`, `*.rockspec`
+- GDScript and Godot: `project.godot`, `*.gd`, `*.tscn`
+- Nim: `*.nimble`, `nim.cfg`, `config.nims`
+- Haxe: `build.hxml`, `*.hxml`, `haxelib.json`, `project.xml`
+- Odin: `ols.json`, `*.odin`
+- D: `dub.json`, `dub.sdl`, `*.d`
 
 When manifests appear in multiple directories, record a subproject table in `.workflow/state/15_archaeology_receipt.md` with five fields:
 

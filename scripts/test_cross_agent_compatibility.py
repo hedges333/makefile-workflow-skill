@@ -139,13 +139,83 @@ def validate():
   if not os.path.exists(cfg_template):
     errors.append(f"Missing {cfg_template}")
   else:
-    print("✔ Workflow configuration template (.workflow/config.json.example) valid.")
+    try:
+      with open(cfg_template) as f:
+        cfg_data = json.load(f)
+      assert "database" in cfg_data
+      assert "prodDatabases" in cfg_data["database"]
+      assert "testDatabases" in cfg_data["database"]
+      assert "prodHosts" in cfg_data["database"]
+      print("✔ Workflow configuration template (.workflow/config.json.example) valid.")
+    except Exception as e:
+      errors.append(f"Invalid {cfg_template}: {e}")
 
   ref_13 = "skills/makefile-workflow/references/13_configuration_and_user_preferences.md"
   if not os.path.exists(ref_13):
     errors.append(f"Missing {ref_13}")
   else:
     print("✔ Configuration reference manual (references/13_configuration_and_user_preferences.md) valid.")
+
+  # 10. Design Patterns Reference Manual
+  ref_14 = "skills/makefile-workflow/references/14_design_patterns_and_architecture.md"
+  if not os.path.exists(ref_14):
+    errors.append(f"Missing {ref_14}")
+  else:
+    with open(ref_14) as f:
+      r14_text = f.read()
+    if "Factory Method" not in r14_text or "Game Loop" not in r14_text or "ORM" not in r14_text:
+      errors.append(f"Incomplete pattern coverage in {ref_14}")
+    else:
+      print("✔ Design patterns reference manual (references/14_design_patterns_and_architecture.md) valid.")
+
+  # 11. Polyglot 27-Language Guides and Manifests
+  for guide_name in (
+      "gdscript_godot.md",
+      "nim.md",
+      "haxe.md",
+      "odin.md",
+      "dlang.md",
+  ):
+    guide_path = os.path.join(
+        "skills", "makefile-workflow", "references", "polyglot", guide_name
+    )
+    if not os.path.exists(guide_path):
+      errors.append(f"Missing polyglot guide {guide_path}")
+  if not any("polyglot guide" in e for e in errors):
+    with open("skills/makefile-workflow/references/polyglot/dlang.md") as f:
+      dlang_text = f.read()
+    if "dfmt --check" in dlang_text:
+      errors.append("dlang.md must not use nonexistent 'dfmt --check' flag")
+    else:
+      print("✔ All 5 new polyglot guides (GDScript, Nim, Haxe, Odin, D) present.")
+
+  for manifest_path in (
+      "plugin.json",
+      ".claude-plugin/plugin.json",
+      ".codex-plugin/plugin.json",
+  ):
+    if os.path.exists(manifest_path):
+      with open(manifest_path) as f:
+        m_data = json.load(f)
+      if m_data.get("version") != "1.4.0" or "27-language" not in m_data.get(
+          "description", ""
+      ):
+        errors.append(
+            f"Manifest {manifest_path} must declare version 1.4.0 and 27-language support"
+        )
+
+  # 12. SKILL.md Single-Page Size Ceiling (SCAR-PROC-99)
+  skill_md = "skills/makefile-workflow/SKILL.md"
+  if not os.path.exists(skill_md):
+    errors.append(f"Missing {skill_md}")
+  else:
+    skill_bytes = os.path.getsize(skill_md)
+    if skill_bytes > 24576:
+      errors.append(
+          f"{skill_md} is {skill_bytes} bytes, exceeding SCAR-PROC-99 24576-byte limit"
+      )
+    else:
+      print(f"✔ {skill_md} size ({skill_bytes} bytes) is within 24 KB limit.")
 
   if errors:
     print(f"\n❌ Validation failed with {len(errors)} error(s):")

@@ -37,6 +37,31 @@ PROD_TOKEN_RE = re.compile(
     re.IGNORECASE,
 )
 
+URI_USERINFO_RE = re.compile(r"(://)[^/\s'\";@]+@")
+
+HOST_VALUE_RE = re.compile(
+    r"(?:"
+    r"(?:^|\s)-(?:h|S)\s*['\"]?|"
+    r"--host(?:=|\s+)['\"]?|"
+    r"\b(?:DB_HOST|PGHOST|MYSQL_HOST|MARIADB_HOST|REDIS_HOST|MONGO_HOST|HOST)=['\"]?|"
+    r"://|"
+    r"@"
+    r")([a-zA-Z0-9._-]+)",
+    re.IGNORECASE,
+)
+
+QUOTED_ARG_PAT = r"(?:'[^']*'|\"(?:\\.|[^\"\\])*\")"
+
+INLINE_QUERY_RE = re.compile(
+    rf"(?:(?<=^)|(?<=\s))(?:-c|-e|--command|--execute|--eval)(?:=|\s*){QUOTED_ARG_PAT}",
+    re.IGNORECASE,
+)
+
+SQLITE_CMD_RE = re.compile(
+    rf"(\bsqlite3\b[^\n]*?\s){QUOTED_ARG_PAT}\s*$",
+    re.IGNORECASE,
+)
+
 ALL_TARGETS = {
     "T00",
     "T10",
@@ -107,6 +132,19 @@ def map_to_agy_tier(model_value):
   return "inherit"
 
 
+def _normalize_str_list(items):
+  if not isinstance(items, list):
+    return []
+  return [x.strip() for x in items if isinstance(x, str) and x.strip()]
+
+
+def _parse_csv_env(env_name):
+  raw = os.getenv(env_name, "")
+  if not raw:
+    return []
+  return [item.strip() for item in raw.split(",") if item.strip()]
+
+
 def resolve_workflow_config(workspace_dir=None):
   """Resolves workflow configuration from workspace, global path, or environment."""
   ws = workspace_dir or resolve_workspace_dir({})
@@ -128,6 +166,11 @@ def resolve_workflow_config(workspace_dir=None):
           "pollIntervalSeconds": 30,
           "quiescenceSeconds": 180,
       },
+      "database": {
+          "prodDatabases": [],
+          "testDatabases": [],
+          "prodHosts": [],
+      },
       "configSource": "defaults",
       "envOverrides": [],
   }
@@ -139,11 +182,20 @@ def resolve_workflow_config(workspace_dir=None):
           loaded = json.load(f)
         if isinstance(loaded, dict):
           if isinstance(loaded.get("models"), dict):
-            config["models"].update(loaded["models"])
+            for m_key, m_val in loaded["models"].items():
+              if isinstance(m_key, str) and isinstance(m_val, str) and m_val.strip():
+                config["models"][m_key] = m_val.strip()
           if isinstance(loaded.get("review"), dict):
             config["review"].update(loaded["review"])
           if isinstance(loaded.get("ci"), dict):
             config["ci"].update(loaded["ci"])
+          if isinstance(loaded.get("database"), dict):
+            db_loaded = loaded["database"]
+            for db_key in ("prodDatabases", "testDatabases", "prodHosts"):
+              if db_key in db_loaded:
+                config["database"][db_key] = _normalize_str_list(
+                    db_loaded[db_key]
+                )
           config["configSource"] = cfg_path
           break
       except Exception:
@@ -162,6 +214,21 @@ def resolve_workflow_config(workspace_dir=None):
       config["models"][agent_key] = val.strip()
       config["envOverrides"].append(f"{env_var}={val.strip()}")
 
+  db_env_mappings = {
+      "MAKEFILE_WORKFLOW_PROD_DBS": "prodDatabases",
+      "MAKEFILE_WORKFLOW_TEST_DBS": "testDatabases",
+      "MAKEFILE_WORKFLOW_PROD_HOSTS": "prodHosts",
+  }
+  for env_var, db_key in db_env_mappings.items():
+    vals = _parse_csv_env(env_var)
+    if vals:
+      merged = list(config["database"][db_key])
+      for v in vals:
+        if v not in merged:
+          merged.append(v)
+      config["database"][db_key] = merged
+      config["envOverrides"].append(f"{env_var}={','.join(vals)}")
+
   config["agyModelTiers"] = {
       role: map_to_agy_tier(val) for role, val in config["models"].items()
   }
@@ -177,6 +244,131 @@ def is_database_command(cmd):
   return False
 
 
+def _split_shell_subcommands(cmd):
+  """Splits a shell command string on unquoted |, ||, &&, ;, and newline."""
+  parts = []
+  buf = []
+  quote = None
+  escaped = False
+  i = 0
+  n = len(cmd)
+  while i < n:
+    ch = cmd[i]
+    if escaped:
+      buf.append(ch)
+      escaped = False
+      i += 1
+      continue
+    if ch == "\\" and quote != "'":
+      buf.append(ch)
+      escaped = True
+      i += 1
+      continue
+    if quote:
+      buf.append(ch)
+      if ch == quote:
+        quote = None
+      i += 1
+      continue
+    if ch in ("'", '"'):
+      quote = ch
+      buf.append(ch)
+      i += 1
+      continue
+    if ch in (";", "\n"):
+      seg = "".join(buf).strip()
+      if seg:
+        parts.append(seg)
+      buf = []
+      i += 1
+      continue
+    if ch in ("|", "&"):
+      seg = "".join(buf).strip()
+      if seg:
+        parts.append(seg)
+      buf = []
+      if i + 1 < n and cmd[i + 1] == ch:
+        i += 2
+      else:
+        i += 1
+      continue
+    buf.append(ch)
+    i += 1
+  tail = "".join(buf).strip()
+  if tail:
+    parts.append(tail)
+  return parts or [cmd]
+
+
+def _contains_identifier(cmd, name):
+  sep = r"[^a-zA-Z0-9_-]"
+  pattern = rf"(?:^|{sep}){re.escape(name)}(?:$|{sep})"
+  return re.search(pattern, cmd, re.IGNORECASE) is not None
+
+
+def _strip_identifier(cmd, name):
+  pattern = rf"(?i)(?:(?<=^)|(?<=[^a-zA-Z0-9_-])){re.escape(name)}(?=$|[^a-zA-Z0-9_-])"
+  return re.sub(pattern, " ", cmd)
+
+
+def _has_prod_host_token(cmd):
+  for match in HOST_VALUE_RE.finditer(cmd):
+    if PROD_TOKEN_RE.search(match.group(1)):
+      return True
+  return False
+
+
+def _evaluate_single_subcommand(subcmd, db_cfg):
+  if not is_database_command(subcmd):
+    return True, "OK"
+
+  clean_cmd = URI_USERINFO_RE.sub(r"\1", subcmd)
+
+  for host in db_cfg.get("prodHosts") or []:
+    if host and _contains_identifier(clean_cmd, host):
+      return False, f"Production database host detected: {host}"
+
+  for db_name in db_cfg.get("prodDatabases") or []:
+    if db_name and _contains_identifier(clean_cmd, db_name):
+      return False, f"Production database name detected: {db_name}"
+
+  if _has_prod_host_token(clean_cmd):
+    return False, "Production database host detected"
+
+  matched_test_dbs = [
+      test_db
+      for test_db in (db_cfg.get("testDatabases") or [])
+      if test_db and _contains_identifier(clean_cmd, test_db)
+  ]
+  if matched_test_dbs:
+    scrubbed = INLINE_QUERY_RE.sub(" ", clean_cmd)
+    scrubbed = SQLITE_CMD_RE.sub(r"\1", scrubbed)
+    for test_db in matched_test_dbs:
+      scrubbed = _strip_identifier(scrubbed, test_db)
+    prod_rem = PROD_TOKEN_RE.search(scrubbed)
+    if prod_rem:
+      return False, f"Production database name detected: {prod_rem.group(1)}"
+    return True, f"Allowed configured test database: {matched_test_dbs[0]}"
+
+  prod_match = PROD_TOKEN_RE.search(clean_cmd)
+  if prod_match:
+    return False, f"Production database name detected: {prod_match.group(1)}"
+
+  return True, "OK"
+
+
+def evaluate_database_safety(cmd, db_cfg=None):
+  db_cfg = db_cfg or {}
+  last_reason = "OK"
+  for subcmd in _split_shell_subcommands(cmd):
+    is_safe, reason = _evaluate_single_subcommand(subcmd, db_cfg)
+    if not is_safe:
+      return False, reason
+    if reason != "OK":
+      last_reason = reason
+  return True, last_reason
+
+
 def handle_initialize(request_id):
   return {
       "jsonrpc": "2.0",
@@ -186,7 +378,7 @@ def handle_initialize(request_id):
           "capabilities": {"tools": {}},
           "serverInfo": {
               "name": "makefile-workflow-guard",
-              "version": "1.3.0",
+              "version": "1.4.0",
           },
       },
   }
@@ -282,7 +474,11 @@ def handle_tools_list(request_id):
                   "commandLine": {
                       "type": "string",
                       "description": "Shell command line to inspect",
-                  }
+                  },
+                  "workspaceDir": {
+                      "type": "string",
+                      "description": "Optional project root directory",
+                  },
               },
               "required": ["commandLine"],
           },
@@ -453,32 +649,18 @@ def handle_tools_call(request_id, tool_name, arguments):
 
   elif tool_name == "workflow_safety_check":
     cmd = arguments.get("commandLine", "")
-    if is_database_command(cmd):
-      prod_match = PROD_TOKEN_RE.search(cmd)
-      if prod_match:
-        return {
-            "jsonrpc": "2.0",
-            "id": request_id,
-            "result": {
-                "content": [{
-                    "type": "text",
-                    "text": json.dumps({
-                        "safe": False,
-                        "reason": (
-                            "Production database name detected:"
-                            f" {prod_match.group(1)}"
-                        ),
-                    }),
-                }]
-            },
-        }
-
+    ws = resolve_workspace_dir(arguments)
+    cfg = resolve_workflow_config(ws)
+    is_safe, reason = evaluate_database_safety(cmd, cfg.get("database"))
     return {
         "jsonrpc": "2.0",
         "id": request_id,
         "result": {
             "content": [
-                {"type": "text", "text": json.dumps({"safe": True, "reason": "OK"})}
+                {
+                    "type": "text",
+                    "text": json.dumps({"safe": is_safe, "reason": reason}),
+                }
             ]
         },
     }

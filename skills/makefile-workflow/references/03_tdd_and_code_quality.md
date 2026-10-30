@@ -24,8 +24,9 @@ Execute every code change in three ordered phases.
 ### Phase 2: Green (Minimal Production Code)
 
 1. Write the smallest production code change that makes the failing test pass.
-2. Run the targeted subproject test command.
-3. Make sure that all targeted subproject tests pass (`green_exit == 0`).
+2. Follow [`14_design_patterns_and_architecture.md`](./14_design_patterns_and_architecture.md): favor object composition over deep inheritance, and apply Game Programming Patterns in game subprojects.
+3. Balance encapsulation with speed: use an ORM (a library that maps database rows to objects) by default, and place parameterized SQL or NoSQL queries inside repositories for large datasets.
+4. Run the targeted subproject test command and make sure that all targeted tests pass (`green_exit == 0`).
 
 ### Phase 3: Refactor
 

@@ -35,4 +35,5 @@ Make sure that credentials and live databases stay protected at all times:
 
 1. Never stage or commit `.env` files, private keys, or API tokens.
 2. If a test needs an API key, make sure that the active value is a dummy or sandbox credential.
-3. Before you run any database migration or test command, make sure that the target host is `localhost`, `127.0.0.1`, `:memory:`, or a local container.
+3. Before you run any database migration or test command, make sure that the target host is `localhost`, `127.0.0.1`, `:memory:`, a local container, or a configured `testDatabases` target.
+4. Declare custom live database names and hosts in `.workflow/config.json` (`database.prodDatabases` and `database.prodHosts`) or `MAKEFILE_WORKFLOW_PROD_DBS` so hardware hooks block them automatically.

@@ -17,11 +17,15 @@ When a session starts or `workflow_get_config` runs, the plugin resolves configu
    - `MAKEFILE_WORKFLOW_WORKER_MODEL` or `MAKEFILE_WORKFLOW_ARCHAEOLOGY_MODEL` for `archaeology-worker`.
    - `MAKEFILE_WORKFLOW_TDD_MODEL` for `tdd-worker`.
    - `MAKEFILE_WORKFLOW_TRIAGE_MODEL` for `triage-worker`.
+   - `MAKEFILE_WORKFLOW_PROD_DBS` for comma-separated live database names to block.
+   - `MAKEFILE_WORKFLOW_TEST_DBS` for comma-separated safe test database names to allow.
+   - `MAKEFILE_WORKFLOW_PROD_HOSTS` for comma-separated live database hosts to block.
 4. Built-in defaults:
    - `adversarial-critic`: `pro`
    - `archaeology-worker`: `flash`
    - `tdd-worker`: `inherit`
    - `triage-worker`: `flash`
+   - Database guard: blocks standalone `prod` and `production` names automatically.
 
 ## 3. Configuration File Schema
 
@@ -42,9 +46,23 @@ Copy [`.workflow/config.json.example`](../../../.workflow/config.json.example) t
   "ci": {
     "pollIntervalSeconds": 30,
     "quiescenceSeconds": 180
+  },
+  "database": {
+    "prodDatabases": [],
+    "testDatabases": [],
+    "prodHosts": []
   }
 }
 ```
+
+### Hybrid Database Isolation Rules
+
+Both `scripts/pre_tool_guard.py` and `workflow_safety_check` read the `database` block and `MAKEFILE_WORKFLOW_*` variables:
+
+1. Any command targeting an entry in `prodHosts` or `prodDatabases` is denied at once, even if its name does not include `prod`.
+2. Any command targeting an entry in `testDatabases` on a non-production host is allowed, so SQL queries selecting a column named `prod` do not trigger false alarms.
+3. If no custom list matches, the built-in `prod` and `production` guard remains active.
+4. When a repository uses databases whose live or test names are not clear from manifests or `.workflow/config.json`, the agent asks the user at Target 15 or Target 20.
 
 ### Model Tiers in Antigravity (`agy`)
 
