@@ -1,0 +1,28 @@
+[
+  {
+    "id": "#1",
+    "issue_url": null,
+    "title": "Add design patterns manual, hybrid database guards, and 27-language polyglot guides",
+    "request": "Add GoF class and object patterns, Nystrom Game Programming Patterns, ORM vs parameterized large-dataset query rules, configurable hybrid database safety guards, and polyglot guides for GDScript, Nim, Haxe, Odin, and D",
+    "branch": "feat/1-patterns-db-guard-polyglot-27",
+    "subprojects": [
+      "mcp",
+      "scripts",
+      "skills",
+      "agents",
+      "rules",
+      "adapters"
+    ],
+    "started_at": "2026-10-30T19:06:56Z",
+    "completed_at": "2026-10-30T19:56:45Z",
+    "commit_sha": "f84cd0688babba9dcc99f94ef01b898c068d3d44",
+    "pr_number": null,
+    "pr_url": null,
+    "closes_issue": false,
+    "tests_added": 28,
+    "scars_earned": [
+      "SCAR-DB-09: Split compound shell pipelines and strip URI userinfo before database token guards",
+      "SCAR-ENV-04: Set umask 0002 in shared group workspaces so collaborator accounts can edit files"
+    ]
+  }
+]
