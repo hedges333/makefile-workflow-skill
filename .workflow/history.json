@@ -92,5 +92,27 @@
     "scars_earned": [
       "SCAR-TOOL-07: Prefer Dart Over Python for Scratch Scripts and Isolate Inline Shell Strings"
     ]
+  },
+  {
+    "id": "#5",
+    "issue_url": null,
+    "title": "Codify SCAR-PROC-104 for review before edit and targeted test loops",
+    "request": "Add SCAR-PROC-104 to synthetic scars catalog, update AGENTS.md rules, and add automated regression test in test_cross_agent_compatibility.py",
+    "branch": "feat/5-review-before-edit-targeted-tests",
+    "subprojects": [
+      "rules",
+      "scripts",
+      "skills"
+    ],
+    "started_at": "2026-10-31T21:12:00Z",
+    "completed_at": "2026-10-31T21:36:38Z",
+    "commit_sha": "fe8a949",
+    "pr_number": null,
+    "pr_url": null,
+    "closes_issue": false,
+    "tests_added": 3,
+    "scars_earned": [
+      "SCAR-PROC-104: Review Before Edit, Minimal Confident Edits, and Targeted Test Loops"
+    ]
   }
 ]
