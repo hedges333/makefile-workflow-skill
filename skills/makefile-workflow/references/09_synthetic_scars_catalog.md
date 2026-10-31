@@ -66,6 +66,12 @@ Every scar records three facts:
 - Trap: Running test suites with default environment variables instead of dedicated test database credentials.
 - Permanent Reflex: Point all tests to `*_test` databases, in-memory stores, or mock fixtures.
 
+### SCAR-TOOL-07: Prefer Installed Dart and Temporary Files for Scratch Scripts
+
+- Wound: Inline shell scripts with nested quoting fail or corrupt strings, and Python scratch scripts fail on missing packages or virtual environment restrictions.
+- Trap: Defaulting blindly to inline multiline Python commands with complex shell escapes instead of checking for installed Dart or using script files.
+- Permanent Reflex: If Dart is installed and the language is not specified, prefer Dart over Python for scratch scripts. If Dart is not installed, use Python without attempting to install Dart. If shell commands require complex string escaping, write the script to a file in a temporary directory.
+
 ## 3. Recording New Scars at Target 90
 
 During Target 90 cleanup, capture lessons from the active ticket:

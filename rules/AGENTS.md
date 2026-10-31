@@ -47,6 +47,15 @@ Keep each code change small and within ticket scope.
 3. Use an ORM (a library that maps database rows to objects) by default. If large datasets slow down the ORM, encapsulate parameterized SQL or NoSQL queries behind repository methods.
 4. If you find unrelated defects during a ticket, do not edit them. Record them in ticket notes for a separate task.
 
+### 3.1 Temporary Script and Automation Rules
+
+Apply these rules for scratch scripts and automation utilities:
+
+1. For one-off scripts and automation tasks where the language is not specified, prefer Dart over Python if Dart is installed.
+2. If Dart is not installed, use Python.
+3. Never attempt to install Dart.
+4. If shell commands require complex string escaping, write the script to a file in a temporary directory.
+
 ## 4. Simple English Documentation Rules
 
 Apply the rules of the `simple-english` plugin to documentation, plans, changelogs, and pull request descriptions:

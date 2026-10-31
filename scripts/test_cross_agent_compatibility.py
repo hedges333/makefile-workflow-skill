@@ -216,6 +216,8 @@ def validate():
       errors.append(f"{ref_09} must document SCAR-PROC-103")
     if "SCAR-GIT-30" not in r09_text:
       errors.append(f"{ref_09} must document SCAR-GIT-30")
+    if "SCAR-TOOL-07" not in r09_text:
+      errors.append(f"{ref_09} must document SCAR-TOOL-07")
 
   ref_10 = "skills/makefile-workflow/references/10_security_and_data_isolation.md"
   if not os.path.exists(ref_10):
@@ -225,6 +227,8 @@ def validate():
       r10_text = f.read()
     if "git reset --hard" not in r10_text or "git rebase" not in r10_text:
       errors.append(f"{ref_10} must document destructive Git command protections")
+    if "SCAR-TOOL-07" not in r10_text or "prefer dart" not in r10_text.lower():
+      errors.append(f"{ref_10} must document Dart scratch script and temporary directory rules")
 
   # 12. SKILL.md Single-Page Size Ceiling (SCAR-PROC-99)
   skill_md = "skills/makefile-workflow/SKILL.md"
@@ -262,6 +266,12 @@ def validate():
       errors.append(f"{agents_md} must guard against duplicate execution using 20_plan_approved.md")
     if "built-in" not in a_text or "shell `rm`" not in a_text and "shell rm" not in a_text:
       errors.append(f"{agents_md} must specify built-in tool demotion without shell rm")
+    if "prefer Dart over Python" not in a_text:
+      errors.append(f"{agents_md} must specify preference for Dart over Python for scratch scripts")
+    if "never attempt to install dart" not in a_text.lower():
+      errors.append(f"{agents_md} must forbid attempting to install Dart")
+    if "temporary directory" not in a_text:
+      errors.append(f"{agents_md} must specify writing temporary scripts to temporary directories")
     if not any("rules/AGENTS.md" in e for e in errors):
       print(f"✔ Antigravity artifact lifecycle and demotion rules ({agents_md}) valid.")
 
