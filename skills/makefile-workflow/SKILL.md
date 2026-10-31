@@ -105,7 +105,7 @@ Read [`references/00`](./references/00_quickstart_and_mental_model.md), [`refere
 1. If `.workflow/state/` exists in the workspace, read all `.md` files in alphabetical order (`00_governance.md` through `99_next_action.md`).
 2. Restore the ticket ID, branch name, approved plan, and active target without asking the user to repeat prior context.
 3. Read `.workflow/config.json` or call MCP `workflow_get_config` with `workspaceDir` to load model configuration.
-4. Keep `.workflow/state/99_next_action.md` updated at each transition, and mirror it to `<brain>/readerboard.md` in Antigravity.
+4. Keep `.workflow/state/99_next_action.md` updated at each transition.
 
 ### Target 10: `ticket-assigned` (Intake and Branch Setup)
 
@@ -134,7 +134,7 @@ Read [`references/02`](./references/02_archaeology_and_planning.md) and [`refere
 
 Read [`references/02`](./references/02_archaeology_and_planning.md) for plan disclosures.
 
-1. Write the plan to `.workflow/state/20_plan.md` (and mirror it to `<brain>/plan.md` in Antigravity with `UserFacing: true, RequestFeedback: true`).
+1. Write the plan to `.workflow/state/20_plan.md`.
 2. Include these five disclosures in the plan:
    - Exact file paths to create or edit.
    - Targeted subproject test commands and full repository test commands.
@@ -200,31 +200,33 @@ Read [`references/06`](./references/06_clean_commit_and_pr.md) for landability r
 
 1. Fetch the remote default branch and test clean mergeability with `git merge-tree`.
 2. Stop tool calls (`tool_calls: []`) and wait for `human-push-approval`.
-3. After user approval, push the branch (`git push -u origin <branch>`), create the pull request (`gh pr create`), and advance to Target 70.
+3. After user approval, push the branch (`git push -u origin <branch>`). If `gh auth status` succeeds, create the pull request (`gh pr create`). If `gh` is unauthenticated or unavailable, use Pure Git Mode (`SCAR-GIT-30`) and advance to Target 70.
 
 ### Target 70: `bot-quiescence` (Remote CI and Bot Triage)
 
 Read [`references/07`](./references/07_ci_and_bot_triage.md) for polling and triage rules.
 
-1. Fork `triage-worker` with `Model` set to `agyModelTiers["triage-worker"]` (default `flash`).
-2. Poll `gh pr checks` and review comments until CI passes and 180 seconds of quiescence (a quiet window with no new bot comments) completes.
-3. Write the triage table (`Accept`, `Defend`, `Defer`, `Acknowledge`) to `.workflow/state/70_bot_triage.md`.
-4. If accepted fixes need code edits, return to Target 30 and repeat Targets 40, 45, 50, 60, and 70.
-5. When CI is green and zero open comments remain, advance to Target 75.
+1. In Pure Git Mode, run full local repository tests (`make all`), write `.workflow/state/70_bot_triage.md` noting pure Git validation, and advance to Target 75.
+2. In PR mode, fork `triage-worker` with `Model` set to `agyModelTiers["triage-worker"]` (default `flash`).
+3. Poll `gh pr checks` and review comments until CI passes and 180 seconds of quiescence (a quiet window with no new bot comments) completes.
+4. Write the triage table (`Accept`, `Defend`, `Defer`, `Acknowledge`) to `.workflow/state/70_bot_triage.md`.
+5. If accepted fixes need code edits, return to Target 30 and repeat Targets 40, 45, 50, 60, and 70.
+6. When CI is green and zero open comments remain, advance to Target 75.
 
 ### Target 75: `ready-to-land` (Policy Table and Landing Gate)
 
 Present final verification evidence before merging the pull request.
 
-1. Print the CI check summary and the 7-criteria review policy table in chat.
+1. Print the CI check summary (or local test sweep summary in Pure Git Mode) and the 7-criteria review policy table in chat.
 2. Stop tool calls (`tool_calls: []`) and wait for `human-landing-approval`, then advance to Target 80.
 
 ### Target 80: `land` (Merge and Branch Cleanup)
 
 Merge the pull request and clean up branches after human landing approval.
 
-1. Run `gh pr merge <PR> --squash --delete-branch` and make sure that the linked issue is closed.
-2. Switch to `main`, run `git pull --ff-only`, delete the local feature branch, and advance to Target 90.
+1. In PR mode, run `gh pr merge <PR> --squash --delete-branch` and make sure that the linked issue is closed.
+2. In Pure Git Mode, switch to `main`, run `git merge --squash <branch>`, commit with `.workflow/state/50_commit_msg.txt`, push `origin main`, and delete the branch.
+3. Switch to `main`, run `git pull --ff-only`, delete the local feature branch if still present, and advance to Target 90.
 
 ### Target 90: `finish` (Scar Catalog and History Ledger)
 

@@ -212,6 +212,10 @@ def validate():
       r09_text = f.read()
     if "SCAR-GIT-25" not in r09_text:
       errors.append(f"{ref_09} must document SCAR-GIT-25")
+    if "SCAR-PROC-103" not in r09_text:
+      errors.append(f"{ref_09} must document SCAR-PROC-103")
+    if "SCAR-GIT-30" not in r09_text:
+      errors.append(f"{ref_09} must document SCAR-GIT-30")
 
   ref_10 = "skills/makefile-workflow/references/10_security_and_data_isolation.md"
   if not os.path.exists(ref_10):
@@ -234,6 +238,32 @@ def validate():
       )
     else:
       print(f"✔ {skill_md} size ({skill_bytes} bytes) is within 24 KB limit.")
+    with open(skill_md) as f:
+      s_text = f.read()
+    if "<brain>" in s_text or "<brain/" in s_text:
+      errors.append(
+          f"{skill_md} must remain platform-neutral and not reference '<brain>'"
+      )
+    else:
+      print(f"✔ {skill_md} is platform-neutral (no <brain> references).")
+
+  # 13. Antigravity Plan Artifact Lifecycle & Demotion Rules (rules/AGENTS.md)
+  agents_md = "rules/AGENTS.md"
+  if not os.path.exists(agents_md):
+    errors.append(f"Missing {agents_md}")
+  else:
+    with open(agents_md) as f:
+      a_text = f.read()
+    if "<brain>/plan.md" not in a_text:
+      errors.append(f"{agents_md} must reference single artifact '<brain>/plan.md'")
+    if "UserFacing: false" not in a_text or "RequestFeedback: false" not in a_text:
+      errors.append(f"{agents_md} must specify demotion with UserFacing: false and RequestFeedback: false")
+    if "20_plan_approved.md" not in a_text:
+      errors.append(f"{agents_md} must guard against duplicate execution using 20_plan_approved.md")
+    if "built-in" not in a_text or "shell `rm`" not in a_text and "shell rm" not in a_text:
+      errors.append(f"{agents_md} must specify built-in tool demotion without shell rm")
+    if not any("rules/AGENTS.md" in e for e in errors):
+      print(f"✔ Antigravity artifact lifecycle and demotion rules ({agents_md}) valid.")
 
   if errors:
     print(f"\n❌ Validation failed with {len(errors)} error(s):")

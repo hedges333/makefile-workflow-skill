@@ -2,12 +2,31 @@
 
 These rules apply when the `makefile-workflow` plugin is active.
 
-## 1. Chat Presentation and Input Rules
+## 1. Chat Presentation, Input, and Artifact Rules
 
 The chat stream is the main presentation surface. The `ask_question` tool is an input prompt, not a display surface.
 
+### 1.1 Target 20 Plan Artifact Lifecycle in Antigravity
+
+Antigravity renders an interactive review panel for artifacts. Follow these rules for implementation plans:
+
+1. Write the implementation plan to `.workflow/state/20_plan.md`.
+2. Mirror the plan to `<brain>/plan.md` with the built-in `write_file` tool.
+3. Set `Overwrite: true` and `ArtifactMetadata: { UserFacing: true, RequestFeedback: true }`.
+4. Always use the single fixed filename `<brain>/plan.md`. Do not create multiple plan files with different names.
+5. Print a concise summary in chat with a `file://` link to `.workflow/state/20_plan.md`, then stop tool calls.
+6. Accept either `/artifact` approval or verbal chat approval at Target 20.
+7. If the user approves the plan, demote the artifact immediately at Target 30 entry.
+8. Use the built-in `write_file` tool to overwrite `<brain>/plan.md`.
+9. Set `Overwrite: true` and `ArtifactMetadata: { UserFacing: false, RequestFeedback: false }`.
+10. Write an approved tombstone body inside `<brain>/plan.md`.
+11. Do not use shell `rm` commands to delete artifacts. Overwriting with the built-in tool updates markdown content and companion JSON attributes safely.
+12. If `.workflow/state/20_plan_approved.md` exists, never re-execute Target 30 from old artifact notifications. Always verify progress from `.workflow/state/`.
+
+### 1.2 Pause Gates and Question Prompts
+
 1. If the user must choose between two or more alternatives ($N \ge 2$), call `ask_question`.
-2. If a gate has one approval action ($N = 1$), do not call `ask_question`. Print the full proposal in chat with `file://` links and stop tool calls. This rule covers Plan Approval (Target 20), Review Approval (Target 45), Commit Approval (Target 50), Push Approval (Target 60), and Landing Approval (Target 75).
+2. If a gate has one approval action ($N = 1$), do not call `ask_question`. Print the full proposal in chat with `file://` links and stop tool calls. This rule covers Review Approval (Target 45), Commit Approval (Target 50), Push Approval (Target 60), and Landing Approval (Target 75).
 3. Before you ask for a decision, print the full facts in the chat message.
 4. Add a `file://` markdown link for every file, diff, plan, or review card that you name.
 

@@ -22,7 +22,7 @@ Do not plan code edits from guesswork. Inspect the repository first to gather fa
 
 ## 2. Target 20: Plan File Creation (`20_plan.md`)
 
-Write the implementation plan to `.workflow/state/20_plan.md`. In Antigravity sessions, mirror it to `<brain>/plan.md` with `UserFacing: true, RequestFeedback: true`.
+Write the implementation plan to `.workflow/state/20_plan.md`.
 
 Include these six items in every plan:
 
@@ -37,7 +37,7 @@ Include these six items in every plan:
 
 Target 20 is a mandatory human pause gate.
 
-1. Print the plan summary in chat with a `file://` link to `.workflow/state/20_plan.md` (or `<brain>/plan.md`).
+1. Print the plan summary in chat with a `file://` link to `.workflow/state/20_plan.md`.
 2. Set `.workflow/state/99_next_action.md` to `AWAITING_DECLARATION (human-plan-approval)`.
 3. Stop execution with empty tool calls (`tool_calls: []`).
 4. Wait for explicit human approval in chat before editing any source files.

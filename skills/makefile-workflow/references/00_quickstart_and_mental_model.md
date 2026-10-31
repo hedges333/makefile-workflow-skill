@@ -19,7 +19,7 @@ Stuart Feldman created `make` in 1976 to run software builds through a DAG (a de
 
 ### Solution 2: Memento State Files
 
-Memento state files are numbered markdown cards inside `<workspace>/.workflow/state/` (`00_governance.md` through `99_next_action.md`). Because each repository stores its own `.workflow/state/` directory, sessions in separate terminal windows or projects never overwrite one another. If chat history resets or compresses, the agent reads `.workflow/state/*.md` and resumes in seconds. In Antigravity sessions, the agent also mirrors the live readerboard to `<brain>/readerboard.md`.
+Memento state files are numbered markdown cards inside `<workspace>/.workflow/state/` (`00_governance.md` through `99_next_action.md`). Because each repository stores its own `.workflow/state/` directory, sessions in separate terminal windows or projects never overwrite one another. If chat history resets or compresses, the agent reads `.workflow/state/*.md` and resumes in seconds.
 
 ### Solution 3: Human Pause Gates
 

@@ -30,6 +30,12 @@ Every scar records three facts:
 - Trap: Treating human pause gates as optional status messages instead of hard stops.
 - Permanent Reflex: Only the human user can declare approval at Targets 20, 42, 45, 50, 60, and 75.
 
+### SCAR-PROC-103: Single Plan Artifact Lifecycle and Built-in Tool Demotion
+
+- Wound: Multiple multi-named plan artifacts left with pending feedback requests confuse agent context after compaction and trigger duplicate execution of already-completed plans.
+- Trap: Creating uniquely named plan files across sessions and attempting to clean them up with shell `rm` commands that break across operating systems or trigger sandbox permission blocks.
+- Permanent Reflex: Mirror plans only to a single fixed path `<brain>/plan.md` at Target 20, demote it immediately at Target 30 entry using the built-in `write_file` tool with `UserFacing: false, RequestFeedback: false`, and treat `.workflow/state/20_plan_approved.md` as the canonical guard against duplicate execution.
+
 ### SCAR-GIT-20: Pre-Push Merge Check
 
 - Wound: An agent pushes a branch that conflicts with `main`, breaks CI, and needs history rewrites.
@@ -41,6 +47,12 @@ Every scar records three facts:
 - Wound: An agent runs `git reset --hard`, `git clean -fd`, or `git checkout --` after a test failure and destroys uncommitted work.
 - Trap: Blocking only `git push --force` to `main` while trusting prompt rules to stop other destructive Git commands.
 - Permanent Reflex: Block work-discarding and force-push Git commands in hooks and MCP. Require human approval before `git rebase` and `git branch -D`.
+
+### SCAR-GIT-30: Pure Git Mode and Hosting Tool Discovery
+
+- Wound: An agent attempts to run `gh pr create` or `gh pr checks` in an SSH-only or non-GitHub repository and stalls at Target 60 or Target 70 even though Git push succeeded.
+- Trap: Assuming every repository uses authenticated GitHub CLI tooling instead of checking whether `gh` is authenticated.
+- Permanent Reflex: Check `gh auth status` at Target 15. If `gh` is unavailable or unauthenticated, use Pure Git Mode: skip remote PR creation at Target 60, run full local repository tests at Target 70, present local landing readiness at Target 75, and squash-merge on `main` at Target 80 using standard Git commands.
 
 ### SCAR-HCI-08: Multi-Choice Prompt Rule
 

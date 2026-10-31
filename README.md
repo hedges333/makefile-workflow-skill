@@ -335,6 +335,3 @@ This repository uses the MIT License. Read [`LICENSE`](./LICENSE) for the full l
 - Summary of [Game Programming Patterns](https://gameprogrammingpatterns.com) analyzed by Robert Nystrom provides an invaluable resource to apply to game programming.
 - **E. Gamma, R. Helm, R. Johnson, and J. Vlissides**, *Design Patterns: Elements of Reusable Object-Oriented Software*. Reading, MA: Addison-Wesley, 1994.
 
----
-
-- For items to be reviewed, write artifacts and use /artifact approval instead of verbal approval.

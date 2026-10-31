@@ -63,3 +63,19 @@ After the user approves landing, merge the pull request and clean up local Git s
    git branch -D <branch-name>
    ```
 5. Advance to Target 90.
+
+## 4. Pure Git Mode (`SCAR-GIT-30`)
+
+If the repository uses Pure Git Mode (`HOSTING_MODE: PURE_GIT`), remote bots and GitHub API actions do not exist:
+
+1. At Target 70, run the full repository test suite locally (`make all`). Write `.workflow/state/70_bot_triage.md` noting pure Git verification and advance to Target 75.
+2. At Target 75, present local test results and the 7-criteria policy table, then wait for `human-landing-approval`.
+3. At Target 80, squash-merge directly with Git on `main`:
+   ```bash
+   git checkout main && git pull --ff-only
+   git merge --squash <branch-name>
+   git commit -F .workflow/state/50_commit_msg.txt
+   git push origin main
+   git branch -d <branch-name>
+   ```
+4. Advance to Target 90.

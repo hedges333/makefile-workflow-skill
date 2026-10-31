@@ -48,7 +48,7 @@ When the user asks what to work on next, run these steps:
 
 ## 3. Live Readerboard (`99_next_action.md`)
 
-Update `<workspace>/.workflow/state/99_next_action.md` at every target transition. In Antigravity sessions, mirror the same content to `<brain>/readerboard.md` with `UserFacing: true`.
+Update `<workspace>/.workflow/state/99_next_action.md` at every target transition.
 
 ```markdown
 # 99_next_action: Live Memento Readerboard
