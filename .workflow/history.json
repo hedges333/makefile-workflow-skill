@@ -158,5 +158,28 @@
     "scars_earned": [
       "SCAR-TEST-09: Fail-Fast Targeted TDD Loop (pytest -x -v)"
     ]
+  },
+  {
+    "id": "#8",
+    "issue_url": null,
+    "title": "Enhance Pillar 2: Comprehensive Test Coverage, Burden Balance, and Ephemeral Socket Isolation",
+    "request": "Enhance Pillar 2 of Six-Pillar Adversarial Review to evaluate test comprehensiveness, boundary conditions, and execution burden balance, and clarify that hermetic testing permits self-contained ephemeral loopback sockets (127.0.0.1:0 and temporary Unix sockets) while forbidding unmanaged external host daemons",
+    "branch": "feat/8-pillar-2-comprehensive-testing",
+    "subprojects": [
+      "agents",
+      "rules",
+      "scripts",
+      "skills"
+    ],
+    "started_at": "2026-10-31T22:23:00Z",
+    "completed_at": "2026-10-31T22:36:11Z",
+    "commit_sha": "74260bc",
+    "pr_number": null,
+    "pr_url": null,
+    "closes_issue": false,
+    "tests_added": 8,
+    "scars_earned": [
+      "SCAR-TEST-08: Two-Tier Test Isolation (Hermetic Unit vs Integration Fixtures)"
+    ]
   }
 ]

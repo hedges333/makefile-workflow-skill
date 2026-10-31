@@ -9,3 +9,4 @@
 | 2026-10-31 | #5 (Local) | Codify SCAR-PROC-104 for review before edit and targeted test loops | `feat/5-review-before-edit-targeted-tests` | Local Squash | +3 | `SCAR-PROC-104` |
 | 2026-10-31 | #6 (Local) | Codify SCAR-TEST-08 for two-tier test isolation | `feat/6-scar-test-08-two-tier-isolation` | Local Squash | +3 | `SCAR-TEST-08` |
 | 2026-10-31 | #7 (Local) | Codify SCAR-TEST-09 for fail-fast targeted TDD loops | `feat/7-scar-test-09-fail-fast-tdd` | Local Squash | +3 | `SCAR-TEST-09` |
+| 2026-10-31 | #8 (Local) | Enhance Pillar 2 test comprehensiveness, burden balance, and ephemeral socket isolation | `feat/8-pillar-2-comprehensive-testing` | Local Squash | +8 | `SCAR-TEST-08` |
