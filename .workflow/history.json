@@ -24,5 +24,28 @@
       "SCAR-DB-09: Split compound shell pipelines and strip URI userinfo before database token guards",
       "SCAR-ENV-04: Set umask 0002 in shared group workspaces so collaborator accounts can edit files"
     ]
+  },
+  {
+    "id": "#2",
+    "issue_url": null,
+    "title": "Add destructive Git command guards and rebase and force-branch approval gates",
+    "request": "Protect repositories against overly eager agents running destructive Git commands that are unnecessary in the normal plugin workflow",
+    "branch": "feat/2-git-command-protections",
+    "subprojects": [
+      "scripts",
+      "mcp",
+      "skills"
+    ],
+    "started_at": "2026-10-30T19:57:00Z",
+    "completed_at": "2026-10-31T01:31:00Z",
+    "commit_sha": "10a4fa0a86338b0c63dabbbdcacedb367fffedf3",
+    "pr_number": null,
+    "pr_url": null,
+    "closes_issue": false,
+    "tests_added": 122,
+    "scars_earned": [
+      "SCAR-GIT-25: Block work-discarding and force-push Git commands in hooks and MCP and gate git rebase and force branch flags",
+      "SCAR-SH-03: Strip shell redirections and unquoted comments before tokenizing Git and database subcommands"
+    ]
   }
 ]
