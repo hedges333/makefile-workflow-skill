@@ -136,5 +136,27 @@
     "scars_earned": [
       "SCAR-TEST-08: Two-Tier Test Isolation (Hermetic Unit vs Integration Fixtures)"
     ]
+  },
+  {
+    "id": "#7",
+    "issue_url": null,
+    "title": "Codify SCAR-TEST-09 for fail-fast targeted TDD loops",
+    "request": "Codify SCAR-TEST-09 into synthetic scars catalog and document fail-fast targeted test loops in TDD reference manual and AGENTS.md. Add automated regression tests in test_cross_agent_compatibility.py",
+    "branch": "feat/7-scar-test-09-fail-fast-tdd",
+    "subprojects": [
+      "rules",
+      "scripts",
+      "skills"
+    ],
+    "started_at": "2026-10-31T22:07:00Z",
+    "completed_at": "2026-10-31T22:17:20Z",
+    "commit_sha": "9d6c6c9",
+    "pr_number": null,
+    "pr_url": null,
+    "closes_issue": false,
+    "tests_added": 3,
+    "scars_earned": [
+      "SCAR-TEST-09: Fail-Fast Targeted TDD Loop (pytest -x -v)"
+    ]
   }
 ]
