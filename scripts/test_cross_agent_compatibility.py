@@ -218,6 +218,8 @@ def validate():
       errors.append(f"{ref_09} must document SCAR-PROC-104")
     if "SCAR-GIT-30" not in r09_text:
       errors.append(f"{ref_09} must document SCAR-GIT-30")
+    if "SCAR-TEST-08" not in r09_text:
+      errors.append(f"{ref_09} must document SCAR-TEST-08")
     if "SCAR-TOOL-07" not in r09_text:
       errors.append(f"{ref_09} must document SCAR-TOOL-07")
 
@@ -229,6 +231,15 @@ def validate():
       r03_text = f.read()
     if "SCAR-PROC-104" not in r03_text:
       errors.append(f"{ref_03} must document SCAR-PROC-104")
+
+  ref_04 = "skills/makefile-workflow/references/04_testing_isolation.md"
+  if not os.path.exists(ref_04):
+    errors.append(f"Missing {ref_04}")
+  else:
+    with open(ref_04) as f:
+      r04_text = f.read()
+    if "SCAR-TEST-08" not in r04_text or "two-tier" not in r04_text.lower():
+      errors.append(f"{ref_04} must document SCAR-TEST-08 and two-tier test isolation")
 
   ref_10 = "skills/makefile-workflow/references/10_security_and_data_isolation.md"
   if not os.path.exists(ref_10):
@@ -285,6 +296,8 @@ def validate():
       errors.append(f"{agents_md} must specify writing temporary scripts to temporary directories")
     if "SCAR-PROC-104" not in a_text or "targeted test loops" not in a_text.lower():
       errors.append(f"{agents_md} Section 3 must document SCAR-PROC-104 and targeted test loops")
+    if "SCAR-TEST-08" not in a_text or "two tiers" not in a_text.lower():
+      errors.append(f"{agents_md} Section 2 must document SCAR-TEST-08 and two-tier test isolation")
     if not any("rules/AGENTS.md" in e for e in errors):
       print(f"✔ Antigravity artifact lifecycle and demotion rules ({agents_md}) valid.")
 

@@ -11,7 +11,7 @@ This document tracks general coding guidelines and synthetic scars derived from 
   - **Trap**: Attempting to fix problems across multiple sections at once instead of reading target files first, making small confident edits, and iterating on targeted tests.
   - **Permanent Reflex**: Read target files and their type contracts before editing. Apply minimal, high-confidence diffs strictly within ticket scope. Run targeted tests in tight loops (`pytest path/to/test.py::test_name -v -x`) until green, leaving unrelated defects for future tickets, and run the full test suite only after the targeted test passes.
 
-- [ ] **SCAR-TEST-08: Two-Tier Test Isolation (Hermetic Unit vs Integration Fixtures)**
+- [x] **SCAR-TEST-08: Two-Tier Test Isolation (Hermetic Unit vs Integration Fixtures)**
   - **Wound**: An unprivileged test runner or CI container fails session-level database DDL or network initialization in a root fixture, causing the entire test suite to crash before running any pure unit tests.
   - **Trap**: Attaching database connections, socket initialization, or schema migrations to global `autouse=True` session fixtures instead of isolating them behind explicit markers.
   - **Permanent Reflex**: Partition test suites into two tiers: Tier 1 hermetic unit tests with zero external daemon/socket dependencies (mocked, fast, least-privilege), and Tier 2 marked integration tests (`@pytest.mark.integration`) that verify external dependencies during pre-flight.

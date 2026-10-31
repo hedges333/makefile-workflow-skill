@@ -72,6 +72,12 @@ Every scar records three facts:
 - Trap: Running test suites with default environment variables instead of dedicated test database credentials.
 - Permanent Reflex: Point all tests to `*_test` databases, in-memory stores, or mock fixtures.
 
+### SCAR-TEST-08: Two-Tier Test Isolation (Hermetic Unit vs Integration Fixtures)
+
+- Wound: An unprivileged test runner or CI container fails session-level database DDL or network initialization in a root fixture, causing the entire test suite to crash before running any pure unit tests.
+- Trap: Attaching database connections, socket initialization, or schema migrations to global `autouse=True` session fixtures instead of isolating them behind explicit markers.
+- Permanent Reflex: Partition test suites into two tiers: Tier 1 hermetic unit tests with zero external daemon or socket dependencies, and Tier 2 marked integration tests that verify external dependencies during pre-flight. Never attach live database connections or network sockets to un-isolated session fixtures.
+
 ### SCAR-TOOL-07: Prefer Installed Dart and Temporary Files for Scratch Scripts
 
 - Wound: Inline shell scripts with nested quoting fail or corrupt strings, and Python scratch scripts fail on missing packages or virtual environment restrictions.

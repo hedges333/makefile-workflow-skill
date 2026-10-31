@@ -20,3 +20,11 @@ Run four safety steps before you execute any test suite:
 2. Read `.workflow/config.json` (`database` section) or `MAKEFILE_WORKFLOW_*` environment variables for declared `prodDatabases`, `testDatabases`, and `prodHosts`.
 3. Inspect the database connection string. If it names a cloud host, staging server, `prod` database, or configured `prodDatabases` entry, stop at once.
 4. If live versus test database names remain unclear, ask the user before running tests. Never fall back to a shared or production database.
+
+## 3. Two-Tier Test Isolation Architecture (`SCAR-TEST-08`)
+
+To prevent unprivileged runner crashes, partition tests into two distinct tiers:
+
+1. Tier 1 (Hermetic Unit Tests): Run pure unit tests in memory with zero external socket or daemon dependencies. Keep execution fast under least-privilege environments.
+2. Tier 2 (Integration Tests): Mark integration tests with explicit framework markers (such as `@pytest.mark.integration` or `@tag :integration`). Verify external dependencies during pre-flight before executing integration tests.
+3. Root Fixture Safety: Never attach database DDL migrations or network socket connections to global autouse session fixtures. Unhandled fixture failures abort the entire test run before executing pure unit tests.
