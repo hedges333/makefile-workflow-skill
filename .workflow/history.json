@@ -114,5 +114,27 @@
     "scars_earned": [
       "SCAR-PROC-104: Review Before Edit, Minimal Confident Edits, and Targeted Test Loops"
     ]
+  },
+  {
+    "id": "#6",
+    "issue_url": null,
+    "title": "Codify SCAR-TEST-08 for two-tier test isolation",
+    "request": "Codify SCAR-TEST-08 into synthetic scars catalog and document two-tier test isolation architecture in testing isolation reference manual and AGENTS.md. Add automated regression tests in test_cross_agent_compatibility.py",
+    "branch": "feat/6-scar-test-08-two-tier-isolation",
+    "subprojects": [
+      "rules",
+      "scripts",
+      "skills"
+    ],
+    "started_at": "2026-10-31T21:50:00Z",
+    "completed_at": "2026-10-31T22:05:07Z",
+    "commit_sha": "901fc52",
+    "pr_number": null,
+    "pr_url": null,
+    "closes_issue": false,
+    "tests_added": 3,
+    "scars_earned": [
+      "SCAR-TEST-08: Two-Tier Test Isolation (Hermetic Unit vs Integration Fixtures)"
+    ]
   }
 ]

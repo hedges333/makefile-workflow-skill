@@ -7,3 +7,4 @@
 | 2026-10-31 | #3 (Local) | Enforce platform-neutral skills, Antigravity artifact demotion, and Pure Git fallback | `feat/3-t20-artifact-cleanup` | Local FF | +3 | `SCAR-PROC-103`, `SCAR-GIT-30` |
 | 2026-10-31 | #4 (Local) | Prefer Dart over Python for scratch scripts and temporary utilities when installed | `feat/4-dart-scratch-script-rule` | Local Squash | +3 | `SCAR-TOOL-07` |
 | 2026-10-31 | #5 (Local) | Codify SCAR-PROC-104 for review before edit and targeted test loops | `feat/5-review-before-edit-targeted-tests` | Local Squash | +3 | `SCAR-PROC-104` |
+| 2026-10-31 | #6 (Local) | Codify SCAR-TEST-08 for two-tier test isolation | `feat/6-scar-test-08-two-tier-isolation` | Local Squash | +3 | `SCAR-TEST-08` |
