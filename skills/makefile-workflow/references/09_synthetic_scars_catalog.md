@@ -78,6 +78,12 @@ Every scar records three facts:
 - Trap: Attaching database connections, socket initialization, or schema migrations to global `autouse=True` session fixtures instead of isolating them behind explicit markers.
 - Permanent Reflex: Partition test suites into two tiers: Tier 1 hermetic unit tests with zero external daemon or socket dependencies, and Tier 2 marked integration tests that verify external dependencies during pre-flight. Never attach live database connections or network sockets to un-isolated session fixtures.
 
+### SCAR-TEST-09: Fail-Fast Targeted TDD Loop (pytest -x -v)
+
+- Wound: Running a large test suite during active debugging generates hundreds of cascading tracebacks, exhausting context limits and obscuring the initial defect.
+- Trap: Running broad test suites without fail-fast flags while attempting to iterate on a single failing test.
+- Permanent Reflex: Use fail-fast flags (`pytest -x -v` or language equivalent) during active Red-Green TDD cycles. Iterate exclusively on the targeted failing test until green before running the full regression suite.
+
 ### SCAR-TOOL-07: Prefer Installed Dart and Temporary Files for Scratch Scripts
 
 - Wound: Inline shell scripts with nested quoting fail or corrupt strings, and Python scratch scripts fail on missing packages or virtual environment restrictions.

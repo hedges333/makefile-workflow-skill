@@ -16,7 +16,7 @@ This document tracks general coding guidelines and synthetic scars derived from 
   - **Trap**: Attaching database connections, socket initialization, or schema migrations to global `autouse=True` session fixtures instead of isolating them behind explicit markers.
   - **Permanent Reflex**: Partition test suites into two tiers: Tier 1 hermetic unit tests with zero external daemon/socket dependencies (mocked, fast, least-privilege), and Tier 2 marked integration tests (`@pytest.mark.integration`) that verify external dependencies during pre-flight.
 
-- [ ] **SCAR-TEST-09: Fail-Fast Targeted TDD Loop (`pytest -x -v`)**
+- [x] **SCAR-TEST-09: Fail-Fast Targeted TDD Loop (`pytest -x -v`)**
   - **Wound**: Running a large test suite during active debugging generates hundreds of cascading tracebacks, exhausting context limits and obscuring the initial defect.
   - **Trap**: Running broad test suites without fail-fast flags while attempting to iterate on a single failing test.
   - **Permanent Reflex**: Use fail-fast flags (`pytest -x -v`) during active Red-Green TDD cycles. Iterate exclusively on the targeted failing test until green before running the full regression suite.
