@@ -152,3 +152,6 @@ This document tracks general coding guidelines and synthetic scars derived from 
 
 - [ ] **Language-specific scars:**
   - For each of the languages in `./skills/makefile-workflow/references/polyglot`, research common pitfalls and traps in that language, and pre-emptively add language-specific scars to the polyglot language MD file.  These could be under a format like 'LANG-SCAR-{language name}-{number}'.
+
+- [ ] **Documentation framework:**
+  - Are there code documentation standards that could be applied as part of Pillar 6 to direct the agent to document code in a standardized way, which can then be assembled in a code documentation tree by some documentation utility for the project being worked on?
