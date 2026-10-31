@@ -115,4 +115,40 @@ This document tracks general coding guidelines and synthetic scars derived from 
 
 ## Further research
 
-- For each of the languages in `./skills/makefile-workflow/references/polyglot`, research common pitfalls and traps in that language, and pre-emptively add language-specific scars to the polyglot language MD file.
+- [ ] **Polyglot Expansion:** 
+  - Analyze whether polyglot files for the following legacy languages, application scripting languages, and data languages would be useful to add to the project:
+    - Bash
+    - COBOL
+    - Fortran
+    - PL/SQL
+    - Specialized SQL dialects like Snowflake, Cortex AISQL, Databricks, Spark
+    - Visual Basic/VB6/VBA
+    - Pascal/Delphi
+    - Ada
+    - Lisp/Scheme
+    - Objective-C
+    - REXX
+    - RPG
+    - MATLAB/Simulink
+    - VHDL/Verilog
+    - Other circuit hardware design languages?
+    - Google Apps Script
+    - LibreOffice Basic
+    - Haskell (Generic)
+    - Haskell/EDSL Copilot/Ogma (NASA-specific)
+    - GraphQL
+    - Legacy Hadoop/Pig/Hive/MapR
+    - MQL/MongoDB 
+    - MarkLogic/CTS/Xquery/Optic
+    - Neo4j/Cypher
+    - Gremlin (Amazon Neptune / Apache TinkerPop)
+    - CQL (Apache Cassandra/ScyllaDB)
+    - InfluxDB
+    - KQL (Kusto)
+    - SPL (Splunk)
+    - LogQL/PromQL (Grafana/Prometheus)
+    - Query DSL (ElasticSearch/Opensearch)
+    - Google Malloy
+
+- [ ] **Language-specific scars:**
+  - For each of the languages in `./skills/makefile-workflow/references/polyglot`, research common pitfalls and traps in that language, and pre-emptively add language-specific scars to the polyglot language MD file.  These could be under a format like 'LANG-SCAR-{language name}-{number}'.
