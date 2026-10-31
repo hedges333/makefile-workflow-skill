@@ -181,5 +181,27 @@
     "scars_earned": [
       "SCAR-TEST-08: Two-Tier Test Isolation (Hermetic Unit vs Integration Fixtures)"
     ]
+  },
+  {
+    "id": "#9",
+    "issue_url": null,
+    "title": "Restructure Scars into Hub-and-Spoke Catalog and Standardize Category-Scoped Numbering",
+    "request": "Restructure synthetic scars catalog into Hub-and-Spoke architecture with domain category files under references/scars/, Master Routing Table in 09_synthetic_scars_catalog.md, category-scoped sequential monotonic numbering, and full language name polyglot scars",
+    "branch": "feat/9-hub-and-spoke-scars-catalog",
+    "subprojects": [
+      "references",
+      "skills",
+      "scripts"
+    ],
+    "started_at": "2026-10-31T22:47:00Z",
+    "completed_at": "2026-10-31T22:56:11Z",
+    "commit_sha": "0eeec30",
+    "pr_number": null,
+    "pr_url": null,
+    "closes_issue": false,
+    "tests_added": 13,
+    "scars_earned": [
+      "SCAR-DOC-16: Concentric Documentation Rings"
+    ]
   }
 ]
