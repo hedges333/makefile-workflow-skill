@@ -47,5 +47,28 @@
       "SCAR-GIT-25: Block work-discarding and force-push Git commands in hooks and MCP and gate git rebase and force branch flags",
       "SCAR-SH-03: Strip shell redirections and unquoted comments before tokenizing Git and database subcommands"
     ]
+  },
+  {
+    "id": "#3",
+    "issue_url": null,
+    "title": "Enforce platform-neutral skills, Antigravity artifact demotion, and Pure Git hosting fallback",
+    "request": "Fix Target 20 plan artifact re-execution in long sessions by demoting artifacts via built-in tools, keep SKILL.md platform-neutral, and support Pure Git mode without gh CLI",
+    "branch": "feat/3-t20-artifact-cleanup",
+    "subprojects": [
+      "skills",
+      "rules",
+      "scripts"
+    ],
+    "started_at": "2026-10-31T19:42:00Z",
+    "completed_at": "2026-10-31T20:05:00Z",
+    "commit_sha": "83e2e68a288603de837cf382794e739f5ebf02db",
+    "pr_number": null,
+    "pr_url": null,
+    "closes_issue": false,
+    "tests_added": 3,
+    "scars_earned": [
+      "SCAR-PROC-103: Single Plan Artifact Lifecycle and Built-in Tool Demotion",
+      "SCAR-GIT-30: Pure Git Mode and Hosting Tool Discovery"
+    ]
   }
 ]
