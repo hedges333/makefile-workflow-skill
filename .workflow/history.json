@@ -70,5 +70,27 @@
       "SCAR-PROC-103: Single Plan Artifact Lifecycle and Built-in Tool Demotion",
       "SCAR-GIT-30: Pure Git Mode and Hosting Tool Discovery"
     ]
+  },
+  {
+    "id": "#4",
+    "issue_url": null,
+    "title": "Prefer Dart over Python for scratch scripts and temporary utilities when installed",
+    "request": "Implement Randal Schwartz recommendation to prefer Dart over Python for one-off scripts and automation tools when installed, fall back to Python if Dart is missing, never attempt to install Dart, and write temporary scripts to system temp directory to bypass shell quoting",
+    "branch": "feat/4-dart-scratch-script-rule",
+    "subprojects": [
+      "rules",
+      "scripts",
+      "skills"
+    ],
+    "started_at": "2026-10-31T20:23:00Z",
+    "completed_at": "2026-10-31T20:39:49Z",
+    "commit_sha": "2e5d4ad1e4fbbd9e568ea46a9a8c2f1f59c8fa72",
+    "pr_number": null,
+    "pr_url": null,
+    "closes_issue": false,
+    "tests_added": 3,
+    "scars_earned": [
+      "SCAR-TOOL-07: Prefer Dart Over Python for Scratch Scripts and Isolate Inline Shell Strings"
+    ]
   }
 ]
