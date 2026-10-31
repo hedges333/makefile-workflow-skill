@@ -38,14 +38,15 @@ Never connect tests or agent commands to live systems.
 2. Point tests to isolated test databases (for example `*_test` or configured `database.testDatabases`), in-memory databases, or mock fixtures. If live versus test database names are unclear, ask the user before running tests.
 3. Run file operations during tests inside temporary directories or mocked file systems.
 
-## 3. Code Edit and Architecture Rules
+## 3. Code Edit and Architecture Rules (`SCAR-PROC-104`)
 
 Keep each code change small and within ticket scope.
 
-1. Read target files and their type contracts before you edit them.
+1. Review before edit (`SCAR-PROC-104`): Read target files and their type contracts before you edit them.
 2. Apply minimal edits that solve the active ticket. Favor object composition over deep class inheritance.
-3. Use an ORM (a library that maps database rows to objects) by default. If large datasets slow down the ORM, encapsulate parameterized SQL or NoSQL queries behind repository methods.
-4. If you find unrelated defects during a ticket, do not edit them. Record them in ticket notes for a separate task.
+3. Run targeted test loops (`SCAR-PROC-104`): Execute targeted subproject test commands in tight loops (`pytest path/to/test.py::test_name -v -x` or script equivalent) until green before running full regression suites.
+4. Use an ORM (a library that maps database rows to objects) by default. If large datasets slow down the ORM, encapsulate parameterized SQL or NoSQL queries behind repository methods.
+5. If you find unrelated defects during a ticket, do not edit them. Record them in ticket notes for a separate task.
 
 ### 3.1 Temporary Script and Automation Rules
 

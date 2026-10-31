@@ -36,6 +36,12 @@ Every scar records three facts:
 - Trap: Creating uniquely named plan files across sessions and attempting to clean them up with shell `rm` commands that break across operating systems or trigger sandbox permission blocks.
 - Permanent Reflex: Mirror plans only to a single fixed path `<brain>/plan.md` at Target 20, demote it immediately at Target 30 entry using the built-in `write_file` tool with `UserFacing: false, RequestFeedback: false`, and treat `.workflow/state/20_plan_approved.md` as the canonical guard against duplicate execution.
 
+### SCAR-PROC-104: Review Before Edit, Minimal Confident Edits, and Targeted Test Loops
+
+- Wound: An agent makes broad, speculative changes across unreviewed files or methods, introduces silent regressions in adjacent code, and gets stuck in cascading test failures.
+- Trap: Attempting to fix problems across multiple unreviewed sections at once instead of reading target files first, making small confident edits, and iterating on targeted tests.
+- Permanent Reflex: Always inspect target files and their type contracts before editing. Apply minimal, high-confidence diffs strictly within ticket scope. Run targeted tests in tight loops (`pytest path/to/test.py::test_name -v -x` or script equivalent) until green, leaving unrelated defects for future tickets, and run the full test suite only after the targeted test passes.
+
 ### SCAR-GIT-20: Pre-Push Merge Check
 
 - Wound: An agent pushes a branch that conflicts with `main`, breaks CI, and needs history rewrites.

@@ -2,12 +2,12 @@
 
 This manual covers test-driven development (TDD, writing tests before production code), small edits, and documentation updates.
 
-## 1. Review Before Edit
+## 1. Review Before Edit (`SCAR-PROC-104`)
 
 Follow three rules before you modify any source file:
 
-1. Read the file, its imports, its type signatures, and its comments first.
-2. Make minimal edits that solve the ticket. Do not rewrite an entire module when a three-line fix works.
+1. Read the file, its imports, its type signatures, and its comments first (`SCAR-PROC-104`).
+2. Make minimal, confident edits that solve the ticket. Do not rewrite an entire module when a three-line fix works.
 3. Leave unrelated defects or style issues untouched, and note them for a separate ticket.
 
 ## 2. Red-Green-Refactor TDD Loop
@@ -34,12 +34,13 @@ Execute every code change in three ordered phases.
 2. Run the code formatter and linter on the modified files.
 3. Re-run the targeted test command to make sure that tests stay green.
 
-## 3. Targeted Subproject Test Loops
+## 3. Targeted Subproject Test Loops (`SCAR-PROC-104`)
 
 In repositories with multiple subprojects (for example `backend/`, `frontend/`, and `scripts/`), keep inner loops fast:
 
-1. Run tests only inside the modified subproject directory during Target 30.
-2. Save the full repository test sweep for Target 50 before commit.
+1. Run tests only inside the modified subproject directory during Target 30 (`SCAR-PROC-104`).
+2. Run targeted tests in tight loops (`pytest path/to/test.py::test_name -v -x` or script equivalent) until green.
+3. Save the full repository test sweep for Target 50 before commit.
 
 ## 4. Concentric Documentation Rings (`SCAR-DOC-16`)
 
