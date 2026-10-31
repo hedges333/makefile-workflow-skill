@@ -88,6 +88,14 @@ Run `make install` from a local clone to validate, test, and install the plugin:
 make install
 ```
 
+### Recommended Companion: SimpleEnglish Plugin
+
+This workflow enforces clear, jargon-free technical communication under ASD-STE100 principles. We recommend installing the [`SimpleEnglish`](https://github.com/AminBlg/SimpleEnglish) companion plugin alongside Makefile Workflow:
+
+```bash
+agy plugin install https://github.com/AminBlg/SimpleEnglish
+```
+
 ---
 
 ## Quickstart

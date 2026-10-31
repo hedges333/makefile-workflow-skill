@@ -291,6 +291,10 @@ def validate():
       errors.append(f"{critic_agent} Pillar 2 must assess test execution burden balance")
     if "ephemeral" not in critic_text.lower():
       errors.append(f"{critic_agent} Pillar 2 must clarify ephemeral loopback socket permissions")
+    if "simple english" not in critic_text.lower():
+      errors.append(f"{critic_agent} Pillar 5 must enforce Simple English standards")
+    if "20 words" not in critic_text:
+      errors.append(f"{critic_agent} Pillar 5 must document sentence length caps (20 words)")
 
   ref_04_review = "skills/makefile-workflow/references/04_six_pillars_adversarial_review.md"
   if not os.path.exists(ref_04_review):
@@ -304,6 +308,10 @@ def validate():
       errors.append(f"{ref_04_review} Pillar 2 must evaluate test burden balance")
     if "ephemeral" not in r04_rev_text.lower():
       errors.append(f"{ref_04_review} Pillar 2 must clarify ephemeral loopback socket permissions")
+    if "simple english" not in r04_rev_text.lower():
+      errors.append(f"{ref_04_review} Pillar 5 must evaluate Simple English compliance")
+    if "20 words" not in r04_rev_text:
+      errors.append(f"{ref_04_review} Pillar 5 must document sentence length caps (20 words)")
 
   ref_10 = "skills/makefile-workflow/references/10_security_and_data_isolation.md"
   if not os.path.exists(ref_10):
@@ -368,6 +376,18 @@ def validate():
       errors.append(f"{agents_md} Section 2 must clarify ephemeral loopback socket permissions")
     if not any("rules/AGENTS.md" in e for e in errors):
       print(f"✔ Antigravity artifact lifecycle and demotion rules ({agents_md}) valid.")
+
+  # 14. SimpleEnglish Companion Plugin Recommendation in README.md
+  readme_path = "README.md"
+  if not os.path.exists(readme_path):
+    errors.append(f"Missing {readme_path}")
+  else:
+    with open(readme_path) as f:
+      rm_text = f.read()
+    if "Recommended Companion: SimpleEnglish Plugin" not in rm_text or "https://github.com/AminBlg/SimpleEnglish" not in rm_text:
+      errors.append(f"{readme_path} must recommend SimpleEnglish companion plugin under Installation with repository URL")
+    else:
+      print("✔ SimpleEnglish companion plugin recommended in README.md.")
 
   if errors:
     print(f"\n❌ Validation failed with {len(errors)} error(s):")

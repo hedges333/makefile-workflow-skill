@@ -616,6 +616,32 @@ def test_session_start():
       assert len(steps_bad) == 1, f"Dropped state card prompt on {bad_cfg_raw}"
       assert "1 state card(s)" in steps_bad[0]["systemMessage"]["systemMessage"]
 
+    # 4. SimpleEnglish plugin discovery advisory
+    fake_home = tempfile.mkdtemp(prefix="fake_home_")
+    env_no_se = dict(os.environ)
+    env_no_se["HOME"] = fake_home
+    res_no_se = run_hook(
+        SESSION_START,
+        {"workspacePaths": [ws_dir]},
+        cwd=hook_cwd,
+        env=env_no_se,
+    )
+    msg_no_se = res_no_se["injectSteps"][0]["systemMessage"]["systemMessage"]
+    assert "simple-english plugin is recommended" in msg_no_se
+
+    se_plugin_dir = os.path.join(fake_home, ".gemini", "config", "plugins", "simple-english")
+    os.makedirs(se_plugin_dir, exist_ok=True)
+    with open(os.path.join(se_plugin_dir, "plugin.json"), "w") as f:
+      f.write('{"name": "simple-english"}')
+    res_with_se = run_hook(
+        SESSION_START,
+        {"workspacePaths": [ws_dir]},
+        cwd=hook_cwd,
+        env=env_no_se,
+    )
+    msg_with_se = res_with_se["injectSteps"][0]["systemMessage"]["systemMessage"]
+    assert "simple-english plugin is recommended" not in msg_with_se
+
   print("✔ SessionStart hook assertions passed.")
 
 
