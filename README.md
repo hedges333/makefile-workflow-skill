@@ -332,3 +332,10 @@ This repository uses the MIT License. Read [`LICENSE`](./LICENSE) for the full l
 - Methodology: Created by [Randal L. Schwartz](https://github.com/RandalSchwartz) in the [*Synthetic Scars* series on DEV.to](https://dev.to/randalschwartz/series/44156) and GitHub Gist `598a1f2b5760a23c1d70b57e9e85393f`.
 - Plugin Packaging and Polyglot Guides: Maintained by [Mark Hedges](https://github.com/hedges333).
 - Documentation Style: Written in plain English following ASD-STE100 principles from the [SimpleEnglish plugin](https://github.com/AminBlg/SimpleEnglish).
+
+---
+
+## Plans
+
+- Remove specific text from Nystrom's guide
+- For items to be reviewed, write artifacts and use /artifact approval instead of verbal approval.
