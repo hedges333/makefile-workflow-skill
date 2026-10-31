@@ -9,6 +9,7 @@ This reference manual documents testing and verification scars (`SCAR-TEST-*`). 
 | `SCAR-TEST-05` | Isolated Test Environments | Test Database & Environment Safety |
 | `SCAR-TEST-08` | Two-Tier Test Isolation | Hermetic Unit vs Integration Fixtures |
 | `SCAR-TEST-09` | Fail-Fast Targeted TDD Loop | Red-Green Test Iteration (`-x -v`) |
+| `SCAR-TEST-10` | Pre-Flight Structural Static Analysis Gate | Fast Structural Syntax Pre-Flight Check |
 
 ---
 
@@ -29,3 +30,9 @@ This reference manual documents testing and verification scars (`SCAR-TEST-*`). 
 - **Wound**: Running a large test suite during active debugging generates hundreds of cascading tracebacks, exhausting context limits and obscuring the initial defect.
 - **Trap**: Running broad test suites without fail-fast flags while attempting to iterate on a single failing test.
 - **Permanent Reflex**: Use fail-fast flags (`pytest -x -v` or language equivalent) during active Red-Green TDD cycles. Iterate exclusively on the targeted failing test until green before running the full regression suite.
+
+### SCAR-TEST-10: Pre-Flight Structural Static Analysis Gate
+
+- **Wound**: Running a slow runtime test suite on code with syntax errors or undefined symbols wastes time and pollutes logs.
+- **Trap**: Relying on full runtime test suites to detect basic structural syntax mistakes or missing imports.
+- **Permanent Reflex**: Run fast structural static analysis before you execute functional tests. Use `ruff` or `flake8` with `--select=E9,F63,F7,F82`, or fall back to standard library AST parsing.

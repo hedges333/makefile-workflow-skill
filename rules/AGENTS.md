@@ -45,9 +45,10 @@ Keep each code change small and within ticket scope.
 
 1. Review before edit (`SCAR-PROC-104`): Read target files and their type contracts before you edit them.
 2. Apply minimal edits that solve the active ticket. Favor object composition over deep class inheritance.
-3. Run fail-fast targeted test loops (`SCAR-PROC-104`, `SCAR-TEST-09`): Execute targeted subproject test commands in tight loops with fail-fast flags (`pytest path/to/test.py::test_name -v -x` or script equivalent) until green before running full regression suites.
-4. Use an ORM (a library that maps database rows to objects) by default. If large datasets slow down the ORM, encapsulate parameterized SQL or NoSQL queries behind repository methods.
-5. If you find unrelated defects during a ticket, do not edit them. Record them in ticket notes for a separate task.
+3. Run pre-flight structural static analysis (`SCAR-TEST-10`): If you modify code, run fast structural checks before functional test suites. Check syntax errors and undefined symbols with `ruff`, `flake8`, or standard library AST parsers.
+4. Run fail-fast targeted test loops (`SCAR-PROC-104`, `SCAR-TEST-09`): Execute targeted subproject test commands in tight loops with fail-fast flags (`pytest path/to/test.py::test_name -v -x` or script equivalent) until green before running full regression suites.
+5. Use an ORM (a library that maps database rows to objects) by default. If large datasets slow down the ORM, encapsulate parameterized SQL or NoSQL queries behind repository methods.
+6. If you find unrelated defects during a ticket, do not edit them. Record them in ticket notes for a separate task.
 
 ### 3.1 Temporary Script and Automation Rules
 

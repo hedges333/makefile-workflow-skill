@@ -3,7 +3,7 @@
 PLUGIN_NAME = makefile-workflow
 INSTALL_DIR = $(HOME)/.gemini/config/plugins/$(PLUGIN_NAME)
 
-.PHONY: all validate install uninstall test test-mcp test-compat test-hooks help
+.PHONY: all validate install uninstall test test-static test-mcp test-compat test-hooks help
 
 all: validate test
 
@@ -11,6 +11,7 @@ help:
 	@echo "Available commands:"
 	@echo "  make validate    - Check plugin manifest, skills, agents, and rules with agy"
 	@echo "  make test        - Run all automated test suites"
+	@echo "  make test-static - Run pre-flight structural static analysis"
 	@echo "  make test-mcp    - Test Model Context Protocol (MCP) server over stdio"
 	@echo "  make test-compat - Check Claude, Cursor, Copilot, and ChatGPT adapters"
 	@echo "  make test-hooks  - Test SessionStart and PreToolUse hook scripts"
@@ -25,6 +26,11 @@ validate:
 		echo "agy CLI not found in PATH. Skipping CLI check."; \
 	fi
 
+test-static:
+	@echo "Running pre-flight structural static analysis..."
+	@python3 scripts/static_check.py
+	@python3 scripts/test_static_analysis.py
+
 test-mcp:
 	@echo "Testing MCP server JSON-RPC protocol..."
 	@python3 scripts/test_mcp_server.py
@@ -37,7 +43,7 @@ test-hooks:
 	@echo "Testing SessionStart and PreToolUse hooks..."
 	@python3 scripts/test_hooks.py
 
-test: test-compat test-mcp test-hooks
+test: test-static test-compat test-mcp test-hooks
 	@echo "Testing file structure..."
 	@test -f plugin.json || (echo "Missing plugin.json" && exit 1)
 	@test -f hooks.json || (echo "Missing hooks.json" && exit 1)
@@ -54,7 +60,7 @@ install: validate test
 		echo "Copying plugin to $(INSTALL_DIR)..."; \
 		rm -rf $(INSTALL_DIR); \
 		mkdir -p $(INSTALL_DIR); \
-		tar --exclude='./.git' --exclude='./.tmp' --exclude='./.workflow/state' --exclude='./.workflow/config.json' --exclude='./.workflow/plan.md' --exclude='./.workflow/commit_msg.txt' -cf - . | tar -xf - -C $(INSTALL_DIR); \
+		tar --exclude='./.git' --exclude='./.tmp' --exclude='./.venv' --exclude='./.workflow/state' --exclude='./.workflow/config.json' --exclude='./.workflow/plan.md' --exclude='./.workflow/commit_msg.txt' -cf - . | tar -xf - -C $(INSTALL_DIR); \
 		echo "Installed to $(INSTALL_DIR)"; \
 	fi
 

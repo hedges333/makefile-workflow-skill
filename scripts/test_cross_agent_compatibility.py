@@ -224,6 +224,8 @@ def validate():
       errors.append(f"{ref_09} must document SCAR-TEST-09")
     if "SCAR-TOOL-07" not in r09_text:
       errors.append(f"{ref_09} must document SCAR-TOOL-07")
+    if "SCAR-TEST-10" not in r09_text:
+      errors.append(f"{ref_09} must document SCAR-TEST-10")
     if "Hub-and-Spoke" not in r09_text and "Master Routing" not in r09_text and "Master Index" not in r09_text:
       errors.append(f"{ref_09} must document Hub-and-Spoke architecture and Master Index")
     if "scars/process.md" not in r09_text or "scars/testing.md" not in r09_text:
@@ -244,6 +246,13 @@ def validate():
     sf_path = os.path.join(scars_dir, sf)
     if not os.path.exists(sf_path):
       errors.append(f"Missing category spoke file {sf_path}")
+
+  testing_spoke = os.path.join(scars_dir, "testing.md")
+  if os.path.exists(testing_spoke):
+    with open(testing_spoke) as f:
+      t_text = f.read()
+    if "SCAR-TEST-10" not in t_text:
+      errors.append(f"{testing_spoke} must document SCAR-TEST-10")
 
   # 11c. Full Language Name Polyglot Scars (dart_flutter.md)
   dart_guide = "skills/makefile-workflow/references/polyglot/dart_flutter.md"
@@ -266,6 +275,8 @@ def validate():
       errors.append(f"{ref_03} must document SCAR-PROC-104")
     if "SCAR-TEST-09" not in r03_text:
       errors.append(f"{ref_03} must document SCAR-TEST-09")
+    if "SCAR-TEST-10" not in r03_text:
+      errors.append(f"{ref_03} must document SCAR-TEST-10")
 
   ref_04 = "skills/makefile-workflow/references/04_testing_isolation.md"
   if not os.path.exists(ref_04):
@@ -370,6 +381,8 @@ def validate():
       errors.append(f"{agents_md} Section 3 must document SCAR-PROC-104 and targeted test loops")
     if "SCAR-TEST-09" not in a_text or "fail-fast" not in a_text.lower():
       errors.append(f"{agents_md} Section 3 must document SCAR-TEST-09 and fail-fast targeted test loops")
+    if "SCAR-TEST-10" not in a_text or "static analysis" not in a_text.lower():
+      errors.append(f"{agents_md} Section 3 must document SCAR-TEST-10 and pre-flight structural static analysis")
     if "SCAR-TEST-08" not in a_text or "two tiers" not in a_text.lower():
       errors.append(f"{agents_md} Section 2 must document SCAR-TEST-08 and two-tier test isolation")
     if "ephemeral loopback socket" not in a_text.lower() and "127.0.0.1:0" not in a_text:
@@ -388,6 +401,25 @@ def validate():
       errors.append(f"{readme_path} must recommend SimpleEnglish companion plugin under Installation with repository URL")
     else:
       print("✔ SimpleEnglish companion plugin recommended in README.md.")
+
+  # 15. Pre-flight Static Check Integration in Makefile and scripts (SCAR-TEST-10)
+  makefile_path = "Makefile"
+  if not os.path.exists(makefile_path):
+    errors.append(f"Missing {makefile_path}")
+  else:
+    with open(makefile_path) as f:
+      mk_text = f.read()
+    if "test-static:" not in mk_text:
+      errors.append(f"{makefile_path} must define 'test-static:' target")
+    if "test: test-static" not in mk_text:
+      errors.append(f"{makefile_path} 'test:' target must list 'test-static' as first prerequisite")
+
+  static_check_script = "scripts/static_check.py"
+  if not os.path.exists(static_check_script):
+    errors.append(f"Missing {static_check_script}")
+  static_test_script = "scripts/test_static_analysis.py"
+  if not os.path.exists(static_test_script):
+    errors.append(f"Missing {static_test_script}")
 
   if errors:
     print(f"\n❌ Validation failed with {len(errors)} error(s):")

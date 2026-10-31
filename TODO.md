@@ -2,6 +2,8 @@
 
 This document tracks general coding guidelines and synthetic scars derived from operational post-mortems and pair-programming experience, to be codified into `skills/makefile-workflow/references/09_synthetic_scars_catalog.md` and related reference manuals.
 
+Plan comprehensive tests with reasonable balance for performance and dependency burden.
+
 ---
 
 ## Batch 1: Process & Test Discipline Scars
@@ -21,7 +23,7 @@ This document tracks general coding guidelines and synthetic scars derived from 
   - **Trap**: Running broad test suites without fail-fast flags while attempting to iterate on a single failing test.
   - **Permanent Reflex**: Use fail-fast flags (`pytest -x -v`) during active Red-Green TDD cycles. Iterate exclusively on the targeted failing test until green before running the full regression suite.
 
-- [ ] **SCAR-TEST-10: Pre-Flight Structural Static Analysis Gate**
+- [x] **SCAR-TEST-10: Pre-Flight Structural Static Analysis Gate**
   - **Wound**: Code changes with syntax errors, undefined variables, or invalid imports fail deep inside execution or integration tests after consuming time and tokens.
   - **Trap**: Relying exclusively on runtime test execution to detect static syntax or import defects in un-executed code branches.
   - **Permanent Reflex**: Run structural static analysis (e.g. `flake8 --select=E9,F63,F7,F82` or compiler checks) as an immediate pre-flight step before running functional test suites.
