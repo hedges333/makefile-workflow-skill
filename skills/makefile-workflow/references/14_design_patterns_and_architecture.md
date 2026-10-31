@@ -58,7 +58,7 @@ Object patterns connect interchangeable objects at runtime so unit tests can pas
 
 ## 3. Game Engineering Patterns (*Game Programming Patterns*)
 
-Game engines include Godot, Haxe Flixel or Heaps, Unity, Unreal, SDL, and Raylib. If a subproject builds a game or real-time simulation, apply the patterns from `https://gameprogrammingpatterns.com/contents.html`. Real-time loops run under strict frame budgets, such as 16.6 milliseconds at 60 frames per second. Avoid hot-loop heap allocations while you keep gameplay systems decoupled.
+Game engines include Godot, Haxe Flixel or Heaps, Unity, Unreal, SDL, and Raylib. If a subproject builds a game or real-time simulation, apply the patterns from `https://gameprogrammingpatterns.com/contents.html`.  Real-time loops run under strict frame budgets, such as 16.6 milliseconds at 60 frames per second. Avoid hot-loop heap allocations while keeping gameplay systems decoupled.  A summary of the public technical concepts detailed in that work follows:
 
 ### Design Patterns Revisited for Games
 
