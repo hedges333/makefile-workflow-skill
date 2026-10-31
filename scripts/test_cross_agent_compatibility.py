@@ -224,6 +224,37 @@ def validate():
       errors.append(f"{ref_09} must document SCAR-TEST-09")
     if "SCAR-TOOL-07" not in r09_text:
       errors.append(f"{ref_09} must document SCAR-TOOL-07")
+    if "Hub-and-Spoke" not in r09_text and "Master Routing" not in r09_text and "Master Index" not in r09_text:
+      errors.append(f"{ref_09} must document Hub-and-Spoke architecture and Master Index")
+    if "scars/process.md" not in r09_text or "scars/testing.md" not in r09_text:
+      errors.append(f"{ref_09} must link to domain spoke category files")
+
+  # 11b. Hub-and-Spoke Category Files (references/scars/)
+  scars_dir = "skills/makefile-workflow/references/scars"
+  spoke_files = (
+      "process.md",
+      "testing.md",
+      "git_and_shell.md",
+      "system_and_os.md",
+      "data_and_database.md",
+      "security_and_auth.md",
+      "tooling_and_hci.md",
+  )
+  for sf in spoke_files:
+    sf_path = os.path.join(scars_dir, sf)
+    if not os.path.exists(sf_path):
+      errors.append(f"Missing category spoke file {sf_path}")
+
+  # 11c. Full Language Name Polyglot Scars (dart_flutter.md)
+  dart_guide = "skills/makefile-workflow/references/polyglot/dart_flutter.md"
+  if not os.path.exists(dart_guide):
+    errors.append(f"Missing {dart_guide}")
+  else:
+    with open(dart_guide) as f:
+      dg_text = f.read()
+    for d_scar in ("SCAR-LANG-DART-01", "SCAR-LANG-DART-02", "SCAR-LANG-DART-03", "SCAR-LANG-DART-04"):
+      if d_scar not in dg_text:
+        errors.append(f"{dart_guide} must document full language name {d_scar}")
 
   ref_03 = "skills/makefile-workflow/references/03_tdd_and_code_quality.md"
   if not os.path.exists(ref_03):

@@ -1,99 +1,84 @@
-# 09. Synthetic Scars Reference Catalog
+# 09. Synthetic Scars Master Catalog and Routing Index
 
-This manual lists core Synthetic Scars (process rules codified from past failures) so agents do not repeat known mistakes.
+This manual serves as the Master Routing Index for all Synthetic Scars (engineering rules codified from past operational failures).
 
-## 1. Structure of a Synthetic Scar
+## 1. Hub-and-Spoke Architecture
 
-Every scar records three facts:
+To scale the synthetic scar catalog to hundreds of community contributions without hitting context limits (`SCAR-PROC-99`) or causing Git merge conflicts, scars are organized into a **Hub-and-Spoke** architecture:
 
-1. Wound: The exact bug, data loss, or broken build that happened.
-2. Trap: The false assumption or shortcut that caused the failure.
-3. Permanent Reflex: The mandatory rule that prevents the failure from happening again.
+```
+references/
+├── 09_synthetic_scars_catalog.md    <-- Master Routing Index Table (Hub)
+├── scars/                           <-- Category Spokes (Universal Rules)
+│   ├── process.md                   <-- SCAR-PROC-*
+│   ├── testing.md                   <-- SCAR-TEST-*
+│   ├── git_and_shell.md             <-- SCAR-GIT-*, SCAR-SH-*
+│   ├── system_and_os.md             <-- SCAR-SYS-*, SCAR-ENV-*
+│   ├── data_and_database.md         <-- SCAR-DATA-*, SCAR-DB-*
+│   ├── security_and_auth.md         <-- SCAR-SEC-*, SCAR-AUTH-*
+│   └── tooling_and_hci.md           <-- SCAR-TOOL-*, SCAR-HCI-*, SCAR-DOC-*
+└── polyglot/                        <-- Language Spokes (Domain-Specific)
+    ├── dart_flutter.md              <-- SCAR-LANG-DART-*
+    ├── python.md                    <-- SCAR-LANG-PYTHON-*
+    ├── typescript_node.md           <-- SCAR-LANG-TYPESCRIPT-*
+    └── ... (27 languages)
+```
 
-## 2. Core Process Scars
+### Numbering Rules
+1. **Category-Scoped Sequencing**: Scars are ordered monotonically within each category spoke file.
+2. **End-of-Sequence Appending**: When adding a new scar, assign the next sequential integer and append it to the end of the appropriate category file.
+3. **Full Language Names**: Language-specific failure vaccines use full uppercase language names: `SCAR-LANG-<FULL_LANGUAGE>-<NN>`.
+4. **Three-Part Anatomy**: Every scar in a spoke file must record:
+   - **Wound**: The exact bug, data loss, or broken build that happened.
+   - **Trap**: The false assumption or shortcut that caused the failure.
+   - **Permanent Reflex**: The mandatory rule that prevents recurrence.
 
-### SCAR-PROC-95: Depth-0 Supervisor and Subagent Isolation
+---
 
-- Wound: A supervisor that runs large file searches and test suites directly hits token limits, compresses history, and drops rules.
-- Trap: Running heavy shell commands directly inside the main conversation turn for convenience.
-- Permanent Reflex: Keep the orchestrator as a Depth-0 supervisor and delegate searches, TDD loops, reviews, and CI polling to child subagents.
+## 2. Master Routing Table
 
-### SCAR-PROC-99: Single-Page SKILL.md Size Ceiling
+| Scar ID | Title | Category | Spoke File |
+| :--- | :--- | :--- | :--- |
+| `SCAR-PROC-53` | Prohibit Shell Sleep Polling | Process | [`scars/process.md`](./scars/process.md) |
+| `SCAR-PROC-95` | Depth-0 Supervisor and Subagent Isolation | Process | [`scars/process.md`](./scars/process.md) |
+| `SCAR-PROC-99` | Single-Page SKILL.md Size Ceiling | Process | [`scars/process.md`](./scars/process.md) |
+| `SCAR-PROC-102` | Human Declaration Authority | Process | [`scars/process.md`](./scars/process.md) |
+| `SCAR-PROC-103` | Single Plan Artifact Lifecycle and Demotion | Process | [`scars/process.md`](./scars/process.md) |
+| `SCAR-PROC-104` | Review Before Edit and Targeted Loops | Process | [`scars/process.md`](./scars/process.md) |
+| `SCAR-PROC-138` | Yield on Repeated Timer Conflicts | Process | [`scars/process.md`](./scars/process.md) |
+| `SCAR-TEST-05` | Isolated Test Environments | Testing | [`scars/testing.md`](./scars/testing.md) |
+| `SCAR-TEST-08` | Two-Tier Test Isolation | Testing | [`scars/testing.md`](./scars/testing.md) |
+| `SCAR-TEST-09` | Fail-Fast Targeted TDD Loop | Testing | [`scars/testing.md`](./scars/testing.md) |
+| `SCAR-SH-03` | Shell Redirection and Comment Stripping | Git & Shell | [`scars/git_and_shell.md`](./scars/git_and_shell.md) |
+| `SCAR-GIT-20` | Pre-Push Merge Check | Git & Shell | [`scars/git_and_shell.md`](./scars/git_and_shell.md) |
+| `SCAR-GIT-25` | Destructive Working-Tree and History Guards | Git & Shell | [`scars/git_and_shell.md`](./scars/git_and_shell.md) |
+| `SCAR-GIT-30` | Pure Git Mode and Tool Discovery | Git & Shell | [`scars/git_and_shell.md`](./scars/git_and_shell.md) |
+| `SCAR-ENV-04` | Shared Workspace Umask Permissions | System & OS | [`scars/system_and_os.md`](./scars/system_and_os.md) |
+| `SCAR-DB-09` | Pipeline Splitting and URI Userinfo Stripping | Data & Database | [`scars/data_and_database.md`](./scars/data_and_database.md) |
+| `SCAR-SEC-01` | Untrusted External Text Airlock | Security & Auth | [`scars/security_and_auth.md`](./scars/security_and_auth.md) |
+| `SCAR-AUTH-02` | Preserve Authorization on Same-Origin Redirects | Security & Auth | [`scars/security_and_auth.md`](./scars/security_and_auth.md) |
+| `SCAR-TOOL-07` | Prefer Dart Over Python for Scratch Scripts | Tooling & HCI | [`scars/tooling_and_hci.md`](./scars/tooling_and_hci.md) |
+| `SCAR-TOOL-13` | Single State Writer Isolation | Tooling & HCI | [`scars/tooling_and_hci.md`](./scars/tooling_and_hci.md) |
+| `SCAR-HCI-08` | Multi-Choice Prompt Rule | Tooling & HCI | [`scars/tooling_and_hci.md`](./scars/tooling_and_hci.md) |
+| `SCAR-DOC-16` | Concentric Documentation Rings | Tooling & HCI | [`scars/tooling_and_hci.md`](./scars/tooling_and_hci.md) |
 
-- Wound: Large skill files above tool byte limits truncate on read and cut off cleanup targets at the bottom of the file.
-- Trap: Packing every language guide and protocol detail into one giant `SKILL.md` file.
-- Permanent Reflex: Keep `SKILL.md` at or below 24 KB and store phase details in `references/`.
+### Language-Specific Failure Vaccines
 
-### SCAR-PROC-102: Human Declaration Authority
+| Scar ID | Title | Language | Spoke File |
+| :--- | :--- | :--- | :--- |
+| `SCAR-LANG-DART-01` | Async Timers (fakeAsync & Frame Pumping) | Dart & Flutter | [`polyglot/dart_flutter.md`](./polyglot/dart_flutter.md) |
+| `SCAR-LANG-DART-02` | Completer Guard (!isCompleted) | Dart & Flutter | [`polyglot/dart_flutter.md`](./polyglot/dart_flutter.md) |
+| `SCAR-LANG-DART-03` | Cascade AST Node Member Offset Inspection | Dart & Flutter | [`polyglot/dart_flutter.md`](./polyglot/dart_flutter.md) |
+| `SCAR-LANG-DART-04` | Widget Lifecycle & Controller Disposal | Dart & Flutter | [`polyglot/dart_flutter.md`](./polyglot/dart_flutter.md) |
 
-- Wound: An agent approves its own plan or code review and runs `git commit` without waiting for the user.
-- Trap: Treating human pause gates as optional status messages instead of hard stops.
-- Permanent Reflex: Only the human user can declare approval at Targets 20, 42, 45, 50, 60, and 75.
-
-### SCAR-PROC-103: Single Plan Artifact Lifecycle and Built-in Tool Demotion
-
-- Wound: Multiple multi-named plan artifacts left with pending feedback requests confuse agent context after compaction and trigger duplicate execution of already-completed plans.
-- Trap: Creating uniquely named plan files across sessions and attempting to clean them up with shell `rm` commands that break across operating systems or trigger sandbox permission blocks.
-- Permanent Reflex: Mirror plans only to a single fixed path `<brain>/plan.md` at Target 20, demote it immediately at Target 30 entry using the built-in `write_file` tool with `UserFacing: false, RequestFeedback: false`, and treat `.workflow/state/20_plan_approved.md` as the canonical guard against duplicate execution.
-
-### SCAR-PROC-104: Review Before Edit, Minimal Confident Edits, and Targeted Test Loops
-
-- Wound: An agent makes broad, speculative changes across unreviewed files or methods, introduces silent regressions in adjacent code, and gets stuck in cascading test failures.
-- Trap: Attempting to fix problems across multiple unreviewed sections at once instead of reading target files first, making small confident edits, and iterating on targeted tests.
-- Permanent Reflex: Always inspect target files and their type contracts before editing. Apply minimal, high-confidence diffs strictly within ticket scope. Run targeted tests in tight loops (`pytest path/to/test.py::test_name -v -x` or script equivalent) until green, leaving unrelated defects for future tickets, and run the full test suite only after the targeted test passes.
-
-### SCAR-GIT-20: Pre-Push Merge Check
-
-- Wound: An agent pushes a branch that conflicts with `main`, breaks CI, and needs history rewrites.
-- Trap: Assuming that passing local unit tests means a clean merge with `origin/main`.
-- Permanent Reflex: Run `git fetch origin main` and `git merge-tree $(git merge-base HEAD origin/main) HEAD origin/main` before every push.
-
-### SCAR-GIT-25: Destructive Working-Tree and History Guards
-
-- Wound: An agent runs `git reset --hard`, `git clean -fd`, or `git checkout --` after a test failure and destroys uncommitted work.
-- Trap: Blocking only `git push --force` to `main` while trusting prompt rules to stop other destructive Git commands.
-- Permanent Reflex: Block work-discarding and force-push Git commands in hooks and MCP. Require human approval before `git rebase` and `git branch -D`.
-
-### SCAR-GIT-30: Pure Git Mode and Hosting Tool Discovery
-
-- Wound: An agent attempts to run `gh pr create` or `gh pr checks` in an SSH-only or non-GitHub repository and stalls at Target 60 or Target 70 even though Git push succeeded.
-- Trap: Assuming every repository uses authenticated GitHub CLI tooling instead of checking whether `gh` is authenticated.
-- Permanent Reflex: Check `gh auth status` at Target 15. If `gh` is unavailable or unauthenticated, use Pure Git Mode: skip remote PR creation at Target 60, run full local repository tests at Target 70, present local landing readiness at Target 75, and squash-merge on `main` at Target 80 using standard Git commands.
-
-### SCAR-HCI-08: Multi-Choice Prompt Rule
-
-- Wound: Calling `ask_question` on single-option gates or opening modal prompts without printing the full proposal in chat.
-- Trap: Using choice widgets for simple single-action approvals.
-- Permanent Reflex: Call `ask_question` only when two or more choices exist ($N \ge 2$). For single approvals ($N = 1$), print the proposal in chat and stop tool calls.
-
-### SCAR-TEST-05: Isolated Test Environments
-
-- Wound: Automated tests connect to a shared or production database and alter live rows.
-- Trap: Running test suites with default environment variables instead of dedicated test database credentials.
-- Permanent Reflex: Point all tests to `*_test` databases, in-memory stores, or mock fixtures.
-
-### SCAR-TEST-08: Two-Tier Test Isolation (Hermetic Unit vs Integration Fixtures)
-
-- Wound: An unprivileged test runner or CI container fails session-level database DDL or network initialization in a root fixture, causing the entire test suite to crash before running any pure unit tests.
-- Trap: Attaching database connections, socket initialization, or schema migrations to global `autouse=True` session fixtures instead of isolating them behind explicit markers.
-- Permanent Reflex: Partition test suites into two tiers: Tier 1 hermetic unit tests with zero external daemon or socket dependencies (allowing self-contained ephemeral loopback sockets), and Tier 2 marked integration tests that verify external dependencies during pre-flight. Never attach live database connections or unmanaged network sockets to un-isolated session fixtures.
-
-### SCAR-TEST-09: Fail-Fast Targeted TDD Loop (pytest -x -v)
-
-- Wound: Running a large test suite during active debugging generates hundreds of cascading tracebacks, exhausting context limits and obscuring the initial defect.
-- Trap: Running broad test suites without fail-fast flags while attempting to iterate on a single failing test.
-- Permanent Reflex: Use fail-fast flags (`pytest -x -v` or language equivalent) during active Red-Green TDD cycles. Iterate exclusively on the targeted failing test until green before running the full regression suite.
-
-### SCAR-TOOL-07: Prefer Installed Dart and Temporary Files for Scratch Scripts
-
-- Wound: Inline shell scripts with nested quoting fail or corrupt strings, and Python scratch scripts fail on missing packages or virtual environment restrictions.
-- Trap: Defaulting blindly to inline multiline Python commands with complex shell escapes instead of checking for installed Dart or using script files.
-- Permanent Reflex: If Dart is installed and the language is not specified, prefer Dart over Python for scratch scripts. If Dart is not installed, use Python without attempting to install Dart. If shell commands require complex string escaping, write the script to a file in a temporary directory.
+---
 
 ## 3. Recording New Scars at Target 90
 
-During Target 90 cleanup, capture lessons from the active ticket:
+During Target 90 cleanup, record lessons from the active ticket:
 
-1. Check the session for any user corrections, rejected reviews, or CI surprises.
-2. Write each lesson using the Wound, Trap, and Permanent Reflex fields.
-3. Record the scar ID in `.workflow/history.json` and append the rule to the matching reference manual.
+1. Check the session for user corrections, rejected reviews, or CI surprises.
+2. Open the matching domain spoke in `skills/makefile-workflow/references/scars/` or language guide in `skills/makefile-workflow/references/polyglot/`.
+3. Append the new scar at the end of the file with the next sequential integer using the Wound, Trap, and Permanent Reflex fields.
+4. Add the new entry to the Master Routing Table in this index.
+5. Record the scar ID in `.workflow/history.json` and `.workflow/history.md`.

@@ -34,10 +34,10 @@ void main() {
 
 Follow four reliability rules when editing Dart or Flutter code:
 
-1. `SCAR-TEST-23` (Async Timers): Wrap timer and microtask tests in `fakeAsync`, or pump widget frames explicitly.
-2. `SCAR-TEST-25` (Completer Guard): Make sure that `!completer.isCompleted` holds before calling `completer.complete()` in callbacks.
-3. `SCAR-DART-09` (Cascade AST Nodes): Inspect Dart AST nodes for cascade expressions before reading member offsets.
-4. Widget Disposal: Cancel streams, timers, controllers, and focus nodes inside `dispose()`.
+1. `SCAR-LANG-DART-01` (Async Timers): Wrap timer and microtask tests in `fakeAsync`, or pump widget frames explicitly.
+2. `SCAR-LANG-DART-02` (Completer Guard): Make sure that `!completer.isCompleted` holds before calling `completer.complete()` in callbacks.
+3. `SCAR-LANG-DART-03` (Cascade AST Nodes): Inspect Dart AST nodes for cascade expressions before reading member offsets.
+4. `SCAR-LANG-DART-04` (Widget Lifecycle Disposal): Cancel streams, timers, controllers, and focus nodes inside `dispose()`.
 
 ## 5. One-Off Scratch Scripts and Automation Utilities
 
