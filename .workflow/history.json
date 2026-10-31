@@ -203,5 +203,28 @@
     "scars_earned": [
       "SCAR-DOC-16: Concentric Documentation Rings"
     ]
+  },
+  {
+    "id": "#10",
+    "issue_url": null,
+    "title": "Enhance Pillar 5 Readability with Simple English Rules, Plugin Discovery Hook, and README Recommendation",
+    "request": "Enhance Pillar 5 of Six-Pillar Adversarial Review to audit diffs and documentation against Simple English standards, add companion plugin discovery in SessionStart hook, and recommend SimpleEnglish in README.md",
+    "branch": "feat/10-pillar-5-simple-english-integration",
+    "subprojects": [
+      "agents",
+      "scripts",
+      "skills",
+      "docs"
+    ],
+    "started_at": "2026-10-31T22:59:00Z",
+    "completed_at": "2026-10-31T23:13:33Z",
+    "commit_sha": "223854e",
+    "pr_number": null,
+    "pr_url": null,
+    "closes_issue": false,
+    "tests_added": 5,
+    "scars_earned": [
+      "SCAR-DOC-16: Concentric Documentation Rings"
+    ]
   }
 ]
