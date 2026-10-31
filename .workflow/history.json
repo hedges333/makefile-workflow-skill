@@ -226,5 +226,28 @@
     "scars_earned": [
       "SCAR-DOC-16: Concentric Documentation Rings"
     ]
+  },
+  {
+    "id": "#11",
+    "issue_url": null,
+    "title": "Codify SCAR-TEST-10 and Implement Pre-Flight Structural Static Analysis Gate",
+    "request": "Implement SCAR-TEST-10 from TODO.md, build a standalone static check runner with fallback, dedicated tests, Makefile test-static integration, and codify scar across catalog and rules",
+    "branch": "feat/11-scar-test-10-static-analysis-gate",
+    "subprojects": [
+      "scripts",
+      "skills",
+      "rules",
+      "build"
+    ],
+    "started_at": "2026-10-31T23:16:00Z",
+    "completed_at": "2026-10-31T23:34:48Z",
+    "commit_sha": "192d76b",
+    "pr_number": null,
+    "pr_url": null,
+    "closes_issue": false,
+    "tests_added": 9,
+    "scars_earned": [
+      "SCAR-TEST-10: Pre-Flight Structural Static Analysis Gate"
+    ]
   }
 ]
