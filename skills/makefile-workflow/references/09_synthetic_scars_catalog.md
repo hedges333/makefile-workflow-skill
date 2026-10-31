@@ -76,7 +76,7 @@ Every scar records three facts:
 
 - Wound: An unprivileged test runner or CI container fails session-level database DDL or network initialization in a root fixture, causing the entire test suite to crash before running any pure unit tests.
 - Trap: Attaching database connections, socket initialization, or schema migrations to global `autouse=True` session fixtures instead of isolating them behind explicit markers.
-- Permanent Reflex: Partition test suites into two tiers: Tier 1 hermetic unit tests with zero external daemon or socket dependencies, and Tier 2 marked integration tests that verify external dependencies during pre-flight. Never attach live database connections or network sockets to un-isolated session fixtures.
+- Permanent Reflex: Partition test suites into two tiers: Tier 1 hermetic unit tests with zero external daemon or socket dependencies (allowing self-contained ephemeral loopback sockets), and Tier 2 marked integration tests that verify external dependencies during pre-flight. Never attach live database connections or unmanaged network sockets to un-isolated session fixtures.
 
 ### SCAR-TEST-09: Fail-Fast Targeted TDD Loop (pytest -x -v)
 

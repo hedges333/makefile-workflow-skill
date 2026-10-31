@@ -30,7 +30,7 @@ git diff $(git merge-base HEAD origin/main) "$APPROVED_TREE"
 Evaluate the diff across six engineering pillars:
 
 1. Pillar 1 (Intent and Scope): Does the diff solve the ticket without scope creep or unrelated edits?
-2. Pillar 2 (Verification): Did failing tests run first, and does every new branch have a passing test?
+2. Pillar 2 (Verification and Test Comprehensiveness): Did failing tests run first, and does every new branch have a passing test? Are tests as comprehensive as possible across boundary limits, error paths, and invalid inputs within a reasonable balance of execution time and dependency burden? For network protocols or daemons, do tests use self-contained ephemeral loopback sockets (such as 127.0.0.1:0 or temporary Unix domain sockets) instead of unmanaged external host daemons?
 3. Pillar 3 (Architecture and Symmetry): Does the diff match existing contracts and apply Gang of Four or game patterns ([`14_design_patterns_and_architecture.md`](./14_design_patterns_and_architecture.md))? Does it encapsulate ORM or parameterized large-dataset queries behind clean boundaries?
 4. Pillar 4 (Blast Radius): Can this change break sibling modules, public APIs, or downstream subprojects?
 5. Pillar 5 (Readability): Is the diff clear, documented, and free of debug statements or dead code?

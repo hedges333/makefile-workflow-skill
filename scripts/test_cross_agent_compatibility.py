@@ -244,6 +244,35 @@ def validate():
       r04_text = f.read()
     if "SCAR-TEST-08" not in r04_text or "two-tier" not in r04_text.lower():
       errors.append(f"{ref_04} must document SCAR-TEST-08 and two-tier test isolation")
+    if "ephemeral loopback socket" not in r04_text.lower() and "127.0.0.1:0" not in r04_text:
+      errors.append(f"{ref_04} must document self-contained ephemeral loopback sockets (127.0.0.1:0)")
+
+  # Critic agent and Six Pillars review definitions
+  critic_agent = "agents/adversarial-critic.md"
+  if not os.path.exists(critic_agent):
+    errors.append(f"Missing {critic_agent}")
+  else:
+    with open(critic_agent) as f:
+      critic_text = f.read()
+    if "comprehensiveness" not in critic_text.lower() and "comprehensive" not in critic_text.lower():
+      errors.append(f"{critic_agent} Pillar 2 must assess test comprehensiveness")
+    if "burden" not in critic_text.lower() and "balance" not in critic_text.lower():
+      errors.append(f"{critic_agent} Pillar 2 must assess test execution burden balance")
+    if "ephemeral" not in critic_text.lower():
+      errors.append(f"{critic_agent} Pillar 2 must clarify ephemeral loopback socket permissions")
+
+  ref_04_review = "skills/makefile-workflow/references/04_six_pillars_adversarial_review.md"
+  if not os.path.exists(ref_04_review):
+    errors.append(f"Missing {ref_04_review}")
+  else:
+    with open(ref_04_review) as f:
+      r04_rev_text = f.read()
+    if "comprehensiveness" not in r04_rev_text.lower() and "comprehensive" not in r04_rev_text.lower():
+      errors.append(f"{ref_04_review} Pillar 2 must evaluate test comprehensiveness")
+    if "burden" not in r04_rev_text.lower():
+      errors.append(f"{ref_04_review} Pillar 2 must evaluate test burden balance")
+    if "ephemeral" not in r04_rev_text.lower():
+      errors.append(f"{ref_04_review} Pillar 2 must clarify ephemeral loopback socket permissions")
 
   ref_10 = "skills/makefile-workflow/references/10_security_and_data_isolation.md"
   if not os.path.exists(ref_10):
@@ -304,6 +333,8 @@ def validate():
       errors.append(f"{agents_md} Section 3 must document SCAR-TEST-09 and fail-fast targeted test loops")
     if "SCAR-TEST-08" not in a_text or "two tiers" not in a_text.lower():
       errors.append(f"{agents_md} Section 2 must document SCAR-TEST-08 and two-tier test isolation")
+    if "ephemeral loopback socket" not in a_text.lower() and "127.0.0.1:0" not in a_text:
+      errors.append(f"{agents_md} Section 2 must clarify ephemeral loopback socket permissions")
     if not any("rules/AGENTS.md" in e for e in errors):
       print(f"✔ Antigravity artifact lifecycle and demotion rules ({agents_md}) valid.")
 

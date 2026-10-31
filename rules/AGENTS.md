@@ -37,7 +37,7 @@ Never connect tests or agent commands to live systems.
 1. Do not connect to live production databases, cloud storage, or mutable production files.
 2. Point tests to isolated test databases (for example `*_test` or configured `database.testDatabases`), in-memory databases, or mock fixtures. If live versus test database names are unclear, ask the user before running tests.
 3. Run file operations during tests inside temporary directories or mocked file systems.
-4. Partition tests into two tiers (`SCAR-TEST-08`): Run pure unit tests in memory with zero external socket or daemon dependencies. Isolate integration tests behind explicit markers, and never connect live sockets or database DDL inside global autouse session fixtures.
+4. Partition tests into two tiers (`SCAR-TEST-08`): Run pure unit tests in memory with zero external socket or daemon dependencies. Isolate integration tests behind explicit markers, and never connect live sockets or database DDL inside global autouse session fixtures. Tests may use self-contained ephemeral loopback sockets (`127.0.0.1:0` or temporary Unix domain sockets) for protocol or daemon verification.
 
 ## 3. Code Edit and Architecture Rules (`SCAR-PROC-104`)
 
