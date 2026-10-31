@@ -44,7 +44,7 @@ def run_test():
       assert (
           init_resp["result"]["serverInfo"]["name"] == "makefile-workflow-guard"
       )
-      assert init_resp["result"]["serverInfo"]["version"] == "1.4.0"
+      assert init_resp["result"]["serverInfo"]["version"] == "1.4.1"
       print("✔ MCP initialize handshake passed.")
 
       # 2. Tools list
@@ -303,6 +303,107 @@ def run_test():
               f"Expected safe={expected_safe} for '{cmd_str}', got {sc_data}"
           )
       print("✔ MCP custom database safety checks passed.")
+
+      # 8b. Destructive Git safety checks via workflow_safety_check (SCAR-GIT-25)
+      for git_idx, (git_cmd_str, expected_git_safe) in enumerate(
+          (
+              ("git reset --hard", False),
+              ("git -- reset --hard", False),
+              ("git clean -fd", False),
+              ("git clean -i", False),
+              ("git clean -n --no-dry-run -fd", False),
+              ("git -c clean.requireForce=false clean -d", False),
+              ("git checkout -- README.md", False),
+              ("git checkout .", False),
+              ("git checkout -p", False),
+              ("git checkout --ours README.md", False),
+              ("git checkout --theirs README.md", False),
+              ("git checkout --pathspec-from-file=paths.txt", False),
+              ("git switch --discard-changes main", False),
+              ("git restore README.md", False),
+              ("git restore --staged --no-staged README.md", False),
+              ("git stash drop", False),
+              ("git filter-branch --all", False),
+              ("git reflog delete HEAD@{1}", False),
+              ("git update-ref -d refs/heads/feat/old", False),
+              ("git update-ref --stdin", False),
+              ("git push --force origin feat/2-test", False),
+              ("git push --force-with-lease origin feat/2-test", False),
+              ("git push --mirror origin", False),
+              ("git push origin +HEAD:feat/2-test", False),
+              ("git -c remote.origin.push=+HEAD:main push origin", False),
+              ("git status && git reset --hard", False),
+              ('echo "$(git clean -fd)"', False),
+              ('bash -euo pipefail -c "git reset --hard"', False),
+              ('sh -c -- "git reset --hard"', False),
+              ('bash -co pipefail "git reset --hard"', False),
+              ('eval "git reset --hard"', False),
+              ('env -S "git reset --hard"', False),
+              ('for f in a; do git checkout -- "$f"; done', False),
+              ("git 2>&1 reset --hard", False),
+              ("psql 2>&1 -h production.db.internal myapp", False),
+              ("# Don't fail\ngit reset --hard", False),
+              ("echo $'a\\'b';git reset --hard", False),
+              ("(cd /tmp && git reset --hard)", False),
+              ("git status --short", True),
+              ("git checkout main 2>&1", True),
+              ("git checkout main 2>/dev/null", True),
+              ("git checkout -b feat/2-test", True),
+              ("git restore --staged README.md", True),
+              ("git clean -nd", True),
+              ("git branch -d feat/1-done", True),
+              ('echo "do not run git reset --hard"', True),
+              ('git commit -m "block git reset --hard"', True),
+          ),
+          start=100,
+      ):
+        git_sc_resp = send_rpc(
+            p,
+            {
+                "jsonrpc": "2.0",
+                "id": git_idx,
+                "method": "tools/call",
+                "params": {
+                    "name": "workflow_safety_check",
+                    "arguments": {"commandLine": git_cmd_str},
+                },
+            },
+        )
+        git_sc_data = json.loads(git_sc_resp["result"]["content"][0]["text"])
+        assert git_sc_data["safe"] is expected_git_safe, (
+            f"Expected safe={expected_git_safe} for '{git_cmd_str}', got {git_sc_data}"
+        )
+
+      for adv_idx, adv_cmd in enumerate(
+          (
+              "git push -u origin feat/2-test",
+              "git rebase main",
+              "git branch -D feat/old",
+              "git branch -M old main",
+              'git commit -m "feat: add safety check"',
+              "gh pr merge 2 --squash",
+              "echo ok && git rebase main",
+          ),
+          start=200,
+      ):
+        adv_sc_resp = send_rpc(
+            p,
+            {
+                "jsonrpc": "2.0",
+                "id": adv_idx,
+                "method": "tools/call",
+                "params": {
+                    "name": "workflow_safety_check",
+                    "arguments": {"commandLine": adv_cmd},
+                },
+            },
+        )
+        adv_sc_data = json.loads(adv_sc_resp["result"]["content"][0]["text"])
+        assert adv_sc_data["safe"] is True, f"Expected safe=True on '{adv_cmd}'"
+        assert "Requires human operator approval" in adv_sc_data["reason"], (
+            f"Expected operator approval reason on '{adv_cmd}', got {adv_sc_data}"
+        )
+      print("✔ MCP destructive Git command safety checks passed.")
     finally:
       p.kill()
       p.wait()

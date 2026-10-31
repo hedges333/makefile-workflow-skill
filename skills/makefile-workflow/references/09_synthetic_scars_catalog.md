@@ -36,6 +36,12 @@ Every scar records three facts:
 - Trap: Assuming that passing local unit tests means a clean merge with `origin/main`.
 - Permanent Reflex: Run `git fetch origin main` and `git merge-tree $(git merge-base HEAD origin/main) HEAD origin/main` before every push.
 
+### SCAR-GIT-25: Destructive Working-Tree and History Guards
+
+- Wound: An agent runs `git reset --hard`, `git clean -fd`, or `git checkout --` after a test failure and destroys uncommitted work.
+- Trap: Blocking only `git push --force` to `main` while trusting prompt rules to stop other destructive Git commands.
+- Permanent Reflex: Block work-discarding and force-push Git commands in hooks and MCP. Require human approval before `git rebase` and `git branch -D`.
+
 ### SCAR-HCI-08: Multi-Choice Prompt Rule
 
 - Wound: Calling `ask_question` on single-option gates or opening modal prompts without printing the full proposal in chat.

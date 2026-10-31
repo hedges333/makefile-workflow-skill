@@ -197,12 +197,30 @@ def validate():
     if os.path.exists(manifest_path):
       with open(manifest_path) as f:
         m_data = json.load(f)
-      if m_data.get("version") != "1.4.0" or "27-language" not in m_data.get(
+      if m_data.get("version") != "1.4.1" or "27-language" not in m_data.get(
           "description", ""
       ):
         errors.append(
-            f"Manifest {manifest_path} must declare version 1.4.0 and 27-language support"
+            f"Manifest {manifest_path} must declare version 1.4.1 and 27-language support"
         )
+
+  ref_09 = "skills/makefile-workflow/references/09_synthetic_scars_catalog.md"
+  if not os.path.exists(ref_09):
+    errors.append(f"Missing {ref_09}")
+  else:
+    with open(ref_09) as f:
+      r09_text = f.read()
+    if "SCAR-GIT-25" not in r09_text:
+      errors.append(f"{ref_09} must document SCAR-GIT-25")
+
+  ref_10 = "skills/makefile-workflow/references/10_security_and_data_isolation.md"
+  if not os.path.exists(ref_10):
+    errors.append(f"Missing {ref_10}")
+  else:
+    with open(ref_10) as f:
+      r10_text = f.read()
+    if "git reset --hard" not in r10_text or "git rebase" not in r10_text:
+      errors.append(f"{ref_10} must document destructive Git command protections")
 
   # 12. SKILL.md Single-Page Size Ceiling (SCAR-PROC-99)
   skill_md = "skills/makefile-workflow/SKILL.md"

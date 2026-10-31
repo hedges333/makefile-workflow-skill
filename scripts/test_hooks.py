@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Test suite for SessionStart and PreToolUse hook scripts."""
 
+import importlib.util
 import json
 import os
 import subprocess
@@ -9,6 +10,7 @@ import tempfile
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PRE_TOOL = os.path.join(REPO_ROOT, "scripts", "pre_tool_guard.py")
 SESSION_START = os.path.join(REPO_ROOT, "scripts", "session_start.py")
+MCP_SERVER = os.path.join(REPO_ROOT, "mcp", "server.py")
 
 
 def run_hook(script_path, payload, cwd=None, env=None):
@@ -336,6 +338,206 @@ def test_pre_tool_guard():
           f"Expected allow for '{allowed_cmd}', got {res_allowed}"
       )
 
+    # 10. Destructive Git command guards (SCAR-GIT-25): deny work-discarding & force-push, force_ask rebase & branch -D, allow normal workflow Git commands
+    for denied_git_cmd in (
+        "git reset --hard",
+        "git reset --hard HEAD~1",
+        "git reset --merge",
+        "git reset --keep",
+        "git clean -f",
+        "git clean -fd",
+        "git clean -xfd",
+        "git clean --force",
+        "git checkout -- README.md",
+        "git checkout HEAD -- scripts/pre_tool_guard.py",
+        "git checkout .",
+        "git checkout ./scripts",
+        "git checkout HEAD README.md",
+        "git checkout -f main",
+        "git checkout --force main",
+        "git switch -f main",
+        "git switch --force main",
+        "git switch --discard-changes main",
+        "git restore README.md",
+        "git restore .",
+        "git restore -W README.md",
+        "git restore --staged --worktree README.md",
+        "git restore -SW README.md",
+        "git stash drop",
+        "git stash drop stash@{0}",
+        "git stash clear",
+        "git filter-branch --tree-filter 'rm -f passwords.txt' HEAD",
+        "git filter-repo --path README.md",
+        "git reflog delete HEAD@{1}",
+        "git reflog expire --expire=now --all",
+        "git update-ref -d refs/heads/feat/old",
+        "git push --force origin feat/2-test",
+        "git push -f origin feat/2-test",
+        "git push -uf origin feat/2-test",
+        "git push --force-with-lease origin feat/2-test",
+        "git push --force-with-lease=feat/2-test:abcdef origin feat/2-test",
+        "git push --force-if-includes origin feat/2-test",
+        "git push origin +HEAD:feat/2-test",
+        "git push origin +feat/2-test",
+        "git -C /tmp reset --hard",
+        "git -C/tmp reset --hard",
+        "GIT_PAGER=cat git clean -fd",
+        "env GIT_TERMINAL_PROMPT=0 git reset --hard",
+        "git status && git reset --hard",
+        "git rebase main && git reset --hard",
+        'echo "$(git reset --hard)"',
+        'bash -c "git clean -fd"',
+        'bash -euo pipefail -c "git reset --hard"',
+        "(cd /tmp && git reset --hard)",
+        "timeout 30 git reset --hard",
+        "nice -n 10 git clean -fd",
+        "git checkout '*.py'",
+        "git update-ref --stdin",
+        "git clean -i",
+        "git clean --interactive",
+        "git checkout -p",
+        "git checkout --patch",
+        "git checkout --discard-changes main",
+        "git push --mirror origin",
+        # BLOCKER-1 regressions
+        "git -- reset --hard",
+        "git -- clean -fd",
+        "git -- push --force origin main",
+        "git clean -n --no-dry-run -fd",
+        "git restore --staged --no-staged README.md",
+        "git checkout --ours README.md",
+        "git checkout --theirs README.md",
+        "git checkout -2 README.md",
+        "git checkout -3 README.md",
+        "git checkout --pathspec-from-file=paths.txt",
+        "git checkout --pathspec-from-file paths.txt",
+        "git -c clean.requireForce=false clean -d",
+        "git -cclean.requireForce=0 clean -d",
+        "git -c remote.origin.push=+HEAD:main push origin",
+        # BLOCKER-2 redirection bypass regressions
+        "git 2>&1 reset --hard",
+        "psql 2>&1 -h prod.db.internal myapp",
+        ">/dev/null git reset --hard",
+        "> /dev/null git clean -fd",
+        "git 2>/dev/null reset --hard",
+        # BLOCKER-3 compound shell keywords, sh -c flag order, eval, env -S
+        'for f in README.md; do git checkout -- "$f"; done',
+        "if ! make test; then git reset --hard; fi",
+        "if false; then :; else git clean -fd; fi",
+        "! git reset --hard",
+        'sh -c -- "git reset --hard"',
+        'bash -c -e "git reset --hard"',
+        'bash -co pipefail "git reset --hard"',
+        'bash -O extglob -c "git reset --hard"',
+        'eval "git reset --hard"',
+        "eval git reset --hard",
+        'env -S "git reset --hard"',
+        'env -S"git reset --hard"',
+        'env --split-string="git reset --hard"',
+        'env --split-string "git reset --hard"',
+        # BLOCKER-4 multiline comments with apostrophes, ANSI-C quotes, unspaced fallback
+        "# Don't fail if dirty\ngit reset --hard",
+        "# it's step 1\ngit reset --hard\n# it's step 2",
+        "echo $'a\\'b';git reset --hard",
+        'echo "unterminated;git reset --hard',
+        'bash -c "psql -h prod.db.internal myapp"',
+        'git commit -m "unterminated && git reset --hard',
+    ):
+      res_git_deny = run_hook(
+          PRE_TOOL,
+          {
+              "workspacePaths": [ws_dir],
+              "toolCall": {
+                  "name": "run_command",
+                  "args": {"CommandLine": denied_git_cmd},
+              },
+          },
+          cwd=hook_cwd,
+      )
+      assert res_git_deny["decision"] == "deny", (
+          f"Expected deny for '{denied_git_cmd}', got {res_git_deny}"
+      )
+
+    for ask_git_cmd in (
+        "git rebase main",
+        "git rebase origin/main",
+        "git -C /tmp rebase main",
+        "git branch -D feat/old",
+        "git branch -df feat/old",
+        "git branch -d -f feat/old",
+        "git branch --delete --force feat/old",
+        "git branch -f main HEAD~2",
+        "git branch -M old main",
+        "git branch -C old main",
+        'git -- commit -m "feat: test"',
+        "echo ok && git rebase main",
+        'git commit -m "block git reset --hard and git clean -fd"',
+    ):
+      res_git_ask = run_hook(
+          PRE_TOOL,
+          {
+              "workspacePaths": [ws_dir],
+              "toolCall": {
+                  "name": "run_command",
+                  "args": {"CommandLine": ask_git_cmd},
+              },
+          },
+          cwd=hook_cwd,
+      )
+      assert res_git_ask["decision"] == "force_ask", (
+          f"Expected force_ask for '{ask_git_cmd}', got {res_git_ask}"
+      )
+
+    for safe_git_cmd in (
+        "git status --short",
+        "git diff --staged",
+        "git add -A",
+        "git write-tree",
+        "git checkout main",
+        "git checkout main 2>/dev/null",
+        "git checkout main 2>&1",
+        "git checkout main > ./checkout.log",
+        "git checkout main &>/dev/null",
+        "git checkout main 2>/dev/null || git checkout -b main",
+        "git restore -W --no-worktree -S README.md",
+        "git checkout feat/2-git-command-protections",
+        "git checkout -b feat/2-git-command-protections",
+        "git checkout -b feat/2-git-command-protections origin/main",
+        "git switch main",
+        "git switch -c feat/2-git-command-protections",
+        "git reset HEAD README.md",
+        "git reset --soft HEAD~1",
+        "git restore --staged README.md",
+        "git restore -S .",
+        "git clean -n",
+        "git clean -nd",
+        "git clean -n -fd",
+        "git clean -n -efoo",
+        "git stash",
+        "git stash pop",
+        "git stash list",
+        "git branch -d feat/1-done",
+        "git branch -d feat/1-Destroy",
+        "git merge --ff-only feat/1-done",
+        "git merge-tree $(git merge-base HEAD origin/main) HEAD origin/main",
+        'echo "do not run git reset --hard or git push --force"',
+        "echo 'never run $(git reset --hard) or git commit'",
+    ):
+      res_git_safe = run_hook(
+          PRE_TOOL,
+          {
+              "workspacePaths": [ws_dir],
+              "toolCall": {
+                  "name": "run_command",
+                  "args": {"CommandLine": safe_git_cmd},
+              },
+          },
+          cwd=hook_cwd,
+      )
+      assert res_git_safe["decision"] == "allow", (
+          f"Expected allow for '{safe_git_cmd}', got {res_git_safe}"
+      )
+
   print("✔ PreToolUse hook assertions passed.")
 
 
@@ -417,6 +619,66 @@ def test_session_start():
   print("✔ SessionStart hook assertions passed.")
 
 
+def _load_module(name, path):
+  spec = importlib.util.spec_from_file_location(name, path)
+  mod = importlib.util.module_from_spec(spec)
+  spec.loader.exec_module(mod)
+  return mod
+
+
+def test_hook_mcp_parity():
+  guard_mod = _load_module("pre_tool_guard", PRE_TOOL)
+  mcp_mod = _load_module("mcp_server", MCP_SERVER)
+
+  parity_commands = (
+      "git reset --hard",
+      "git -- reset --hard",
+      "git clean -fd",
+      "git clean -n --no-dry-run -fd",
+      "git clean -nd",
+      "git checkout -- README.md",
+      "git checkout --ours README.md",
+      "git checkout main 2>&1",
+      "git checkout main 2>/dev/null",
+      "git 2>&1 reset --hard",
+      "git restore README.md",
+      "git restore --staged README.md",
+      "git restore --staged --no-staged README.md",
+      "git stash drop",
+      "git update-ref --stdin",
+      "git push --force origin feat/2-test",
+      "git push --mirror origin",
+      "git push -u origin feat/2-test",
+      "git rebase main",
+      "git branch -D feat/old",
+      "git branch -M old main",
+      "git branch -d feat/1-done",
+      'git commit -m "feat: add guard"',
+      "gh pr merge 2 --squash",
+      'for f in README.md; do git checkout -- "$f"; done',
+      'sh -c -- "git reset --hard"',
+      'eval "git reset --hard"',
+      'env -S "git reset --hard"',
+      "# Don't fail\ngit reset --hard",
+      "echo $'a\\'b';git reset --hard",
+  )
+
+  for cmd in parity_commands:
+    hook_res = guard_mod.evaluate_git_command(cmd, has_review=True)
+    mcp_safe, mcp_reason = mcp_mod.evaluate_git_safety(cmd)
+    assert (hook_res["decision"] == "deny") == (not mcp_safe), (
+        f"Deny parity mismatch on '{cmd}': hook={hook_res}, mcp=({mcp_safe}, {mcp_reason})"
+    )
+    assert (hook_res["decision"] == "force_ask") == (
+        mcp_safe and mcp_reason.startswith("Requires human operator approval")
+    ), (
+        f"Gate parity mismatch on '{cmd}': hook={hook_res}, mcp=({mcp_safe}, {mcp_reason})"
+    )
+
+  print("✔ Hook and MCP Git guard parity assertions passed.")
+
+
 if __name__ == "__main__":
   test_pre_tool_guard()
   test_session_start()
+  test_hook_mcp_parity()

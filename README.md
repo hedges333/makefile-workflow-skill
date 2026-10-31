@@ -310,7 +310,8 @@ Automated test suites and agent commands must never touch live production system
 
 1. Point all database tests to isolated `*_test` databases, local containers, in-memory databases, or mock fixtures.
 2. Write temporary files during tests inside scratch directories that clean up automatically on exit.
-3. In Antigravity, [`scripts/pre_tool_guard.py`](./scripts/pre_tool_guard.py) inspects shell commands before execution, blocks production database names, blocks force-pushes to `main`, and prompts for confirmation on `git commit`, `git push`, and `gh pr merge`.
+3. Never run work-discarding Git commands such as `git reset --hard`, `git clean -fd`, unstaged `git restore`, or force-pushes.
+4. Wait for operator approval at hook prompts before `git commit`, `git push`, `gh pr merge`, `git rebase`, or `git branch -D`.
 
 ---
 

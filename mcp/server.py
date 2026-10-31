@@ -9,6 +9,7 @@ and user configuration lookup.
 import json
 import os
 import re
+import shlex
 import subprocess
 import sys
 
@@ -244,6 +245,187 @@ def is_database_command(cmd):
   return False
 
 
+def _preprocess_shell(cmd):
+  """Strips unquoted # comments and normalizes ANSI-C $'...' literals."""
+  out = []
+  quote = None
+  escaped = False
+  i = 0
+  n = len(cmd)
+  while i < n:
+    ch = cmd[i]
+    if quote is None:
+      if escaped:
+        out.append("\\")
+        out.append(ch)
+        escaped = False
+        i += 1
+        continue
+      if ch == "\\":
+        escaped = True
+        i += 1
+        continue
+      if ch == "#" and (i == 0 or cmd[i - 1] in " \t\r\n;|&()"):
+        while i < n and cmd[i] != "\n":
+          i += 1
+        continue
+      if cmd[i : i + 2] == "$'":
+        j = i + 2
+        body = []
+        closed = False
+        while j < n:
+          c2 = cmd[j]
+          if c2 == "\\" and j + 1 < n:
+            body.append(cmd[j + 1])
+            j += 2
+            continue
+          if c2 == "'":
+            closed = True
+            j += 1
+            break
+          body.append(c2)
+          j += 1
+        if closed:
+          safe_single = "'" + "".join(body).replace("'", "'\\''") + "'"
+          out.append(safe_single)
+          i = j
+          continue
+        out.append("'")
+        i += 2
+        continue
+      if ch in ("'", '"'):
+        quote = ch
+        out.append(ch)
+        i += 1
+        continue
+      out.append(ch)
+      i += 1
+      continue
+
+    if quote == "'":
+      out.append(ch)
+      if ch == "'":
+        quote = None
+      i += 1
+      continue
+
+    if escaped:
+      out.append("\\")
+      out.append(ch)
+      escaped = False
+      i += 1
+      continue
+    if ch == "\\":
+      escaped = True
+      i += 1
+      continue
+    out.append(ch)
+    if ch == '"':
+      quote = None
+    i += 1
+
+  if escaped:
+    out.append("\\")
+  return "".join(out)
+
+
+def _strip_shell_redirections(seg):
+  """Strips unquoted shell redirections (such as 2>&1, 2>/dev/null, > out)."""
+  out = []
+  quote = None
+  escaped = False
+  i = 0
+  n = len(seg)
+  while i < n:
+    ch = seg[i]
+    if escaped:
+      out.append("\\")
+      out.append(ch)
+      escaped = False
+      i += 1
+      continue
+    if ch == "\\" and quote != "'":
+      escaped = True
+      i += 1
+      continue
+    if quote:
+      out.append(ch)
+      if ch == quote:
+        quote = None
+      i += 1
+      continue
+    if ch in ("'", '"'):
+      quote = ch
+      out.append(ch)
+      i += 1
+      continue
+
+    op_idx = -1
+    if ch.isdigit() and (i == 0 or seg[i - 1] in " \t\r\n;|&()"):
+      k = i
+      while k < n and seg[k].isdigit():
+        k += 1
+      if k < n and seg[k] in ("<", ">"):
+        op_idx = k
+    elif ch in ("<", ">") or seg[i : i + 2] == "&>":
+      op_idx = i
+
+    if op_idx != -1:
+      if seg[op_idx : op_idx + 3] in ("&>>", "<<<", "<<-"):
+        j = op_idx + 3
+      elif seg[op_idx : op_idx + 2] in ("&>", ">>", "<<", "<&", ">&", "<>", ">|"):
+        j = op_idx + 2
+      else:
+        j = op_idx + 1
+      while j < n and seg[j] in (" ", "\t"):
+        j += 1
+      w_quote = None
+      w_esc = False
+      w_paren = 0
+      while j < n:
+        wc = seg[j]
+        if w_esc:
+          w_esc = False
+          j += 1
+          continue
+        if wc == "\\" and w_quote != "'":
+          w_esc = True
+          j += 1
+          continue
+        if w_quote:
+          if wc == w_quote:
+            w_quote = None
+          j += 1
+          continue
+        if wc in ("'", '"'):
+          w_quote = wc
+          j += 1
+          continue
+        if wc == "(":
+          w_paren += 1
+          j += 1
+          continue
+        if wc == ")":
+          if w_paren > 0:
+            w_paren -= 1
+            j += 1
+            continue
+          break
+        if w_paren == 0 and wc in (" ", "\t", "\r", "\n", ";", "|", "&", "<", ">"):
+          break
+        j += 1
+      out.append(" ")
+      i = j
+      continue
+
+    out.append(ch)
+    i += 1
+
+  if escaped:
+    out.append("\\")
+  return "".join(out)
+
+
 def _split_shell_subcommands(cmd):
   """Splits a shell command string on unquoted |, ||, &&, ;, and newline."""
   parts = []
@@ -282,15 +464,33 @@ def _split_shell_subcommands(cmd):
       buf = []
       i += 1
       continue
-    if ch in ("|", "&"):
+    if ch == "|":
       seg = "".join(buf).strip()
       if seg:
         parts.append(seg)
       buf = []
-      if i + 1 < n and cmd[i + 1] == ch:
+      if i + 1 < n and cmd[i + 1] == "|":
         i += 2
       else:
         i += 1
+      continue
+    if ch == "&":
+      if i + 1 < n and cmd[i + 1] == "&":
+        seg = "".join(buf).strip()
+        if seg:
+          parts.append(seg)
+        buf = []
+        i += 2
+        continue
+      if (i > 0 and cmd[i - 1] in ("<", ">")) or (i + 1 < n and cmd[i + 1] == ">"):
+        buf.append(ch)
+        i += 1
+        continue
+      seg = "".join(buf).strip()
+      if seg:
+        parts.append(seg)
+      buf = []
+      i += 1
       continue
     buf.append(ch)
     i += 1
@@ -298,6 +498,131 @@ def _split_shell_subcommands(cmd):
   if tail:
     parts.append(tail)
   return parts or [cmd]
+
+
+def _extract_shell_substitutions(cmd):
+  """Extracts unescaped $(...), `...`, and unquoted (...) subshell bodies."""
+  results = []
+  in_single = False
+  in_double = False
+  escaped = False
+  i = 0
+  n = len(cmd)
+  while i < n:
+    ch = cmd[i]
+    if escaped:
+      escaped = False
+      i += 1
+      continue
+    if ch == "\\" and not in_single:
+      escaped = True
+      i += 1
+      continue
+    if ch == "'" and not in_double:
+      in_single = not in_single
+      i += 1
+      continue
+    if ch == '"' and not in_single:
+      in_double = not in_double
+      i += 1
+      continue
+    if not in_single:
+      if cmd[i : i + 2] == "$(":
+        depth = 1
+        j = i + 2
+        sub_single = False
+        sub_double = False
+        sub_esc = False
+        while j < n and depth > 0:
+          c2 = cmd[j]
+          if sub_esc:
+            sub_esc = False
+          elif c2 == "\\" and not sub_single:
+            sub_esc = True
+          elif c2 == "'" and not sub_double:
+            sub_single = not sub_single
+          elif c2 == '"' and not sub_single:
+            sub_double = not sub_double
+          elif not sub_single and not sub_double:
+            if c2 == "(":
+              depth += 1
+            elif c2 == ")":
+              depth -= 1
+          j += 1
+        inner = cmd[i + 2 : j - 1 if depth == 0 else j].strip()
+        if inner:
+          results.append(inner)
+        i = j
+        continue
+      if ch == "`":
+        j = i + 1
+        sub_esc = False
+        while j < n:
+          c2 = cmd[j]
+          if sub_esc:
+            sub_esc = False
+          elif c2 == "\\":
+            sub_esc = True
+          elif c2 == "`":
+            break
+          j += 1
+        inner = cmd[i + 1 : j].strip()
+        if inner:
+          results.append(inner)
+        i = j + 1
+        continue
+      if not in_double and ch == "(":
+        depth = 1
+        j = i + 1
+        sub_single = False
+        sub_double = False
+        sub_esc = False
+        while j < n and depth > 0:
+          c2 = cmd[j]
+          if sub_esc:
+            sub_esc = False
+          elif c2 == "\\" and not sub_single:
+            sub_esc = True
+          elif c2 == "'" and not sub_double:
+            sub_single = not sub_single
+          elif c2 == '"' and not sub_single:
+            sub_double = not sub_double
+          elif not sub_single and not sub_double:
+            if c2 == "(":
+              depth += 1
+            elif c2 == ")":
+              depth -= 1
+          j += 1
+        inner = cmd[i + 1 : j - 1 if depth == 0 else j].strip()
+        if inner:
+          results.append(inner)
+        i = j
+        continue
+    i += 1
+  return results
+
+
+def _expand_shell_subcommands(cmd, max_depth=3):
+  """Expands pipelines, chains, command substitutions, subshells, and sh -c."""
+  expanded = []
+  queue = [(cmd, 0)]
+  while queue:
+    raw_current, depth = queue.pop(0)
+    current = _preprocess_shell(raw_current)
+    if depth < max_depth:
+      for inner in _extract_shell_substitutions(current):
+        queue.append((inner, depth + 1))
+    for raw_seg in _split_shell_subcommands(current):
+      seg = _strip_shell_redirections(raw_seg).strip()
+      if not seg:
+        continue
+      expanded.append(seg)
+      if depth < max_depth:
+        for tokens in _tokenize_subcommand(seg):
+          exe, rem = _unwrap_command_tokens(tokens)
+          if exe == "SHELL_C" and rem:
+            queue.append((rem[0], depth + 1))
+  return expanded or [cmd]
 
 
 def _contains_identifier(cmd, name):
@@ -360,12 +685,507 @@ def _evaluate_single_subcommand(subcmd, db_cfg):
 def evaluate_database_safety(cmd, db_cfg=None):
   db_cfg = db_cfg or {}
   last_reason = "OK"
-  for subcmd in _split_shell_subcommands(cmd):
+  for subcmd in _expand_shell_subcommands(cmd):
     is_safe, reason = _evaluate_single_subcommand(subcmd, db_cfg)
     if not is_safe:
       return False, reason
     if reason != "OK":
       last_reason = reason
+  return True, last_reason
+
+
+GIT_GLOBAL_VALUE_FLAGS = {
+    "-C",
+    "-c",
+    "--git-dir",
+    "--work-tree",
+    "--namespace",
+    "--super-prefix",
+    "--config-env",
+}
+
+ENV_ASSIGN_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
+SHELL_KEYWORDS = {
+    "(",
+    "{",
+    "}",
+    ")",
+    "!",
+    "if",
+    "then",
+    "elif",
+    "else",
+    "do",
+    "while",
+    "until",
+}
+
+
+def _tokenize_subcommand(subcmd):
+  """Splits a shell segment into token lists, failing closed on bad quotes."""
+  try:
+    toks = shlex.split(subcmd, posix=True)
+    return [toks] if toks else []
+  except ValueError:
+    groups = []
+    for chunk in re.split(r"(?:&&|\|\||[;|&\n])", subcmd):
+      words = [t for t in re.split(r"[\s'\"]+", chunk.strip()) if t]
+      if words:
+        groups.append(words)
+    return groups
+
+
+def _unwrap_command_tokens(tokens):
+  """Strips leading env assignments and shell wrappers, returning (exe, args)."""
+  idx = 0
+  n = len(tokens)
+  while idx < n:
+    tok = tokens[idx]
+    if tok in SHELL_KEYWORDS:
+      idx += 1
+      continue
+    if ENV_ASSIGN_RE.match(tok):
+      idx += 1
+      continue
+    exe = os.path.basename(tok)
+    if exe == "eval":
+      j = idx + 1
+      if j < n and tokens[j] == "--":
+        j += 1
+      if j < n:
+        return "SHELL_C", [" ".join(tokens[j:])]
+      return None, []
+    if exe == "env":
+      idx += 1
+      while idx < n and tokens[idx].startswith("-"):
+        flag = tokens[idx]
+        if flag == "--":
+          idx += 1
+          break
+        if flag in {"-S", "--split-string"}:
+          if idx + 1 < n:
+            return "SHELL_C", [tokens[idx + 1]]
+          return None, []
+        if flag.startswith("-S") and len(flag) > 2:
+          return "SHELL_C", [flag[2:]]
+        if flag.startswith("--split-string="):
+          return "SHELL_C", [flag.split("=", 1)[1]]
+        if flag in {"-u", "-C", "--unset", "--chdir"}:
+          idx += 2
+        else:
+          idx += 1
+      continue
+    if exe in {"command", "builtin", "exec", "nohup", "time"}:
+      idx += 1
+      while idx < n and tokens[idx].startswith("-"):
+        flag = tokens[idx]
+        if flag == "--":
+          idx += 1
+          break
+        idx += 1
+      continue
+    if exe == "sudo":
+      idx += 1
+      while idx < n and tokens[idx].startswith("-"):
+        flag = tokens[idx]
+        if flag == "--":
+          idx += 1
+          break
+        if flag in {"-u", "-g", "-C", "-D", "-h", "-p", "-r", "-t", "-T", "-U"}:
+          idx += 2
+        else:
+          idx += 1
+      continue
+    if exe == "xargs":
+      idx += 1
+      while idx < n and tokens[idx].startswith("-"):
+        flag = tokens[idx]
+        if flag == "--":
+          idx += 1
+          break
+        if flag in {"-n", "-L", "-s", "-P", "-I", "-d", "-E", "-a"}:
+          idx += 2
+        else:
+          idx += 1
+      continue
+    if exe == "timeout":
+      idx += 1
+      while idx < n and tokens[idx].startswith("-"):
+        flag = tokens[idx]
+        if flag == "--":
+          idx += 1
+          break
+        if flag in {"-k", "-s", "--kill-after", "--signal"}:
+          idx += 2
+        else:
+          idx += 1
+      if idx < n:
+        idx += 1
+      continue
+    if exe == "nice":
+      idx += 1
+      while idx < n and tokens[idx].startswith("-"):
+        flag = tokens[idx]
+        if flag == "--":
+          idx += 1
+          break
+        if flag in {"-n", "--adjustment"}:
+          idx += 2
+        else:
+          idx += 1
+      continue
+    if exe in {"sh", "bash", "zsh", "dash", "ksh"}:
+      j = idx + 1
+      has_c = False
+      while j < n:
+        flag = tokens[j]
+        if flag in {"--", "-"}:
+          j += 1
+          break
+        if flag in {"-o", "+o", "-O", "+O", "--rcfile", "--init-file"}:
+          j += 2
+          continue
+        if flag.startswith("--"):
+          j += 1
+          continue
+        if flag.startswith(("-", "+")) and len(flag) > 1:
+          is_minus = flag.startswith("-")
+          for k, ch in enumerate(flag[1:], start=1):
+            if is_minus and ch == "c":
+              has_c = True
+            elif ch in {"o", "O"}:
+              if k == len(flag) - 1:
+                j += 1
+              break
+          j += 1
+          continue
+        break
+      if has_c and j < n:
+        return "SHELL_C", [tokens[j]]
+      return exe, tokens[idx + 1 :]
+    return exe, tokens[idx + 1 :]
+  return None, []
+
+
+def _parse_git_subcommand(git_args):
+  """Strips global git flags and returns (subcommand, subcommand_args, configs)."""
+  idx = 0
+  n = len(git_args)
+  configs = []
+  while idx < n:
+    tok = git_args[idx]
+    if tok == "--":
+      if idx + 1 < n:
+        return git_args[idx + 1], git_args[idx + 2 :], configs
+      return None, [], configs
+    if tok == "-c":
+      if idx + 1 < n:
+        configs.append(git_args[idx + 1])
+      idx += 2
+      continue
+    if tok.startswith("-c") and len(tok) > 2:
+      configs.append(tok[2:])
+      idx += 1
+      continue
+    if tok in GIT_GLOBAL_VALUE_FLAGS:
+      idx += 2
+      continue
+    if tok.startswith("-C") and len(tok) > 2:
+      idx += 1
+      continue
+    if any(tok.startswith(flag + "=") for flag in GIT_GLOBAL_VALUE_FLAGS):
+      idx += 1
+      continue
+    if tok.startswith("-"):
+      idx += 1
+      continue
+    return tok, git_args[idx + 1 :], configs
+  return None, [], configs
+
+
+def _split_git_args(args, short_value_chars="", long_value_flags=()):
+  """Splits subcommand args into (long_opts, short_opts, ordered, pos, has_dd)."""
+  long_opts = []
+  short_opts = set()
+  ordered_opts = []
+  positionals = []
+  has_double_dash = False
+  i = 0
+  n = len(args)
+  while i < n:
+    tok = args[i]
+    if tok == "--":
+      has_double_dash = True
+      positionals.extend(args[i + 1 :])
+      break
+    if tok.startswith("--"):
+      long_opts.append(tok)
+      ordered_opts.append(tok)
+      if tok in long_value_flags:
+        i += 2
+      else:
+        i += 1
+      continue
+    if tok.startswith("-") and len(tok) > 1:
+      for j in range(1, len(tok)):
+        ch = tok[j]
+        short_opts.add(ch)
+        ordered_opts.append(f"-{ch}")
+        if ch in short_value_chars:
+          if j == len(tok) - 1:
+            i += 1
+          break
+      i += 1
+      continue
+    positionals.append(tok)
+    i += 1
+  return long_opts, short_opts, ordered_opts, positionals, has_double_dash
+
+
+def _has_clean_force_config(configs):
+  for item in configs:
+    if "=" in item:
+      key, val = item.split("=", 1)
+      if key.strip().lower() == "clean.requireforce" and val.strip().lower() in {
+          "false",
+          "0",
+          "no",
+          "off",
+      }:
+        return True
+  return False
+
+
+def _has_push_force_config(configs):
+  for item in configs:
+    if "=" in item:
+      key, val = item.split("=", 1)
+      k_low = key.strip().lower()
+      v_str = val.strip()
+      if re.match(r"^remote\..+\.push$", k_low) and v_str.startswith("+"):
+        return True
+  return False
+
+
+def _evaluate_git_tokens_safety(tokens):
+  """Returns (safe: bool, reason: str) for MCP workflow_safety_check."""
+  exe, rem = _unwrap_command_tokens(tokens)
+  if not exe or exe == "SHELL_C":
+    return True, "OK"
+
+  if exe == "gh":
+    _, _, _, gh_pos, _ = _split_git_args(
+        rem,
+        short_value_chars="R",
+        long_value_flags=("--repo", "--hostname"),
+    )
+    if len(gh_pos) >= 2 and gh_pos[0] == "pr" and gh_pos[1] == "merge":
+      return True, "Requires human operator approval at Target 75 Landing Gate"
+    return True, "OK"
+
+  if exe != "git":
+    return True, "OK"
+
+  subcmd, sub_args, git_configs = _parse_git_subcommand(rem)
+  if not subcmd:
+    return True, "OK"
+
+  if subcmd == "reset":
+    long_opts, _, _, _, _ = _split_git_args(sub_args)
+    for bad_flag in ("--hard", "--merge", "--keep"):
+      if bad_flag in long_opts:
+        return False, f"Destructive Git command blocked: git reset {bad_flag}"
+    return True, "OK"
+
+  if subcmd == "clean":
+    _, _, ordered_opts, _, _ = _split_git_args(
+        sub_args,
+        short_value_chars="e",
+        long_value_flags=("--exclude",),
+    )
+    cfg_force = _has_clean_force_config(git_configs)
+    dry_run = False
+    force = cfg_force
+    interactive = False
+    for opt in ordered_opts:
+      if opt in {"-n", "--dry-run"}:
+        dry_run = True
+      elif opt == "--no-dry-run":
+        dry_run = False
+      elif opt in {"-f", "--force"}:
+        force = True
+      elif opt == "--no-force":
+        force = cfg_force
+      elif opt in {"-i", "--interactive"}:
+        interactive = True
+      elif opt == "--no-interactive":
+        interactive = False
+    if (force or interactive) and not dry_run:
+      return False, "Destructive Git command blocked: git clean"
+    return True, "OK"
+
+  if subcmd == "checkout":
+    long_opts, short_opts, _, pos, has_dd = _split_git_args(
+        sub_args,
+        short_value_chars="bBU",
+        long_value_flags=(
+            "--orphan",
+            "--conflict",
+            "--inter-hunk-context",
+            "--pathspec-from-file",
+        ),
+    )
+    if (
+        any(ch in short_opts for ch in ("f", "p", "2", "3"))
+        or any(
+            opt
+            in {
+                "--force",
+                "--discard-changes",
+                "--patch",
+                "--ours",
+                "--theirs",
+                "--pathspec-from-file",
+            }
+            or opt.startswith("--pathspec-from-file=")
+            for opt in long_opts
+        )
+    ):
+      return False, "Destructive Git command blocked: git checkout --force"
+    if has_dd:
+      return False, "Destructive Git command blocked: git checkout -- <path>"
+    if any(
+        p in {".", ".."}
+        or p.startswith(("./", "../"))
+        or any(ch in p for ch in "*?[")
+        for p in pos
+    ):
+      return False, "Destructive Git command blocked: path-based git checkout"
+    creating_branch = (
+        "b" in short_opts or "B" in short_opts or "--orphan" in long_opts
+    )
+    if not creating_branch and len(pos) >= 2:
+      return False, "Destructive Git command blocked: git checkout <tree> <path>"
+    return True, "OK"
+
+  if subcmd == "switch":
+    long_opts, short_opts, _, _, _ = _split_git_args(
+        sub_args,
+        short_value_chars="cC",
+        long_value_flags=("--orphan", "--conflict"),
+    )
+    if (
+        "f" in short_opts
+        or "--force" in long_opts
+        or "--discard-changes" in long_opts
+    ):
+      return False, "Destructive Git command blocked: git switch --discard-changes"
+    return True, "OK"
+
+  if subcmd == "restore":
+    _, _, ordered_opts, _, _ = _split_git_args(
+        sub_args,
+        short_value_chars="s",
+        long_value_flags=("--source", "--conflict", "--pathspec-from-file"),
+    )
+    staged = False
+    worktree = False
+    for opt in ordered_opts:
+      if opt in {"-S", "--staged"}:
+        staged = True
+      elif opt == "--no-staged":
+        staged = False
+      elif opt in {"-W", "--worktree"}:
+        worktree = True
+      elif opt == "--no-worktree":
+        worktree = False
+    if not staged or worktree:
+      return False, "Destructive Git command blocked: working-tree git restore"
+    return True, "OK"
+
+  if subcmd == "stash":
+    _, _, _, pos, _ = _split_git_args(
+        sub_args,
+        short_value_chars="m",
+        long_value_flags=("--message", "--pathspec-from-file"),
+    )
+    if pos and pos[0] in {"drop", "clear"}:
+      return False, f"Destructive Git command blocked: git stash {pos[0]}"
+    return True, "OK"
+
+  if subcmd in {"filter-branch", "filter-repo"}:
+    return False, f"Destructive Git command blocked: git {subcmd}"
+
+  if subcmd == "reflog":
+    _, _, _, pos, _ = _split_git_args(sub_args)
+    if pos and pos[0] in {"delete", "expire"}:
+      return False, f"Destructive Git command blocked: git reflog {pos[0]}"
+    return True, "OK"
+
+  if subcmd == "update-ref":
+    long_opts, short_opts, _, _, _ = _split_git_args(
+        sub_args, short_value_chars="m"
+    )
+    if "d" in short_opts or "--stdin" in long_opts:
+      return False, "Destructive Git command blocked: git update-ref"
+    return True, "OK"
+
+  if subcmd == "push":
+    long_opts, short_opts, _, pos, _ = _split_git_args(
+        sub_args,
+        short_value_chars="o",
+        long_value_flags=("--repo", "--receive-pack", "--exec", "--push-option"),
+    )
+    has_force_flag = (
+        "f" in short_opts
+        or any(
+            opt
+            in {"--force", "--force-with-lease", "--force-if-includes", "--mirror"}
+            or opt.startswith("--force-with-lease=")
+            for opt in long_opts
+        )
+    )
+    has_plus_refspec = (
+        any(p.startswith("+") and len(p) > 1 for p in pos)
+        or _has_push_force_config(git_configs)
+    )
+    if has_force_flag or has_plus_refspec:
+      return False, "Destructive Git command blocked: force-push is forbidden"
+    return True, "Requires human operator approval at Target 60 Push Gate"
+
+  if subcmd == "rebase":
+    return True, "Requires human operator approval before running git rebase"
+
+  if subcmd == "branch":
+    long_opts, short_opts, _, _, _ = _split_git_args(
+        sub_args,
+        short_value_chars="u",
+        long_value_flags=("--set-upstream-to",),
+    )
+    has_force_short = any(ch in short_opts for ch in ("D", "M", "C", "f"))
+    if has_force_short or "--force" in long_opts:
+      return (
+          True,
+          "Requires human operator approval before running git branch force flags",
+      )
+    return True, "OK"
+
+  if subcmd == "commit":
+    return True, "Requires human operator approval at Target 50 Commit Gate"
+
+  return True, "OK"
+
+
+def evaluate_git_safety(cmd):
+  """Checks all shell subcommands for destructive Git operations."""
+  last_reason = "OK"
+  for subcmd in _expand_shell_subcommands(cmd):
+    for tokens in _tokenize_subcommand(subcmd):
+      is_safe, reason = _evaluate_git_tokens_safety(tokens)
+      if not is_safe:
+        return False, reason
+      if reason != "OK" and last_reason == "OK":
+        last_reason = reason
   return True, last_reason
 
 
@@ -378,7 +1198,7 @@ def handle_initialize(request_id):
           "capabilities": {"tools": {}},
           "serverInfo": {
               "name": "makefile-workflow-guard",
-              "version": "1.4.0",
+              "version": "1.4.1",
           },
       },
   }
@@ -466,7 +1286,8 @@ def handle_tools_list(request_id):
           "name": "workflow_safety_check",
           "description": (
               "Checks a shell command or connection string to make sure that"
-              " it does not connect to a production database."
+              " it does not connect to a production database or run a"
+              " destructive Git command."
           ),
           "inputSchema": {
               "type": "object",
@@ -652,6 +1473,12 @@ def handle_tools_call(request_id, tool_name, arguments):
     ws = resolve_workspace_dir(arguments)
     cfg = resolve_workflow_config(ws)
     is_safe, reason = evaluate_database_safety(cmd, cfg.get("database"))
+    if is_safe:
+      git_safe, git_reason = evaluate_git_safety(cmd)
+      if not git_safe:
+        is_safe, reason = False, git_reason
+      elif reason == "OK" and git_reason != "OK":
+        reason = git_reason
     return {
         "jsonrpc": "2.0",
         "id": request_id,

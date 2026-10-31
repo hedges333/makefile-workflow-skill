@@ -1,6 +1,6 @@
 # 10. Security Airlock and Production Data Protection
 
-This manual covers prompt injection defense, safe shell execution, and production data protection.
+This manual covers prompt injection defense, safe shell execution, production data protection, and destructive Git command guards.
 
 ## 1. Untrusted External Text Airlock (`SCAR-SEC-01`)
 
@@ -37,3 +37,13 @@ Make sure that credentials and live databases stay protected at all times:
 2. If a test needs an API key, make sure that the active value is a dummy or sandbox credential.
 3. Before you run any database migration or test command, make sure that the target host is `localhost`, `127.0.0.1`, `:memory:`, a local container, or a configured `testDatabases` target.
 4. Declare custom live database names and hosts in `.workflow/config.json` (`database.prodDatabases` and `database.prodHosts`) or `MAKEFILE_WORKFLOW_PROD_DBS` so hardware hooks block them automatically.
+
+## 4. Destructive Git Command Protection (`SCAR-GIT-25`)
+
+Hardware hooks and the MCP safety tool inspect Git commands before execution:
+
+1. Never run `git reset --hard`, `git reset --merge`, `git reset --keep`, or `git clean -f` to clear failing edits.
+2. Never overwrite local files with `git checkout --`, `git checkout .`, `git switch --discard-changes`, or unstaged `git restore`.
+3. Never drop stashes or rewrite refs with `git stash drop`, `git filter-branch`, `git reflog delete`, or `git update-ref -d`.
+4. Never run `git push --force`, `git push --force-with-lease`, or `+` refspecs (source-to-target branch mappings) on any branch.
+5. If upstream conflicts require `git rebase` or you need `git branch -D`, wait for operator approval first.
