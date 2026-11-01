@@ -35,7 +35,7 @@ CommitPhase   ::= !DeclareCommit ?AssertCommit !DeclarePush ?AssertPR ( ?AssertQ
 .PHONY: finish land ready-to-land bot-quiescence push commit approved-review triaged-blockers adversarial-review implementation-diff approved-plan archaeology-verified ticket-assigned read-init-d
 
 finish: land codified-scars-consolidated
-	@echo "[Target 90] Update history ledger and mark 99_next_action.md COMPLETE..."
+	@echo "[Target 90] Update history ledger, push origin main, and mark 99_next_action.md COMPLETE..."
 codified-scars-consolidated: land
 	@echo "[Orchestrator] Record human corrections and critic blockers in scar catalog..."
 land: ready-to-land human-landing-approval
@@ -92,7 +92,7 @@ At the start of each turn or after context compaction (automatic chat history co
 | `70` | Pull request is open and CI or review bots are active | `bot-quiescence` | Call `workflow_poll_ci` ([`references/07`](./references/07_ci_and_bot_triage.md)), write `70_bot_triage.md`, triage bot comments if present. |
 | `75` | CI is green and zero open bot comments remain | `ready-to-land` | Print CI assertions and 7-criteria policy table, then pause for `human-landing-approval`. |
 | `80` | Human approved landing | `land` | Squash-merge pull request, delete ticket branch, and fast-forward default branch. |
-| `90` | Pull request merged and ticket branch deleted | `finish` | Record scars, update `.workflow/history.json` and `.workflow/history.md`, mark `99_next_action.md` complete. |
+| `90` | Pull request merged and ticket branch deleted | `finish` | Record scars, update ledger, push origin main (if direct push allowed), mark `99_next_action.md` complete. |
 
 ---
 
@@ -236,7 +236,8 @@ Read [`references/09`](./references/09_synthetic_scars_catalog.md) and [`referen
 
 1. Review the session for human corrections and record any new Synthetic Scars (process rules learned from past failures).
 2. Append the completed ticket record to `.workflow/history.json` and `.workflow/history.md`.
-3. Mark `.workflow/state/99_next_action.md` as `COMPLETE (make finish satisfied)` and print the closing summary in chat.
+3. If direct push is permitted, commit ledger files and run `git push origin main`. If branch protection forbids direct push, record the ledger at Target 75 before merge.
+4. Mark `.workflow/state/99_next_action.md` as `COMPLETE (make finish satisfied)` and print the closing summary in chat.
 
 ---
 

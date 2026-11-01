@@ -666,6 +666,22 @@ def validate():
     if "GH-1" not in hmd_text:
       errors.append(f"{history_md_path} must use GH-<N> for GitHub issue links")
 
+  # Request History Ledger Git lifecycle documentation check
+  ledger_ref = "skills/makefile-workflow/references/12_request_history_ledger.md"
+  if os.path.exists(ledger_ref):
+    with open(ledger_ref) as f:
+      ledger_text = f.read()
+    if "git push origin main" not in ledger_text:
+      errors.append(
+          f"{ledger_ref} must document 'git push origin main' for Target 90"
+          " history commit push"
+      )
+    if "branch protection" not in ledger_text.lower():
+      errors.append(
+          f"{ledger_ref} must document branch protection lifecycle for request"
+          " history ledger"
+      )
+
   intake_ref = "skills/makefile-workflow/references/01_intake_and_branching.md"
   if os.path.exists(intake_ref):
     with open(intake_ref) as f:

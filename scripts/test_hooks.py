@@ -115,6 +115,70 @@ def test_pre_tool_guard():
     assert r5_present["decision"] == "force_ask"
     assert "present" in r5_present["reason"]
 
+    # Regression test for BLOCKER-2: Realistic 99_next_action.md with static milestone list
+    with open(
+        os.path.join(state_dir, "99_next_action.md"), "w", encoding="utf-8"
+    ) as f:
+      f.write(
+          "# 99_next_action: Live Memento Readerboard\n\n"
+          "- Ticket: [GH-42: Fix auth timeout](https://github.com/org/repo/issues/42)\n"
+          "- Branch: feat/42-auth-timeout\n"
+          "- Active Target: Target 50 (commit)\n"
+          "- Last Completed Step: Target 45 (approved-review)\n\n"
+          "## Milestone Progress\n"
+          "- [x] T00: read-init-d\n"
+          "- [x] T10: ticket-assigned\n"
+          "- [x] T15: archaeology-verified\n"
+          "- [x] T20: approved-plan\n"
+          "- [x] T30: implementation-diff\n"
+          "- [x] T40: adversarial-review\n"
+          "- [x] T45: approved-review\n"
+          "- [>] T50: commit\n"
+          "- [ ] T60: push\n"
+          "- [ ] T70: bot-quiescence\n"
+          "- [ ] T75: ready-to-land\n"
+          "- [ ] T80: land\n"
+          "- [ ] T90: finish (History Ledger)\n"
+      )
+
+    r5_milestones_present = run_hook(
+        PRE_TOOL,
+        {
+            "workspacePaths": [ws_dir],
+            "toolCall": {
+                "name": "run_command",
+                "args": {"CommandLine": "git commit -m 'feat: regular feature commit'"},
+            },
+        },
+        cwd=hook_cwd,
+    )
+    assert r5_milestones_present["decision"] == "force_ask"
+    assert "Target 50 Commit Gate" in r5_milestones_present["reason"]
+    assert "Target 90 History Ledger Gate" not in r5_milestones_present["reason"]
+    assert "present" in r5_milestones_present["reason"]
+
+    # Also test missing review card in presence of 99_next_action.md
+    os.remove(os.path.join(state_dir, "45_review_approved.md"))
+    r5_milestones_missing = run_hook(
+        PRE_TOOL,
+        {
+            "workspacePaths": [ws_dir],
+            "toolCall": {
+                "name": "run_command",
+                "args": {"CommandLine": "git commit -m 'feat: regular feature commit'"},
+            },
+        },
+        cwd=hook_cwd,
+    )
+    assert r5_milestones_missing["decision"] == "force_ask"
+    assert "Target 50 Commit Gate" in r5_milestones_missing["reason"]
+    assert "Target 90 History Ledger Gate" not in r5_milestones_missing["reason"]
+    assert "missing" in r5_milestones_missing["reason"]
+
+    # Restore 45_review_approved.md
+    with open(os.path.join(state_dir, "45_review_approved.md"), "w", encoding="utf-8") as f:
+      f.write("APPROVED\n")
+
     # 6. git push and gh pr merge always prompt with force_ask
     r6 = run_hook(
         PRE_TOOL,
@@ -141,6 +205,67 @@ def test_pre_tool_guard():
         cwd=hook_cwd,
     )
     assert r7["decision"] == "force_ask"
+
+    # 6b. Target 90 History Ledger commit and push gates
+    # a) Commit with docs(history): message returns Target 90 History Ledger Gate
+    r_t90_commit_msg = run_hook(
+        PRE_TOOL,
+        {
+            "workspacePaths": [ws_dir],
+            "toolCall": {
+                "name": "run_command",
+                "args": {
+                    "CommandLine": "git commit -m 'docs(history): record GH-4'"
+                },
+            },
+        },
+        cwd=hook_cwd,
+    )
+    assert r_t90_commit_msg["decision"] == "force_ask"
+    assert "Target 90 History Ledger Gate" in r_t90_commit_msg["reason"]
+    assert "Target 50 Commit Gate" not in r_t90_commit_msg["reason"]
+
+    # Commit under Target 90 state card (99_next_action.md indicating Target 90)
+    with open(
+        os.path.join(state_dir, "99_next_action.md"), "w", encoding="utf-8"
+    ) as f:
+      f.write("# 99_next_action\n- Active Target: Target 90 (finish)\n")
+
+    r_t90_commit_state = run_hook(
+        PRE_TOOL,
+        {
+            "workspacePaths": [ws_dir],
+            "toolCall": {
+                "name": "run_command",
+                "args": {
+                    "CommandLine": (
+                        "git commit -m 'chore: update ledger'"
+                        " .workflow/history.json"
+                    )
+                },
+            },
+        },
+        cwd=hook_cwd,
+    )
+    assert r_t90_commit_state["decision"] == "force_ask"
+    assert "Target 90 History Ledger Gate" in r_t90_commit_state["reason"]
+    assert "Target 50 Commit Gate" not in r_t90_commit_state["reason"]
+
+    # b) Push command on branch main under Target 90 state returns Target 90 History Push Gate
+    r_t90_push = run_hook(
+        PRE_TOOL,
+        {
+            "workspacePaths": [ws_dir],
+            "toolCall": {
+                "name": "run_command",
+                "args": {"CommandLine": "git push origin main"},
+            },
+        },
+        cwd=hook_cwd,
+    )
+    assert r_t90_push["decision"] == "force_ask"
+    assert "Target 90 History Push Gate" in r_t90_push["reason"]
+    assert "Target 60 Push Gate" not in r_t90_push["reason"]
 
     # 7. Configured prodDatabases, prodHosts, and testDatabases in .workflow/config.json
     with open(

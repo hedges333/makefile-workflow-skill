@@ -1224,6 +1224,19 @@ def _evaluate_git_tokens_safety(tokens):
     return True, "OK"
 
   if subcmd == "commit":
+    if any(
+        k in " ".join(tokens)
+        for k in (
+            "docs(history):",
+            ".workflow/history",
+            "history.json",
+            "history.md",
+        )
+    ):
+      return (
+          True,
+          "Requires human operator approval at Target 90 History Ledger Gate",
+      )
     return True, "Requires human operator approval at Target 50 Commit Gate"
 
   return True, "OK"

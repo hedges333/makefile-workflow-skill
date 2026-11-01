@@ -46,6 +46,7 @@ Target 75 is a mandatory human pause gate.
    - Dependency changes.
    - Test coverage.
 4. Stop tool calls (`tool_calls: []`) and wait for `human-landing-approval`.
+5. If branch protection forbids direct push, commit ledger updates on the feature branch before requesting landing approval.
 
 ## 3. Target 80: Merge and Branch Cleanup
 
@@ -64,7 +65,7 @@ After the user approves landing, merge the pull request and clean up local Git s
    ```bash
    git branch -D <branch-name>
    ```
-5. Advance to Target 90.
+5. Advance to Target 90. At Target 90, update the history ledger and push to `origin main` if direct push is permitted.
 
 ## 4. Pure Git Mode (`SCAR-GIT-30`)
 
@@ -80,4 +81,4 @@ If the repository uses Pure Git Mode (`HOSTING_MODE: PURE_GIT`), remote bots and
    git push origin main
    git branch -d <branch-name>
    ```
-4. Advance to Target 90.
+4. Advance to Target 90. Update `.workflow/history.json` and `.workflow/history.md`, commit, and run `git push origin main`.
