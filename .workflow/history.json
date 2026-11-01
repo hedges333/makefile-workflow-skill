@@ -339,5 +339,25 @@
     "scars_earned": [
       "SCAR-TEST-11: Shift-Left Testing Balance in Archaeology and Planning"
     ]
+  },
+  {
+    "id": "#1 (GH-1)",
+    "issue_url": "https://github.com/hedges333/makefile-workflow-skill/issues/1",
+    "title": "Fix Target 40 critic prompt to diff against locked APPROVED_TREE instead of HEAD",
+    "request": "Fix Target 40 critic prompt in agents/adversarial-critic.md and CLAUDE.md to diff against locked Merkle tree hash from .workflow/state/approved_tree.txt instead of uncommitted HEAD, preventing vacuous review approvals.",
+    "branch": "fix/1-critic-diff-approved-tree",
+    "subprojects": [
+      "agents",
+      "scripts",
+      "rules"
+    ],
+    "started_at": "2026-11-01T04:24:00Z",
+    "completed_at": "2026-11-01T04:51:28Z",
+    "commit_sha": "a7ffd23",
+    "pr_number": 6,
+    "pr_url": "https://github.com/hedges333/makefile-workflow-skill/pull/6",
+    "closes_issue": true,
+    "tests_added": 4,
+    "scars_earned": []
   }
 ]
