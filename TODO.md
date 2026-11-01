@@ -162,3 +162,5 @@ Plan comprehensive tests with reasonable balance for performance and dependency 
 
 - [ ] **Documentation framework:**
   - Are there code documentation standards that could be applied as part of Pillar 6 to direct the agent to document code in a standardized way, which can then be assembled in a code documentation tree by some documentation utility for the project being worked on?
+
+- [ ] **YOLO mode?**
