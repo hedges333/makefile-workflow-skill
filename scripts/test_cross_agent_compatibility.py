@@ -226,6 +226,8 @@ def validate():
       errors.append(f"{ref_09} must document SCAR-TOOL-07")
     if "SCAR-TEST-10" not in r09_text:
       errors.append(f"{ref_09} must document SCAR-TEST-10")
+    if "SCAR-SYS-05" not in r09_text:
+      errors.append(f"{ref_09} must document SCAR-SYS-05")
     if "Hub-and-Spoke" not in r09_text and "Master Routing" not in r09_text and "Master Index" not in r09_text:
       errors.append(f"{ref_09} must document Hub-and-Spoke architecture and Master Index")
     if "scars/process.md" not in r09_text or "scars/testing.md" not in r09_text:
@@ -253,6 +255,15 @@ def validate():
       t_text = f.read()
     if "SCAR-TEST-10" not in t_text:
       errors.append(f"{testing_spoke} must document SCAR-TEST-10")
+
+  system_spoke = os.path.join(scars_dir, "system_and_os.md")
+  if os.path.exists(system_spoke):
+    with open(system_spoke) as f:
+      sys_text = f.read()
+    if "SCAR-SYS-05" not in sys_text:
+      errors.append(f"{system_spoke} must document SCAR-SYS-05")
+    if "shutil.copyfile" not in sys_text or "copystat" not in sys_text:
+      errors.append(f"{system_spoke} must document shutil.copyfile and copystat for SCAR-SYS-05")
 
   # 11c. Full Language Name Polyglot Scars (dart_flutter.md)
   dart_guide = "skills/makefile-workflow/references/polyglot/dart_flutter.md"
@@ -334,6 +345,8 @@ def validate():
       errors.append(f"{ref_10} must document destructive Git command protections")
     if "SCAR-TOOL-07" not in r10_text or "prefer dart" not in r10_text.lower():
       errors.append(f"{ref_10} must document Dart scratch script and temporary directory rules")
+    if "SCAR-SYS-05" not in r10_text or "copyfile" not in r10_text.lower():
+      errors.append(f"{ref_10} Section 5 must document SCAR-SYS-05 and cross-user file promotion")
 
   # 12. SKILL.md Single-Page Size Ceiling (SCAR-PROC-99)
   skill_md = "skills/makefile-workflow/SKILL.md"
@@ -387,6 +400,8 @@ def validate():
       errors.append(f"{agents_md} Section 2 must document SCAR-TEST-08 and two-tier test isolation")
     if "ephemeral loopback socket" not in a_text.lower() and "127.0.0.1:0" not in a_text:
       errors.append(f"{agents_md} Section 2 must clarify ephemeral loopback socket permissions")
+    if "SCAR-SYS-05" not in a_text or "shutil.copyfile" not in a_text:
+      errors.append(f"{agents_md} Section 2 must document SCAR-SYS-05 cross-user file promotion")
     if not any("rules/AGENTS.md" in e for e in errors):
       print(f"✔ Antigravity artifact lifecycle and demotion rules ({agents_md}) valid.")
 
@@ -413,6 +428,10 @@ def validate():
       errors.append(f"{makefile_path} must define 'test-static:' target")
     if "test: test-static" not in mk_text:
       errors.append(f"{makefile_path} 'test:' target must list 'test-static' as first prerequisite")
+    if "test-safe-copy:" not in mk_text:
+      errors.append(f"{makefile_path} must define 'test-safe-copy:' target")
+    if "test-safe-copy" not in mk_text.split("test:")[1].split("\n")[0]:
+      errors.append(f"{makefile_path} 'test:' target must list 'test-safe-copy' prerequisite")
 
   static_check_script = "scripts/static_check.py"
   if not os.path.exists(static_check_script):
@@ -420,6 +439,12 @@ def validate():
   static_test_script = "scripts/test_static_analysis.py"
   if not os.path.exists(static_test_script):
     errors.append(f"Missing {static_test_script}")
+  safe_copy_script = "scripts/safe_copy.py"
+  if not os.path.exists(safe_copy_script):
+    errors.append(f"Missing {safe_copy_script}")
+  safe_copy_test_script = "scripts/test_safe_copy.py"
+  if not os.path.exists(safe_copy_test_script):
+    errors.append(f"Missing {safe_copy_test_script}")
 
   if errors:
     print(f"\n❌ Validation failed with {len(errors)} error(s):")

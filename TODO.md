@@ -32,7 +32,7 @@ Plan comprehensive tests with reasonable balance for performance and dependency 
 
 ## Batch 2: Operating System, Filesystem & Process Scars
 
-- [ ] **SCAR-SYS-05: Cross-User File Promotion (`shutil.copyfile` over `copy2` / `copystat`)**
+- [x] **SCAR-SYS-05: Cross-User File Promotion (`shutil.copyfile` over `copy2` / `copystat`)**
   - **Wound**: Promoting or syncing files across service accounts or system users crashes with `[Errno 1] EPERM`.
   - **Trap**: Assuming standard library helpers like `shutil.copy2` or `shutil.copytree` are safe across user boundaries; they invoke `copystat` (`chmod`/`utime`), which requires ownership privileges.
   - **Permanent Reflex**: When copying across system users or daemons, copy file contents only (`shutil.copyfile`) or create destination directories with caller permissions rather than copying permission bits and ownership.

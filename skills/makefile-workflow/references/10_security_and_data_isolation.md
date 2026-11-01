@@ -48,3 +48,12 @@ Hardware hooks and the MCP safety tool inspect Git commands before execution:
 3. Never drop stashes or rewrite refs with `git stash drop`, `git filter-branch`, `git reflog delete`, or `git update-ref -d`.
 4. Never run `git push --force`, `git push --force-with-lease`, or `+` refspecs (source-to-target branch mappings) on any branch.
 5. If upstream conflicts require `git rebase` or you need `git branch -D`, wait for operator approval first.
+
+## 5. Cross-User File Promotion (`SCAR-SYS-05`)
+
+Promoting files across service accounts, daemons, or system users requires permission isolation:
+
+1. When writing to shared or cross-user directories, never use `shutil.copy2` or `shutil.copytree`.
+2. If the caller does not own the destination file, standard `copystat` calls (`os.chmod` and `os.utime`) fail with `PermissionError: [Errno 1] EPERM`.
+3. Stream file contents with `shutil.copyfile` so new files receive standard permissions from the caller umask (`SCAR-ENV-04`).
+4. When copying directory trees, create destination directories with caller permissions and stream child files with `safe_copy_file`.
