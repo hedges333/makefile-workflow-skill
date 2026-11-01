@@ -18,7 +18,7 @@ Because `.workflow/state/` is listed in `.git/info/exclude`, Git ignores state f
 
 ### Phase 2: Fork the Critic Subagent
 
-In Antigravity, fork `adversarial-critic` with `Model` set to `agyModelTiers["adversarial-critic"]` (default `pro`). Have the critic inspect the exact tree diff:
+In Antigravity, fork `adversarial-critic` with `Model` set to `agyModelTiers["adversarial-critic"]` (default `inherit`). Have the critic inspect the exact tree diff:
 
 ```bash
 APPROVED_TREE=$(cat .workflow/state/approved_tree.txt)

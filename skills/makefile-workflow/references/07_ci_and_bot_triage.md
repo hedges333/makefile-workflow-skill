@@ -8,7 +8,7 @@ After you open a pull request, do not merge right away. Wait for remote CI runne
 
 ### Phase 1: Fork the Triage Worker
 
-Fork a `triage-worker` subagent with `Model` set to `agyModelTiers["triage-worker"]` (default `flash`):
+Fork a `triage-worker` subagent with `Model` set to `agyModelTiers["triage-worker"]` (default `inherit`):
 
 1. Poll `gh pr checks` until every remote CI workflow finishes.
 2. Wait through 180 seconds of quiescence (a quiet window with no new bot comments) so Gemini, Copilot, CodeRabbit, and SonarQube finish posting.

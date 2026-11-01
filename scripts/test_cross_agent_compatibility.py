@@ -146,6 +146,24 @@ def validate():
       assert "prodDatabases" in cfg_data["database"]
       assert "testDatabases" in cfg_data["database"]
       assert "prodHosts" in cfg_data["database"]
+      assert "models" in cfg_data, f"{cfg_template} must declare 'models' section"
+      for role in (
+          "adversarial-critic",
+          "archaeology-worker",
+          "tdd-worker",
+          "triage-worker",
+      ):
+        assert (
+            cfg_data["models"].get(role) == "inherit"
+        ), f"{cfg_template} role '{role}' must default to 'inherit', got '{cfg_data['models'].get(role)}'"
+      with open(cfg_template) as f:
+        cfg_raw = f.read()
+      if "Antigravity" not in cfg_raw or "inherit" not in cfg_raw:
+        errors.append(f"{cfg_template} must document Antigravity specificity and inherit defaults")
+      if "flash_lite" not in cfg_raw or "pro" not in cfg_raw:
+        errors.append(f"{cfg_template} must document valid Antigravity model tiers (inherit, flash_lite, flash, pro)")
+      if "effort" not in cfg_raw.lower():
+        errors.append(f"{cfg_template} must document session reasoning effort inheritance")
       print("✔ Workflow configuration template (.workflow/config.json.example) valid.")
     except Exception as e:
       errors.append(f"Invalid {cfg_template}: {e}")
@@ -154,7 +172,31 @@ def validate():
   if not os.path.exists(ref_13):
     errors.append(f"Missing {ref_13}")
   else:
-    print("✔ Configuration reference manual (references/13_configuration_and_user_preferences.md) valid.")
+    with open(ref_13) as f:
+      r13_text = f.read()
+    for role in (
+        "adversarial-critic",
+        "archaeology-worker",
+        "tdd-worker",
+        "triage-worker",
+    ):
+      if f"`{role}`: `inherit`" not in r13_text and f'"{role}": "inherit"' not in r13_text:
+        errors.append(f"{ref_13} must document 'inherit' default for {role}")
+    if "flash_lite" not in r13_text or "flash" not in r13_text or "pro" not in r13_text:
+      errors.append(f"{ref_13} must document all four Antigravity tier enums")
+    if "reasoning effort" not in r13_text.lower() and "/effort" not in r13_text:
+      errors.append(f"{ref_13} must document reasoning effort (/effort) inheritance")
+    if not any("references/13_" in e for e in errors):
+      print("✔ Configuration reference manual (references/13_configuration_and_user_preferences.md) valid.")
+
+  ref_08 = "skills/makefile-workflow/references/08_subagent_orchestration.md"
+  if not os.path.exists(ref_08):
+    errors.append(f"Missing {ref_08}")
+  else:
+    with open(ref_08) as f:
+      r08_text = f.read()
+    if "Default tier: flash" in r08_text or "Default tier: pro" in r08_text:
+      errors.append(f"{ref_08} must default all subagents to inherit")
 
   # 10. Design Patterns Reference Manual
   ref_14 = "skills/makefile-workflow/references/14_design_patterns_and_architecture.md"
@@ -368,6 +410,14 @@ def validate():
       )
     else:
       print(f"✔ {skill_md} is platform-neutral (no <brain> references).")
+    if "`agyModelTiers[\"archaeology-worker\"]` (default `inherit`)" not in s_text:
+      errors.append(f"{skill_md} Target 15 must document 'archaeology-worker' default inherit")
+    if "`agyModelTiers[\"tdd-worker\"]` (default `inherit`)" not in s_text:
+      errors.append(f"{skill_md} Target 30 must document 'tdd-worker' default inherit")
+    if "`agyModelTiers[\"adversarial-critic\"]` (default `inherit`)" not in s_text:
+      errors.append(f"{skill_md} Target 40 must document 'adversarial-critic' default inherit")
+    if "`agyModelTiers[\"triage-worker\"]` (default `inherit`)" not in s_text:
+      errors.append(f"{skill_md} Target 70 must document 'triage-worker' default inherit")
 
   # 13. Antigravity Plan Artifact Lifecycle & Demotion Rules (rules/AGENTS.md)
   agents_md = "rules/AGENTS.md"
@@ -405,7 +455,7 @@ def validate():
     if not any("rules/AGENTS.md" in e for e in errors):
       print(f"✔ Antigravity artifact lifecycle and demotion rules ({agents_md}) valid.")
 
-  # 14. SimpleEnglish Companion Plugin Recommendation in README.md
+  # 14. SimpleEnglish Companion Plugin Recommendation & Subagent Roles in README.md
   readme_path = "README.md"
   if not os.path.exists(readme_path):
     errors.append(f"Missing {readme_path}")
@@ -416,6 +466,30 @@ def validate():
       errors.append(f"{readme_path} must recommend SimpleEnglish companion plugin under Installation with repository URL")
     else:
       print("✔ SimpleEnglish companion plugin recommended in README.md.")
+
+    for role in (
+        "adversarial-critic",
+        "archaeology-worker",
+        "tdd-worker",
+        "triage-worker",
+    ):
+      if f'"{role}": "inherit"' not in rm_text:
+        errors.append(f"{readme_path} config snippet must show '{role}': 'inherit'")
+      if role not in rm_text:
+        errors.append(f"{readme_path} must document worker role '{role}'")
+
+    if "triage-worker" not in rm_text or "quiescence" not in rm_text.lower() or "triage table" not in rm_text.lower():
+      errors.append(f"{readme_path} must explain triage-worker purpose (CI polling, quiescence, triage table)")
+    if "archaeology-worker" not in rm_text or "polyglot" not in rm_text.lower():
+      errors.append(f"{readme_path} must explain archaeology-worker purpose (discovery, polyglot scan)")
+    if "adversarial-critic" not in rm_text or "six pillars" not in rm_text.lower():
+      errors.append(f"{readme_path} must explain adversarial-critic purpose (independent review, Six Pillars)")
+    if "tdd-worker" not in rm_text or "red-green-refactor" not in rm_text.lower():
+      errors.append(f"{readme_path} must explain tdd-worker purpose (TDD, red-green-refactor)")
+    if "reasoning effort" not in rm_text.lower() and "/effort" not in rm_text:
+      errors.append(f"{readme_path} must document reasoning effort inheritance for 'inherit'")
+    if "flash_lite" not in rm_text or "flash" not in rm_text or "pro" not in rm_text:
+      errors.append(f"{readme_path} must document Antigravity valid enum tiers (inherit, flash_lite, flash, pro)")
 
   # 15. Pre-flight Static Check Integration in Makefile and scripts (SCAR-TEST-10)
   makefile_path = "Makefile"

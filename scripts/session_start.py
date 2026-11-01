@@ -151,7 +151,7 @@ def main():
     state_dir = find_state_dir(workspace_paths, artifact_dir)
     cfg, cfg_source = get_workflow_config(workspace_paths)
     models = cfg.get("models") if isinstance(cfg.get("models"), dict) else {}
-    critic_model = models.get("adversarial-critic", "pro")
+    critic_model = models.get("adversarial-critic", "inherit")
     tdd_model = models.get("tdd-worker", "inherit")
 
     notes = []

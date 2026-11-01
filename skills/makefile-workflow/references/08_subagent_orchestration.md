@@ -14,10 +14,10 @@ The main orchestrator agent runs at Depth 0 as a `make` supervisor:
 
 Four subagent roles handle isolated phases of the workflow:
 
-- `archaeology-worker` (Target 15): Scans languages, subprojects, sibling APIs, and existing tests with read-only tools. Default tier: `flash`.
+- `archaeology-worker` (Target 15): Scans languages, subprojects, sibling APIs, and existing tests with read-only tools. Default tier: `inherit`.
 - `tdd-worker` (Target 30): Writes failing tests first, writes minimal feature code, and runs subproject test loops. Default tier: `inherit`.
-- `adversarial-critic` (Target 40): Audits the Git tree diff in an isolated read-only context without authoring bias. Default tier: `pro`.
-- `triage-worker` (Target 70): Polls remote CI checks and review bot comments through 180 seconds of quiet time. Default tier: `flash`.
+- `adversarial-critic` (Target 40): Audits the Git tree diff in an isolated read-only context without authoring bias. Default tier: `inherit`.
+- `triage-worker` (Target 70): Polls remote CI checks and review bot comments through 180 seconds of quiet time. Default tier: `inherit`.
 
 Read [13. Configuration and User Preferences](13_configuration_and_user_preferences.md) to override model tiers per role.
 

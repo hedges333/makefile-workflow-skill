@@ -196,35 +196,42 @@ def run_test():
         assert len(tree_data["actualTree"]) == 40
         print("✔ MCP workflow_verify_tree resolved workspaceDir cleanly.")
 
-      # 7. Get config and state with workspaceDir
-      cfg_resp = send_rpc(
-          p,
-          {
-              "jsonrpc": "2.0",
-              "id": 10,
-              "method": "tools/call",
-              "params": {
-                  "name": "workflow_get_config",
-                  "arguments": {"workspaceDir": REPO_ROOT},
-              },
-          },
-      )
-      cfg_data = json.loads(cfg_resp["result"]["content"][0]["text"])
-      assert "models" in cfg_data
-      assert "agyModelTiers" in cfg_data
-      assert cfg_data["agyModelTiers"]["adversarial-critic"] in {
-          "inherit",
-          "flash_lite",
-          "flash",
-          "pro",
-      }
-      assert "review" in cfg_data
-      assert "ci" in cfg_data
-      assert "database" in cfg_data
-      assert "prodDatabases" in cfg_data["database"]
-      assert "testDatabases" in cfg_data["database"]
-      assert "prodHosts" in cfg_data["database"]
-      print("✔ MCP workflow_get_config returned valid configuration.")
+      # 7. Get config with default workspaceDir
+      with tempfile.TemporaryDirectory() as empty_ws:
+        cfg_resp = send_rpc(
+            p,
+            {
+                "jsonrpc": "2.0",
+                "id": 10,
+                "method": "tools/call",
+                "params": {
+                    "name": "workflow_get_config",
+                    "arguments": {"workspaceDir": empty_ws},
+                },
+            },
+        )
+        cfg_data = json.loads(cfg_resp["result"]["content"][0]["text"])
+        assert "models" in cfg_data
+        assert "agyModelTiers" in cfg_data
+        for role in (
+            "adversarial-critic",
+            "archaeology-worker",
+            "tdd-worker",
+            "triage-worker",
+        ):
+          assert (
+              cfg_data["models"].get(role) == "inherit"
+          ), f"Expected default models[{role}] == 'inherit', got {cfg_data['models'].get(role)}"
+          assert (
+              cfg_data["agyModelTiers"].get(role) == "inherit"
+          ), f"Expected default agyModelTiers[{role}] == 'inherit', got {cfg_data['agyModelTiers'].get(role)}"
+        assert "review" in cfg_data
+        assert "ci" in cfg_data
+        assert "database" in cfg_data
+        assert "prodDatabases" in cfg_data["database"]
+        assert "testDatabases" in cfg_data["database"]
+        assert "prodHosts" in cfg_data["database"]
+        print("✔ MCP workflow_get_config returned valid default configuration.")
 
       # 8. Custom database configuration in workspaceDir for workflow_get_config and workflow_safety_check
       with tempfile.TemporaryDirectory() as ws_cfg_dir:
@@ -236,6 +243,12 @@ def run_test():
         ) as f:
           json.dump(
               {
+                  "models": {
+                      "adversarial-critic": "gemini-4-argon-high",
+                      "archaeology-worker": "gemini-3.8-flash-low",
+                      "tdd-worker": "flash_lite",
+                      "triage-worker": "pro",
+                  },
                   "database": {
                       "prodDatabases": ["billing_live", 1, True, None],
                       "testDatabases": ["billing_sandbox", "billing", 1, False],
@@ -258,6 +271,14 @@ def run_test():
             },
         )
         ws_cfg = json.loads(ws_cfg_resp["result"]["content"][0]["text"])
+        assert ws_cfg["models"]["adversarial-critic"] == "gemini-4-argon-high"
+        assert ws_cfg["agyModelTiers"]["adversarial-critic"] == "pro"
+        assert ws_cfg["models"]["archaeology-worker"] == "gemini-3.8-flash-low"
+        assert ws_cfg["agyModelTiers"]["archaeology-worker"] == "flash"
+        assert ws_cfg["models"]["tdd-worker"] == "flash_lite"
+        assert ws_cfg["agyModelTiers"]["tdd-worker"] == "flash_lite"
+        assert ws_cfg["models"]["triage-worker"] == "pro"
+        assert ws_cfg["agyModelTiers"]["triage-worker"] == "pro"
         assert ws_cfg["database"]["prodDatabases"] == ["billing_live"]
         assert ws_cfg["database"]["testDatabases"] == ["billing_sandbox", "billing"]
         assert ws_cfg["database"]["prodHosts"] == ["db.company.internal"]
@@ -414,6 +435,10 @@ def run_test():
     custom_env["MAKEFILE_WORKFLOW_PROD_DBS"] = "ledger_live"
     custom_env["MAKEFILE_WORKFLOW_TEST_DBS"] = "ledger_test"
     custom_env["MAKEFILE_WORKFLOW_PROD_HOSTS"] = "live-cluster.internal"
+    custom_env["MAKEFILE_WORKFLOW_CRITIC_MODEL"] = "gemini-4-argon-high"
+    custom_env["MAKEFILE_WORKFLOW_WORKER_MODEL"] = "flash_lite"
+    custom_env["MAKEFILE_WORKFLOW_TDD_MODEL"] = "pro"
+    custom_env["MAKEFILE_WORKFLOW_TRIAGE_MODEL"] = "flash"
     p_env = subprocess.Popen(
         ["python3", SERVER_SCRIPT],
         stdin=subprocess.PIPE,
@@ -443,6 +468,14 @@ def run_test():
       assert "ledger_live" in env_cfg["database"]["prodDatabases"]
       assert "ledger_test" in env_cfg["database"]["testDatabases"]
       assert "live-cluster.internal" in env_cfg["database"]["prodHosts"]
+      assert env_cfg["models"]["adversarial-critic"] == "gemini-4-argon-high"
+      assert env_cfg["agyModelTiers"]["adversarial-critic"] == "pro"
+      assert env_cfg["models"]["archaeology-worker"] == "flash_lite"
+      assert env_cfg["agyModelTiers"]["archaeology-worker"] == "flash_lite"
+      assert env_cfg["models"]["tdd-worker"] == "pro"
+      assert env_cfg["agyModelTiers"]["tdd-worker"] == "pro"
+      assert env_cfg["models"]["triage-worker"] == "flash"
+      assert env_cfg["agyModelTiers"]["triage-worker"] == "flash"
 
       env_sc_bad = send_rpc(
           p_env,

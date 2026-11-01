@@ -21,10 +21,10 @@ When a session starts or `workflow_get_config` runs, the plugin resolves configu
    - `MAKEFILE_WORKFLOW_TEST_DBS` for comma-separated safe test database names to allow.
    - `MAKEFILE_WORKFLOW_PROD_HOSTS` for comma-separated live database hosts to block.
 4. Built-in defaults:
-   - `adversarial-critic`: `pro`
-   - `archaeology-worker`: `flash`
+   - `adversarial-critic`: `inherit`
+   - `archaeology-worker`: `inherit`
    - `tdd-worker`: `inherit`
-   - `triage-worker`: `flash`
+   - `triage-worker`: `inherit`
    - Database guard: blocks standalone `prod` and `production` names automatically.
 
 ## 3. Configuration File Schema
@@ -34,10 +34,10 @@ Copy [`.workflow/config.json.example`](../../../.workflow/config.json.example) t
 ```json
 {
   "models": {
-    "adversarial-critic": "pro",
-    "archaeology-worker": "flash",
+    "adversarial-critic": "inherit",
+    "archaeology-worker": "inherit",
     "tdd-worker": "inherit",
-    "triage-worker": "flash"
+    "triage-worker": "inherit"
   },
   "review": {
     "maxReviewRounds": 3,
@@ -66,12 +66,16 @@ Both `scripts/pre_tool_guard.py` and `workflow_safety_check` read the `database`
 
 ### Model Tiers in Antigravity (`agy`)
 
+Subagent model tiers are specific to Google Antigravity (`agy`). Other platforms run as single chat sessions using the active session model.
+
 Antigravity `invoke_subagent` accepts four model tier names:
 
+- `inherit`: Uses the active model of the parent session and inherits the session reasoning effort (`/effort`).
 - `pro`: High-capacity reasoning models such as Gemini 4 Argon or Claude Opus.
 - `flash`: Fast workhorse models such as Gemini 3.8 Flash.
 - `flash_lite`: Lightweight low-cost models.
-- `inherit`: Uses the active model of the parent session.
+
+When set to `inherit`, subagents inherit both the model and the chat session reasoning effort (`/effort`). When set to an abstract tier (`pro`, `flash`, `flash_lite`), Antigravity uses backend tier presets with standard effort.
 
 If you put a concrete model ID such as `gemini-4-argon-high` in `models`, `workflow_get_config` normalizes it under `agyModelTiers`. Each role maps to `pro`, `flash`, `flash_lite`, or `inherit`.
 

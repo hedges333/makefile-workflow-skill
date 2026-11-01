@@ -124,12 +124,17 @@ def map_to_agy_tier(model_value):
   val = str(model_value).strip().lower()
   if val in {"inherit", "flash_lite", "flash", "pro"}:
     return val
-  if any(tok in val for tok in ("lite", "haiku", "mini", "nano")):
+  tokens = set(re.split(r"[-_./\s]+", val))
+  if (
+      "flash-lite" in val
+      or "flash_lite" in val
+      or any(tok in tokens for tok in ("lite", "haiku", "mini", "nano"))
+  ):
     return "flash_lite"
-  if any(tok in val for tok in ("flash", "fast", "low")):
-    return "flash"
-  if any(tok in val for tok in ("pro", "argon", "opus", "high", "o1", "o3")):
+  if any(tok in tokens or tok in val for tok in ("pro", "argon", "opus", "high", "o1", "o3")):
     return "pro"
+  if any(tok in tokens or tok in val for tok in ("flash", "fast", "low")):
+    return "flash"
   return "inherit"
 
 
@@ -154,10 +159,10 @@ def resolve_workflow_config(workspace_dir=None):
 
   config = {
       "models": {
-          "adversarial-critic": "pro",
-          "archaeology-worker": "flash",
+          "adversarial-critic": "inherit",
+          "archaeology-worker": "inherit",
           "tdd-worker": "inherit",
-          "triage-worker": "flash",
+          "triage-worker": "inherit",
       },
       "review": {
           "maxReviewRounds": 3,

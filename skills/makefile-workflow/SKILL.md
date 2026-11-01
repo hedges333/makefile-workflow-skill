@@ -122,7 +122,7 @@ Read [`references/01`](./references/01_intake_and_branching.md) for intake modes
 
 Read [`references/02`](./references/02_archaeology_and_planning.md) and [`references/11`](./references/11_polyglot_monorepos.md) for discovery rules.
 
-1. Fork an `archaeology-worker` subagent with the tier from `agyModelTiers["archaeology-worker"]` (default `flash`).
+1. Fork an `archaeology-worker` subagent with the tier from `agyModelTiers["archaeology-worker"]` (default `inherit`).
 2. Scan the repository for subprojects across all 27 supported languages.
 3. Locate existing test runners, or prepare smoke test templates when no tests exist.
 4. Inspect `.workflow/config.json` and database manifests. If live versus test database names remain unclear, ask the user before Target 30.
@@ -161,7 +161,7 @@ Read [`references/04_six_pillars`](./references/04_six_pillars_adversarial_revie
 
 1. Lock the staged Git Merkle tree hash (a cryptographic snapshot of staged files): run `git add -A && git write-tree > .workflow/state/approved_tree.txt`.
 2. In interactive IDEs, prompt the user in chat: "Switch the model picker to a deep-reasoning model for the Six-Pillar review."
-3. In Antigravity, fork `adversarial-critic` with `Model` set to `agyModelTiers["adversarial-critic"]` (default `pro`).
+3. In Antigravity, fork `adversarial-critic` with `Model` set to `agyModelTiers["adversarial-critic"]` (default `inherit`).
 4. Audit the diff across the Six Pillars: Intent, Verification, Architecture, Blast Radius, Readability, and Error Handling.
 5. Write `.workflow/state/40_critic_review.md`.
 6. If blockers exist, move to Target 42. If zero blockers exist, move to Target 45.
@@ -207,7 +207,7 @@ Read [`references/06`](./references/06_clean_commit_and_pr.md) for landability r
 Read [`references/07`](./references/07_ci_and_bot_triage.md) for polling and triage rules.
 
 1. In Pure Git Mode, run full local repository tests (`make all`), write `.workflow/state/70_bot_triage.md` noting pure Git validation, and advance to Target 75.
-2. In PR mode, fork `triage-worker` with `Model` set to `agyModelTiers["triage-worker"]` (default `flash`).
+2. In PR mode, fork `triage-worker` with `Model` set to `agyModelTiers["triage-worker"]` (default `inherit`).
 3. Poll `gh pr checks` and review comments until CI passes and 180 seconds of quiescence (a quiet window with no new bot comments) completes.
 4. Write the triage table (`Accept`, `Defend`, `Defer`, `Acknowledge`) to `.workflow/state/70_bot_triage.md`.
 5. If accepted fixes need code edits, return to Target 30 and repeat Targets 40, 45, 50, 60, and 70.

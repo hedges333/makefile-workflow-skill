@@ -206,6 +206,15 @@ The workflow stops at six human approval checkpoints. Reply in chat to continue:
 
 You can assign specific AI models to each worker role without editing plugin files. The plugin leaves `./agents/*.md` free of hardcoded model names so that every user controls their own cost and reasoning tiers.
 
+### Worker Subagent Roles
+
+In Google Antigravity, four specialized subagents isolate heavy operations from the main supervisor context:
+
+- `archaeology-worker` (Target 15): Scans the repository for polyglot subprojects across 27 languages. Discovers existing test runners, sibling API patterns, and database configurations.
+- `tdd-worker` (Target 30): Executes Red-Green-Refactor test-driven development. Writes failing tests first, writes minimal feature code, and runs fast targeted test loops in subproject folders.
+- `adversarial-critic` (Target 40): Audits the staged Git Merkle tree diff against the Six Pillars in an isolated read-only context without authoring bias.
+- `triage-worker` (Target 70): Polls remote CI workflows, enforces 180 seconds of bot quiescence, and classifies automated review comments into the 4-part Triage Table (`Accept`, `Defend`, `Defer`, `Acknowledge`).
+
 ### 1. Workspace or Global Configuration File
 
 Copy [`.workflow/config.json.example`](./.workflow/config.json.example) to `<workspace>/.workflow/config.json` (per project) or `~/.gemini/config/makefile-workflow.json` (global):
@@ -213,10 +222,10 @@ Copy [`.workflow/config.json.example`](./.workflow/config.json.example) to `<wor
 ```json
 {
   "models": {
-    "adversarial-critic": "pro",
-    "archaeology-worker": "flash",
+    "adversarial-critic": "inherit",
+    "archaeology-worker": "inherit",
     "tdd-worker": "inherit",
-    "triage-worker": "flash"
+    "triage-worker": "inherit"
   },
   "review": {
     "maxReviewRounds": 3,
@@ -234,7 +243,11 @@ Copy [`.workflow/config.json.example`](./.workflow/config.json.example) to `<wor
 }
 ```
 
-If you write concrete model names such as `gemini-4-argon-high`, `workflow_get_config` maps them to Antigravity tiers under `agyModelTiers`. Valid Antigravity subagent tiers are `pro`, `flash`, `flash_lite`, and `inherit`. You can also list custom live and test database names under `database` so hardware hooks block live databases and allow declared test databases.
+Subagent model tiers are specific to Google Antigravity (`agy`). Other platforms run as single chat sessions using the active session model.
+
+Antigravity `invoke_subagent` accepts four valid enum tiers: `inherit`, `flash_lite`, `flash`, and `pro`. When set to `inherit` (default for all roles), child subagents inherit the active model and session reasoning effort (`/effort`) from the parent chat session. When set to an abstract tier (`pro`, `flash`, `flash_lite`), Antigravity uses fixed backend presets with standard effort.
+
+If you write concrete model names such as `gemini-4-argon-high`, `workflow_get_config` maps them to Antigravity tiers under `agyModelTiers`. You can also list custom live and test database names under `database` so hardware hooks block live databases and allow declared test databases.
 
 ### 2. Environment Variables
 

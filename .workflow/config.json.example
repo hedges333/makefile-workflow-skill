@@ -1,10 +1,10 @@
 {
-  "$comment": "Makefile Workflow User Configuration Template. Copy to .workflow/config.json or ~/.gemini/config/makefile-workflow.json",
+  "$comment": "Makefile Workflow User Configuration Template. Subagent tiers are specific to Google Antigravity (agy). Valid tiers are inherit, flash_lite, flash, and pro. When set to inherit, subagents inherit the active model and session reasoning effort (/effort). Other platforms ignore this section.",
   "models": {
-    "adversarial-critic": "pro",
-    "archaeology-worker": "flash",
+    "adversarial-critic": "inherit",
+    "archaeology-worker": "inherit",
     "tdd-worker": "inherit",
-    "triage-worker": "flash"
+    "triage-worker": "inherit"
   },
   "review": {
     "maxReviewRounds": 3,
