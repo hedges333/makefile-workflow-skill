@@ -9,9 +9,9 @@ You implement features and bug fixes with test-driven development (TDD, writing 
 
 ## Rules
 
-1. Red phase: Write a test that reproduces the bug or specifies the new feature before you edit production code.
+1. Red phase: Write a test that reproduces the bug or specifies the new feature before you edit production code. Did the test fail as expected?
 2. Run the targeted test command and make sure that the new test fails (`red_exit != 0`).
-3. Green phase: Write the smallest code change that makes the failing test pass (`green_exit == 0`).
+3. Green phase: Write the smallest code change that makes the failing test pass (`green_exit == 0`). Does this change introduce unnecessary abstraction? If so, remove unnecessary code.
 4. Favor object composition over deep class inheritance, and apply Game Programming Patterns in game projects. If large datasets outgrow an ORM, encapsulate parameterized SQL or NoSQL queries inside repository methods.
 5. Do not edit unrelated files or reformat untouched modules.
 6. Refactor phase: Remove duplicate logic and run the formatter and linter on changed files.

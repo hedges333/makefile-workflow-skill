@@ -219,6 +219,11 @@ def validate():
       r08_text = f.read()
     if "Default tier: flash" in r08_text or "Default tier: pro" in r08_text:
       errors.append(f"{ref_08} must default all subagents to inherit")
+    if "socratic" not in r08_text.lower() or "delegation protocol" not in r08_text.lower():
+      errors.append(f"{ref_08} must document Socratic Subagent Delegation Protocol")
+    for role_name in ("archaeology-worker", "tdd-worker", "adversarial-critic", "triage-worker"):
+      if role_name not in r08_text:
+        errors.append(f"{ref_08} must document Socratic prompt pattern for {role_name}")
 
   # 10. Design Patterns Reference Manual
   ref_14 = "skills/makefile-workflow/references/14_design_patterns_and_architecture.md"
@@ -385,6 +390,8 @@ def validate():
       aw_text = f.read()
     if "failure mechanism" not in aw_text.lower() or "burden" not in aw_text.lower():
       errors.append(f"{arch_worker} must instruct worker to classify failure mechanisms and evaluate testing burden balance")
+    if "evidence" not in aw_text.lower() or "guess" not in aw_text.lower():
+      errors.append(f"{arch_worker} Rule 5 must instruct worker to question verification evidence for Belnap claims")
 
   ref_02 = "skills/makefile-workflow/references/02_archaeology_and_planning.md"
   if not os.path.exists(ref_02):
@@ -399,6 +406,18 @@ def validate():
     if "invariant audit" not in r02_text.lower():
       errors.append(f"{ref_02} must mandate Socratic Invariant Audit table in plan template")
 
+  # TDD implementation worker definition
+  tdd_worker = "agents/tdd-worker.md"
+  if not os.path.exists(tdd_worker):
+    errors.append(f"Missing {tdd_worker}")
+  else:
+    with open(tdd_worker) as f:
+      tdd_text = f.read()
+    if "did the test fail" not in tdd_text.lower():
+      errors.append(f"{tdd_worker} Rule 1 must question test failure before code edits")
+    if "unnecessary abstraction" not in tdd_text.lower() and "abstraction" not in tdd_text.lower():
+      errors.append(f"{tdd_worker} Rule 3 must question unnecessary code abstractions")
+
   # Critic agent and Six Pillars review definitions
   critic_agent = "agents/adversarial-critic.md"
   if not os.path.exists(critic_agent):
@@ -410,6 +429,8 @@ def validate():
       errors.append(f"{critic_agent} Rule 2 must reference approved_tree.txt")
     if "git diff $(git merge-base HEAD origin/main) HEAD" in critic_text:
       errors.append(f"{critic_agent} Rule 2 must not diff against HEAD")
+    if "does the diff solve" not in critic_text.lower():
+      errors.append(f"{critic_agent} Pillar 1 must use diagnostic question format matching references/04")
     if "comprehensiveness" not in critic_text.lower() and "comprehensive" not in critic_text.lower():
       errors.append(f"{critic_agent} Pillar 2 must assess test comprehensiveness")
     if "burden" not in critic_text.lower() and "balance" not in critic_text.lower():
@@ -429,6 +450,8 @@ def validate():
       tw_text = f.read()
     if "configured quiescence" not in tw_text.lower():
       errors.append(f"{triage_agent} Rule 2 must reference configured quiescence duration")
+    if "defect" not in tw_text.lower() or "suggestion" not in tw_text.lower():
+      errors.append(f"{triage_agent} Rule 3 must interrogate whether bot comments are defects or suggestions")
 
   ref_04_review = "skills/makefile-workflow/references/04_six_pillars_adversarial_review.md"
   if not os.path.exists(ref_04_review):
