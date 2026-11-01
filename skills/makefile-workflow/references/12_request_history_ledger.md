@@ -70,7 +70,37 @@ Store both ledger files inside `.workflow/` at the repository root:
 | 2026-10-29 | LOCAL-1 | Add health endpoint | `feat/local-1-health-endpoint` | [#46](https://github.com/owner/repo/pull/46) | +2 | - |
 ```
 
-## 3. Update Steps at Target 90
+## 3. Git Lifecycle by Repository Mode
+
+Select the Git lifecycle that matches your branch protection settings:
+
+### Mode 1: Pull Request Mode with Branch Protection
+
+If branch protection forbids direct pushes to `main`, follow this lifecycle:
+1. Update `.workflow/history.json` and `.workflow/history.md` during Target 75 on the feature branch.
+2. Commit the ledger update to the feature branch with `git commit -m "docs(history): record <id>"`.
+3. Push the feature branch to update the pull request. Wait for required status checks to pass before requesting landing approval.
+4. When `gh pr merge --squash` runs at Target 80, the pull request merges the ledger record into `main`.
+5. At Target 90, pull `main` to verify the ledger commit is present.
+
+### Mode 2: Pull Request Mode with Direct Push Allowed
+
+If direct pushes to `main` are permitted for automated workflows, follow this lifecycle:
+1. Complete the pull request squash merge and branch deletion at Target 80.
+2. Switch to `main` and pull the latest commits with `git checkout main && git pull --ff-only`.
+3. Update `.workflow/history.json` and `.workflow/history.md` at Target 90.
+4. Commit the ledger update with `git commit -m "docs(history): record <id>"`.
+5. Push the ledger commit directly to `main` with `git push origin main`.
+
+### Mode 3: Pure Git Mode
+
+If the repository runs without pull requests, follow this lifecycle:
+1. At Target 80, squash-merge the feature branch into `main` and delete the feature branch.
+2. At Target 90, update `.workflow/history.json` and `.workflow/history.md`.
+3. Commit the ledger files with `git commit -m "docs(history): record <id>"`.
+4. Push `main` to the remote repository with `git push origin main`.
+
+## 4. Update Steps at Target 90
 
 Run these steps during Target 90 after a pull request merges:
 
@@ -78,4 +108,5 @@ Run these steps during Target 90 after a pull request merges:
 2. Read `.workflow/history.json`, or start with `[]` when the file is new.
 3. Append the completed ticket object to `.workflow/history.json`.
 4. Add a matching summary row to `.workflow/history.md`.
-5. Commit the updated ledger files when the project tracks `.workflow/history.*` in Git.
+5. Commit the updated ledger files when the project tracks `.workflow/history.*` in Git: `git commit -m "docs(history): record <id>"`.
+6. If direct push to `main` is permitted, push the ledger commit with `git push origin main`.

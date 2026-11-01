@@ -873,7 +873,43 @@ def _has_push_force_config(configs):
   return False
 
 
-def _evaluate_git_tokens(tokens, has_review):
+def _detect_target_90(cmd, state_dir=None):
+  """Detects whether command is a Target 90 history ledger operation."""
+  is_history_msg = (
+      "docs(history):" in cmd
+      or ".workflow/history" in cmd
+      or "history.json" in cmd
+      or "history.md" in cmd
+  )
+  is_t90_state = False
+  if state_dir is None:
+    cwd_state = os.path.join(os.getcwd(), ".workflow", "state")
+    if os.path.isdir(cwd_state):
+      state_dir = cwd_state
+
+  if state_dir and os.path.isdir(state_dir):
+    next_action_card = os.path.join(state_dir, "99_next_action.md")
+    if os.path.isfile(next_action_card):
+      try:
+        with open(next_action_card, "r", encoding="utf-8") as f:
+          txt = f.read()
+        if (
+            re.search(r"(?im)^-\s*Active Target:\s*(?:Target\s*90|T90)\b", txt)
+            or re.search(r"^\s*-\s*\[>\]\s*(?:Target\s*90|T90)\b", txt, re.M)
+            or re.search(
+                r"(?im)^#\s*Next Action:.*(?:COMPLETE|make finish satisfied)",
+                txt,
+            )
+        ):
+          is_t90_state = True
+      except Exception:
+        pass
+  return is_history_msg, is_t90_state
+
+
+def _evaluate_git_tokens(
+    tokens, has_review, is_history_msg=False, is_t90_state=False
+):
   """Returns ('deny'|'force_ask'|'allow', reason) for a single command's tokens."""
   exe, rem = _unwrap_command_tokens(tokens)
   if not exe or exe == "SHELL_C":
@@ -1109,6 +1145,15 @@ def _evaluate_git_tokens(tokens, has_review):
           "Blocked force-push command. "
           "Force-pushing is forbidden across all branches in the agent workflow.",
       )
+    if is_t90_state and (
+        "main" in pos
+        or "master" in pos
+        or any(p.endswith("/main") or p.endswith(":main") for p in pos)
+    ):
+      return (
+          "force_ask",
+          "Target 90 History Push Gate: Approve to push history ledger commit to origin/main.",
+      )
     if has_review:
       reason = (
           "Target 60 Push Gate: 45_review_approved.md is present. "
@@ -1144,6 +1189,11 @@ def _evaluate_git_tokens(tokens, has_review):
     return "allow", ""
 
   if subcmd == "commit":
+    if is_history_msg:
+      return (
+          "force_ask",
+          "Target 90 History Ledger Gate: Approve to commit history ledger updates.",
+      )
     if has_review:
       reason = (
           "Target 50 Commit Gate: 45_review_approved.md is present. "
@@ -1159,12 +1209,18 @@ def _evaluate_git_tokens(tokens, has_review):
   return "allow", ""
 
 
-def evaluate_git_command(cmd, has_review):
+def evaluate_git_command(cmd, has_review, state_dir=None):
   """Evaluates all subcommands with deny > force_ask > allow precedence."""
+  is_history_msg, is_t90_state = _detect_target_90(cmd, state_dir)
   first_ask_reason = None
   for subcmd in _expand_shell_subcommands(cmd):
     for tokens in _tokenize_subcommand(subcmd):
-      decision, reason = _evaluate_git_tokens(tokens, has_review)
+      decision, reason = _evaluate_git_tokens(
+          tokens,
+          has_review,
+          is_history_msg=is_history_msg,
+          is_t90_state=is_t90_state,
+      )
       if decision == "deny":
         return {"decision": "deny", "reason": reason}
       if decision == "force_ask" and first_ask_reason is None:
@@ -1228,7 +1284,7 @@ def evaluate_tool_call(payload):
   state_dir = resolve_state_dir(payload)
   review_card = os.path.join(state_dir, "45_review_approved.md")
   has_review = os.path.isfile(review_card)
-  return evaluate_git_command(cmd, has_review)
+  return evaluate_git_command(cmd, has_review, state_dir=state_dir)
 
 
 def main():
