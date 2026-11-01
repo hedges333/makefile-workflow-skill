@@ -359,5 +359,24 @@
     "closes_issue": true,
     "tests_added": 4,
     "scars_earned": []
+  },
+  {
+    "id": "#2 (GH-2)",
+    "issue_url": "https://github.com/hedges333/makefile-workflow-skill/issues/2",
+    "title": "Use sys.executable in test subprocesses and configurable PYTHON macro in Makefile",
+    "request": "Fix test_hooks.py and test_mcp_server.py to pass sys.executable instead of hardcoded 'python3' to subprocess calls, define PYTHON ?= python3 in Makefile, and add regression tests in test_cross_agent_compatibility.py.",
+    "branch": "fix/2-sys-executable-subprocess",
+    "subprojects": [
+      "scripts",
+      "build"
+    ],
+    "started_at": "2026-11-01T04:53:55Z",
+    "completed_at": "2026-11-01T05:16:33Z",
+    "commit_sha": "407fd95",
+    "pr_number": 7,
+    "pr_url": "https://github.com/hedges333/makefile-workflow-skill/pull/7",
+    "closes_issue": true,
+    "tests_added": 6,
+    "scars_earned": []
   }
 ]
