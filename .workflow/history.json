@@ -316,5 +316,28 @@
     "scars_earned": [
       "SCAR-SYS-06: Native Runtime Environment Path Pre-Flight (TMPDIR)"
     ]
+  },
+  {
+    "id": "#15",
+    "issue_url": null,
+    "title": "Codify SCAR-TEST-11 and Shift-Left Testing Balance in Archaeology and Planning",
+    "request": "Codify SCAR-TEST-11 in synthetic scars catalog, reference manuals, agent rules, and worker prompts. Mandate failure mechanism classification in Target 15 archaeology and a 7th disclosure in Target 20 plans for Testing Strategy and Burden-Balance Analysis while retaining independent Pillar 2 adversarial review at Target 40.",
+    "branch": "feat/15-shift-left-testing-balance",
+    "subprojects": [
+      "skills",
+      "rules",
+      "agents",
+      "scripts"
+    ],
+    "started_at": "2026-11-01T03:59:00Z",
+    "completed_at": "2026-11-01T04:15:00Z",
+    "commit_sha": "095efcf",
+    "pr_number": null,
+    "pr_url": null,
+    "closes_issue": false,
+    "tests_added": 7,
+    "scars_earned": [
+      "SCAR-TEST-11: Shift-Left Testing Balance in Archaeology and Planning"
+    ]
   }
 ]
