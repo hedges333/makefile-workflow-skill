@@ -20,11 +20,15 @@ When a session starts or `workflow_get_config` runs, the plugin resolves configu
    - `MAKEFILE_WORKFLOW_PROD_DBS` for comma-separated live database names to block.
    - `MAKEFILE_WORKFLOW_TEST_DBS` for comma-separated safe test database names to allow.
    - `MAKEFILE_WORKFLOW_PROD_HOSTS` for comma-separated live database hosts to block.
+   - `MAKEFILE_WORKFLOW_CI_QUIESCENCE_SECONDS` for continuous integration quiet window in seconds (default 180).
+   - `MAKEFILE_WORKFLOW_CI_POLL_INTERVAL` for continuous integration polling interval in seconds (default 30).
 4. Built-in defaults:
    - `adversarial-critic`: `inherit`
    - `archaeology-worker`: `inherit`
    - `tdd-worker`: `inherit`
    - `triage-worker`: `inherit`
+   - `ci.quiescenceSeconds`: `180`
+   - `ci.pollIntervalSeconds`: `30`
    - Database guard: blocks standalone `prod` and `production` names automatically.
 
 ## 3. Configuration File Schema

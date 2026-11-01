@@ -11,7 +11,7 @@ After you open a pull request, do not merge right away. Wait for remote CI runne
 Fork a `triage-worker` subagent with `Model` set to `agyModelTiers["triage-worker"]` (default `inherit`):
 
 1. Poll `gh pr checks` until every remote CI workflow finishes.
-2. Wait through 180 seconds of quiescence (a quiet window with no new bot comments) so Gemini, Copilot, CodeRabbit, and SonarQube finish posting.
+2. Wait through the configured quiescence duration (default 180 seconds with no new bot comments) so Gemini, Copilot, CodeRabbit, and SonarQube finish posting.
 3. Group every bot finding or CI failure into one of four actions:
    - `Accept`: Real bug or security defect that needs a code fix.
    - `Defend`: Incorrect bot claim paired with a technical reply.
@@ -26,7 +26,7 @@ If any accepted finding needs a code edit, return through the review and commit 
 1. Return to Target 30, write a failing test for the defect, and fix the code.
 2. Run Target 40 review and wait for Target 45 review sign-off.
 3. Run Target 50 commit and Target 60 push.
-4. Re-enter Target 70 and restart the 180-second timer.
+4. Re-enter Target 70 and restart the quiescence timer.
 5. When CI is green and zero open comments remain, advance to Target 75.
 
 ## 2. Target 75: Ready to Land Gate

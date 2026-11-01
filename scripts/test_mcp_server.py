@@ -440,6 +440,8 @@ def run_test():
     custom_env["MAKEFILE_WORKFLOW_WORKER_MODEL"] = "flash_lite"
     custom_env["MAKEFILE_WORKFLOW_TDD_MODEL"] = "pro"
     custom_env["MAKEFILE_WORKFLOW_TRIAGE_MODEL"] = "flash"
+    custom_env["MAKEFILE_WORKFLOW_CI_QUIESCENCE_SECONDS"] = "40"
+    custom_env["MAKEFILE_WORKFLOW_CI_POLL_INTERVAL"] = "8"
     p_env = subprocess.Popen(
         [sys.executable, SERVER_SCRIPT],
         stdin=subprocess.PIPE,
@@ -477,6 +479,8 @@ def run_test():
       assert env_cfg["agyModelTiers"]["tdd-worker"] == "pro"
       assert env_cfg["models"]["triage-worker"] == "flash"
       assert env_cfg["agyModelTiers"]["triage-worker"] == "flash"
+      assert env_cfg["ci"]["quiescenceSeconds"] == 40
+      assert env_cfg["ci"]["pollIntervalSeconds"] == 8
 
       env_sc_bad = send_rpc(
           p_env,

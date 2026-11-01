@@ -235,6 +235,18 @@ def resolve_workflow_config(workspace_dir=None):
       config["database"][db_key] = merged
       config["envOverrides"].append(f"{env_var}={','.join(vals)}")
 
+  ci_env_mappings = {
+      "MAKEFILE_WORKFLOW_CI_QUIESCENCE_SECONDS": "quiescenceSeconds",
+      "MAKEFILE_WORKFLOW_CI_POLL_INTERVAL": "pollIntervalSeconds",
+  }
+  for env_var, ci_key in ci_env_mappings.items():
+    val = os.getenv(env_var)
+    if val and val.strip().isdigit():
+      num = int(val.strip())
+      if num > 0:
+        config["ci"][ci_key] = num
+        config["envOverrides"].append(f"{env_var}={num}")
+
   config["agyModelTiers"] = {
       role: map_to_agy_tier(val) for role, val in config["models"].items()
   }

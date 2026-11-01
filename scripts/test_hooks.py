@@ -568,6 +568,10 @@ def test_session_start():
       json.dump(
           {
               "models": {"adversarial-critic": "gemini-4-argon-high"},
+              "ci": {
+                  "quiescenceSeconds": 45,
+                  "pollIntervalSeconds": 15,
+              },
               "database": {
                   "prodDatabases": ["billing_live", 1, None],
                   "testDatabases": ["billing_test"],
@@ -588,12 +592,16 @@ def test_session_start():
     assert "gemini-4-argon-high" in msg
     assert "billing_live" in msg
     assert "None" not in msg
+    assert "ci.quiescence=45s" in msg
+    assert "ci.poll=15s" in msg
 
     # 2. Environment variable database overrides in SessionStart
     env_override = dict(os.environ)
     env_override["MAKEFILE_WORKFLOW_PROD_DBS"] = "warehouse_live"
     env_override["MAKEFILE_WORKFLOW_TEST_DBS"] = "warehouse_test"
     env_override["MAKEFILE_WORKFLOW_PROD_HOSTS"] = "warehouse.internal"
+    env_override["MAKEFILE_WORKFLOW_CI_QUIESCENCE_SECONDS"] = "25"
+    env_override["MAKEFILE_WORKFLOW_CI_POLL_INTERVAL"] = "5"
     res_env = run_hook(
         SESSION_START,
         {"workspacePaths": [ws_dir]},
@@ -604,6 +612,8 @@ def test_session_start():
     assert "warehouse_live" in msg_env
     assert "warehouse_test" in msg_env
     assert "warehouse.internal" in msg_env
+    assert "ci.quiescence=25s" in msg_env
+    assert "ci.poll=5s" in msg_env
 
     # 3. Malformed or non-dict config values must never drop Target 00 state card restoration
     for bad_cfg_raw in (
