@@ -53,6 +53,7 @@ flowchart LR
 Start a task or query status with direct chat prompts:
 
 - Start from requirements: `"Add CSV export to /api/reports using the makefile workflow."`
+- Start with Socratic invariant constraints: `"Does code quality improve with proper object usage and test-driven development? Can tests run in isolation without touching live systems? If you focus narrowly on this solution, will regressions be less likely?"`
 - Start from an issue: `"Resolve GitHub issue #123."`
 - View progress: `"Show the active target and readerboard."`
 - View backlog: `"List the top open issues by priority."`

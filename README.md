@@ -103,7 +103,7 @@ agy plugin install https://github.com/AminBlg/SimpleEnglish
 Run your first workflow task in five steps:
 
 1. Open your project repository in your terminal or IDE with your AI coding agent active.
-2. Describe your task in chat, for example: `"Add a health endpoint at /api/health that returns uptime in seconds."`
+2. Describe your task, or prompt Socratically with invariant constraints (for example: `"Add a health endpoint at /api/health that returns uptime in seconds."`).
 3. Wait while the agent creates branch `feat/1-health-endpoint`, scans your codebase, and writes `.workflow/state/20_plan.md`.
 4. Read the plan in chat at Target 20 and reply: `"Plan approved. Proceed."`
 5. Review the test results and Six-Pillar code audit, then reply `"Approved"` at each pause gate to commit, push, and merge.
@@ -140,6 +140,14 @@ Ask the agent what to work on next, for example `"Show open issues on GitHub."`
 1. The agent queries open issues with `gh issue list` and sorts them by priority (`P0` through `P3`).
 2. The agent lists the candidates in chat so that you can pick one.
 3. After you choose an issue, the agent starts Target 10.
+
+#### Way 4: Socratic Intake Prompt
+
+Frame your request with Socratic prompting to test invariant constraints before planning:
+
+> *"Does code quality improve with proper object usage and test-driven development? Can tests run in isolation without touching live systems? If existing tests must change, include that in the plan. Wait for plan approval before editing code. Can you run targeted tests with `-v` and `-x` until green? If you focus narrowly on this solution, will regressions be less likely?"*
+
+This prompting style causes the model to forward-simulate state constraints. The agent prunes reckless reasoning paths before drafting `.workflow/state/20_plan.md`.
 
 ---
 

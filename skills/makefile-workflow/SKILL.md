@@ -133,18 +133,19 @@ Read [`references/02`](./references/02_archaeology_and_planning.md) and [`refere
 
 ### Target 20: `approved-plan` (Plan File and Human Approval)
 
-Read [`references/02`](./references/02_archaeology_and_planning.md) for plan disclosures.
+Read [`references/02`](./references/02_archaeology_and_planning.md) for plan disclosures and Socratic pre-planning deliberation.
 
-1. Write the plan to `.workflow/state/20_plan.md`.
-2. Include these six disclosures in the plan:
+1. Interrogate proposed changes with Socratic deliberation questions covering fail-fast test loops, hermetic isolation, existing test changes, and scoped diff boundaries.
+2. Write the plan to `.workflow/state/20_plan.md` with the Socratic Invariant Audit table.
+3. Include these six disclosures in the plan:
    - Exact file paths to create or edit.
    - Targeted subproject test commands and full repository test commands.
    - Smoke test templates if the subproject lacks tests.
    - Any existing tests that must change and the technical reason for each change.
    - Database and file isolation details proving that tests never touch production data.
    - Testing strategy and burden balance justifying depth against execution speed and dependencies (`SCAR-TEST-11`).
-3. Print the plan summary in chat with a `file://` link and stop tool calls (`tool_calls: []`) for `human-plan-approval`.
-4. After the user approves the plan, write `.workflow/state/20_plan_approved.md` and advance to Target 30.
+4. Print the plan summary in chat with a `file://` link and stop tool calls (`tool_calls: []`) for `human-plan-approval`.
+5. After the user approves the plan, write `.workflow/state/20_plan_approved.md` and advance to Target 30.
 
 ### Target 30: `implementation-diff` (Red-Green-Refactor TDD)
 

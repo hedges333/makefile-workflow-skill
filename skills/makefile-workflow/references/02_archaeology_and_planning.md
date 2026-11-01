@@ -25,6 +25,28 @@ Do not plan code edits from guesswork. Inspect the repository first to gather fa
 
 Write the implementation plan to `.workflow/state/20_plan.md`.
 
+### 2.1 Socratic Pre-Planning Deliberation
+
+Do not draft implementation plans from passive checklists. Before writing `.workflow/state/20_plan.md`, interrogate your proposed solution with these four Socratic questions:
+
+1. **Targeted Test Loops (`SCAR-PROC-104`, `SCAR-TEST-09`)**: Will running targeted test loops with fail-fast flags (`-v -x`) isolate failures before running full test suites?
+2. **Hermetic Test Isolation (`SCAR-TEST-08`)**: Can tests run in memory, in temporary directories, or against mock fixtures without touching live databases or systems?
+3. **Existing Test Modifications**: If an existing test must change, does the change reflect a true contract update rather than masking a bug?
+4. **Minimal Scoped Edits (`SCAR-PROC-104`)**: If you keep changes narrow and leave unrelated defects for future tickets, will regressions be less likely?
+
+### 2.2 Socratic Invariant Audit Table
+
+Include this audit table in every `.workflow/state/20_plan.md`:
+
+| Invariant / Boundary | Probing Socratic Inquiry | Pre-Implementation Verification / Proof |
+| :--- | :--- | :--- |
+| **Fail-Fast Targeted Loops** | Which exact subproject test command runs in tight iteration with fail-fast flags (`-v -x`) before full sweeps? | List the exact command with `-v -x` flags. |
+| **Hermetic Test Isolation** | Can every test run in memory or against mock fixtures without live socket or database calls? | State the fixture strategy and temporary directory path. |
+| **Existing Test Modification** | If any existing test is altered, why does this modification not mask a regression? | State the semantic reason, or note that zero existing tests change. |
+| **Minimal Scoped Edits** | What files will remain untouched, and how are unrelated defects quarantined? | List untouched modules and verify ticket scope boundaries. |
+
+### 2.3 Required Plan Disclosures
+
 Include these seven items in every plan:
 
 1. Target subprojects and programming languages involved in the task.
