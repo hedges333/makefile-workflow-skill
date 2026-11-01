@@ -378,5 +378,24 @@
     "closes_issue": true,
     "tests_added": 6,
     "scars_earned": []
+  },
+  {
+    "id": "#3 (GH-3)",
+    "issue_url": "https://github.com/hedges333/makefile-workflow-skill/issues/3",
+    "title": "Prevent global Git flag bypasses and enforce force-push protection in hooks",
+    "request": "Add --exec-path, --attr-source, and --list-cmds to GIT_GLOBAL_VALUE_FLAGS in pre_tool_guard.py and mcp/server.py, and add comprehensive regression tests in test_hooks.py.",
+    "branch": "fix/3-pre-tool-guard-git-regexes",
+    "subprojects": [
+      "scripts",
+      "mcp"
+    ],
+    "started_at": "2026-11-01T05:25:00Z",
+    "completed_at": "2026-11-01T05:48:00Z",
+    "commit_sha": "072331b",
+    "pr_number": 8,
+    "pr_url": "https://github.com/hedges333/makefile-workflow-skill/pull/8",
+    "closes_issue": true,
+    "tests_added": 21,
+    "scars_earned": []
   }
 ]
