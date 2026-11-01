@@ -397,5 +397,26 @@
     "closes_issue": true,
     "tests_added": 21,
     "scars_earned": []
+  },
+  {
+    "id": "#9 (GH-9)",
+    "issue_url": "https://github.com/hedges333/makefile-workflow-skill/issues/9",
+    "title": "Propagate and enforce ci.quiescenceSeconds configuration across workflow",
+    "request": "Extract ci.quiescenceSeconds and ci.pollIntervalSeconds in session_start.py, support environment variable overrides in hooks and MCP server, and update agent rules and skill docs.",
+    "branch": "fix/9-ci-quiescence-config",
+    "subprojects": [
+      "scripts",
+      "mcp",
+      "agents",
+      "skills"
+    ],
+    "started_at": "2026-11-01T05:54:00Z",
+    "completed_at": "2026-11-01T06:40:40Z",
+    "commit_sha": "3cf7043",
+    "pr_number": 10,
+    "pr_url": "https://github.com/hedges333/makefile-workflow-skill/pull/10",
+    "closes_issue": true,
+    "tests_added": 12,
+    "scars_earned": []
   }
 ]
