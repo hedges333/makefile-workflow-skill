@@ -504,5 +504,25 @@
     "closes_issue": true,
     "tests_added": 5,
     "scars_earned": []
+  },
+  {
+    "id": "GH-17",
+    "issue_url": "https://github.com/hedges333/makefile-workflow-skill/issues/17",
+    "title": "Align subagent prompts and supervisor delegation with directive-embedded Socratic questions",
+    "request": "Align child subagents (archaeology-worker, tdd-worker, adversarial-critic, triage-worker) and supervisor delegation protocol in references/08 with directive-embedded Socratic questions to prune reckless reasoning branches and rubber-stamping.",
+    "branch": "feat/17-socratic-subagent-prompts",
+    "subprojects": [
+      "agents",
+      "scripts",
+      "skills"
+    ],
+    "started_at": "2026-11-01T19:55:00Z",
+    "completed_at": "2026-11-01T20:28:48Z",
+    "commit_sha": "a4b2324",
+    "pr_number": 20,
+    "pr_url": "https://github.com/hedges333/makefile-workflow-skill/pull/20",
+    "closes_issue": true,
+    "tests_added": 6,
+    "scars_earned": []
   }
 ]
