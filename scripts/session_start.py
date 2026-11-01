@@ -21,6 +21,21 @@ DB_ENV_MAPPINGS = {
     "MAKEFILE_WORKFLOW_PROD_HOSTS": "prodHosts",
 }
 
+CI_ENV_MAPPINGS = {
+    "MAKEFILE_WORKFLOW_CI_QUIESCENCE_SECONDS": "quiescenceSeconds",
+    "MAKEFILE_WORKFLOW_CI_POLL_INTERVAL": "pollIntervalSeconds",
+}
+
+
+def _parse_positive_int(val, default):
+  if isinstance(val, int) and val > 0:
+    return val
+  if isinstance(val, str) and val.strip().isdigit():
+    num = int(val.strip())
+    if num > 0:
+      return num
+  return default
+
 
 def _normalize_str_list(items):
   if not isinstance(items, list):
@@ -71,12 +86,35 @@ def get_workflow_config(workspace_paths):
       if db_key in raw_db:
         db_cfg[db_key] = _normalize_str_list(raw_db[db_key])
 
+  ci_cfg = {
+      "pollIntervalSeconds": 30,
+      "quiescenceSeconds": 180,
+  }
+  raw_ci = raw_cfg.get("ci")
+  if isinstance(raw_ci, dict):
+    if "pollIntervalSeconds" in raw_ci:
+      ci_cfg["pollIntervalSeconds"] = _parse_positive_int(
+          raw_ci["pollIntervalSeconds"], 30
+      )
+    if "quiescenceSeconds" in raw_ci:
+      ci_cfg["quiescenceSeconds"] = _parse_positive_int(
+          raw_ci["quiescenceSeconds"], 180
+      )
+
   env_applied = []
   for env_var, agent_key in ENV_MAPPINGS.items():
     val = os.getenv(env_var)
     if val and val.strip():
       models[agent_key] = val.strip()
       env_applied.append(env_var)
+
+  for env_var, ci_key in CI_ENV_MAPPINGS.items():
+    val = os.getenv(env_var)
+    if val and val.strip().isdigit():
+      num = int(val.strip())
+      if num > 0:
+        ci_cfg[ci_key] = num
+        env_applied.append(env_var)
 
   for env_var, db_key in DB_ENV_MAPPINGS.items():
     val = os.getenv(env_var)
@@ -94,7 +132,7 @@ def get_workflow_config(workspace_paths):
     env_label = "env (" + ", ".join(env_applied) + ")"
     source = (source + " + " + env_label) if source else env_label
 
-  return {"models": models, "database": db_cfg}, source
+  return {"models": models, "ci": ci_cfg, "database": db_cfg}, source
 
 
 def check_simple_english(workspace_paths):
@@ -164,6 +202,10 @@ def main():
         )
 
     if cfg_source:
+      ci_cfg = cfg.get("ci") if isinstance(cfg.get("ci"), dict) else {}
+      quiescence_sec = ci_cfg.get("quiescenceSeconds", 180)
+      poll_interval_sec = ci_cfg.get("pollIntervalSeconds", 30)
+      ci_summary = f", ci.quiescence={quiescence_sec}s, ci.poll={poll_interval_sec}s"
       db_cfg = cfg.get("database") if isinstance(cfg.get("database"), dict) else {}
       prod_dbs = db_cfg.get("prodDatabases") or []
       test_dbs = db_cfg.get("testDatabases") or []
@@ -175,7 +217,7 @@ def main():
         )
       notes.append(
           f"Makefile Workflow loaded configuration from {cfg_source} "
-          f"(critic={critic_model}, tdd={tdd_model}{db_summary})."
+          f"(critic={critic_model}, tdd={tdd_model}{ci_summary}{db_summary})."
       )
 
     has_se = check_simple_english(workspace_paths)

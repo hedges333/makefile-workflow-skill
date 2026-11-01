@@ -399,6 +399,15 @@ def validate():
     if "20 words" not in critic_text:
       errors.append(f"{critic_agent} Pillar 5 must document sentence length caps (20 words)")
 
+  triage_agent = "agents/triage-worker.md"
+  if not os.path.exists(triage_agent):
+    errors.append(f"Missing {triage_agent}")
+  else:
+    with open(triage_agent) as f:
+      tw_text = f.read()
+    if "configured quiescence" not in tw_text.lower():
+      errors.append(f"{triage_agent} Rule 2 must reference configured quiescence duration")
+
   ref_04_review = "skills/makefile-workflow/references/04_six_pillars_adversarial_review.md"
   if not os.path.exists(ref_04_review):
     errors.append(f"Missing {ref_04_review}")

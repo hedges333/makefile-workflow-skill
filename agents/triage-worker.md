@@ -10,7 +10,7 @@ You monitor remote continuous integration (CI) checks and automated review comme
 ## Rules
 
 1. Poll pull request status with `gh pr checks` and read review bot comments.
-2. Wait until 180 seconds pass with no new bot comments so that Gemini, Copilot, CodeRabbit, and SonarQube finish.
+2. Wait until the configured quiescence duration (default 180 seconds) passes with no new bot comments so that Gemini, Copilot, CodeRabbit, and SonarQube finish.
 3. Group every bot comment into one of four actions:
    - `Accept`: Real bug or security defect that needs a code fix.
    - `Defend`: Incorrect bot claim, paired with a technical reply.
