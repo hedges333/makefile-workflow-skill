@@ -418,5 +418,26 @@
     "closes_issue": true,
     "tests_added": 12,
     "scars_earned": []
+  },
+  {
+    "id": "GH-11",
+    "issue_url": "https://github.com/hedges333/makefile-workflow-skill/issues/11",
+    "title": "Disambiguate local session tickets from GitHub issues in history, branches, and commits",
+    "request": "Distinguish local session tasks from GitHub issues in history ledgers, branch names, and commit messages to prevent accidental auto-close collisions on GitHub.",
+    "branch": "feat/11-disambiguate-local-tickets",
+    "subprojects": [
+      "skills",
+      "rules",
+      "scripts",
+      "adapters"
+    ],
+    "started_at": "2026-11-01T07:05:00Z",
+    "completed_at": "2026-11-01T07:29:34Z",
+    "commit_sha": "40ff6c0",
+    "pr_number": 12,
+    "pr_url": "https://github.com/hedges333/makefile-workflow-skill/pull/12",
+    "closes_issue": true,
+    "tests_added": 26,
+    "scars_earned": []
   }
 ]
