@@ -484,5 +484,25 @@
     "scars_earned": [
       "SCAR-TOOL-15: Use anchored state marker detection instead of substring matching when inspecting workflow readerboard cards"
     ]
+  },
+  {
+    "id": "GH-16",
+    "issue_url": "https://github.com/hedges333/makefile-workflow-skill/issues/16",
+    "title": "Add Socratic plan formulation protocol, invariant audit, and intake guidance to Target 20",
+    "request": "Incorporate Socratic Prompting and NLP Meta-Model deliberation into Target 20 planning lifecycle, add Socratic Invariant Audit table to plan template, instruct supervisor in SKILL.md to evaluate Socratic questions, and add Socratic intake guidance in README.md.",
+    "branch": "feat/16-socratic-plan-protocol",
+    "subprojects": [
+      "rules",
+      "scripts",
+      "skills"
+    ],
+    "started_at": "2026-11-01T19:14:00Z",
+    "completed_at": "2026-11-01T19:54:00Z",
+    "commit_sha": "13ecf43",
+    "pr_number": 19,
+    "pr_url": "https://github.com/hedges333/makefile-workflow-skill/pull/19",
+    "closes_issue": true,
+    "tests_added": 5,
+    "scars_earned": []
   }
 ]
