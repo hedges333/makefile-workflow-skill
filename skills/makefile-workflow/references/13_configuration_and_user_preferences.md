@@ -22,7 +22,7 @@ When a session starts or `workflow_get_config` runs, the plugin resolves configu
    - `MAKEFILE_WORKFLOW_PROD_HOSTS` for comma-separated live database hosts to block.
    - `MAKEFILE_WORKFLOW_CI_QUIESCENCE_SECONDS` for continuous integration quiet window in seconds (default 180).
    - `MAKEFILE_WORKFLOW_CI_POLL_INTERVAL` for continuous integration polling interval in seconds (default 30).
-4. Built-in defaults:
+4. Canonical defaults in `default_config.json` (packaged at repository root). Single-item user overrides in `.workflow/config.json` deep-merge recursively into defaults without dropping unset default fields:
    - `adversarial-critic`: `inherit`
    - `archaeology-worker`: `inherit`
    - `tdd-worker`: `inherit`

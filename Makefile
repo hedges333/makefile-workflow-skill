@@ -59,6 +59,7 @@ test: test-static test-safe-copy test-env-preflight test-compat test-mcp test-ho
 	@test -f plugin.json || (echo "Missing plugin.json" && exit 1)
 	@test -f hooks.json || (echo "Missing hooks.json" && exit 1)
 	@test -f mcp_config.json || (echo "Missing mcp_config.json" && exit 1)
+	@test -f default_config.json || (echo "Missing default_config.json" && exit 1)
 	@test -f skills/makefile-workflow/SKILL.md || (echo "Missing SKILL.md" && exit 1)
 	@test -f rules/AGENTS.md || (echo "Missing rules/AGENTS.md" && exit 1)
 	@echo "All tests passed."

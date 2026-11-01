@@ -172,6 +172,24 @@ def validate():
     except Exception as e:
       errors.append(f"Invalid {cfg_template}: {e}")
 
+  # 9b. Canonical Default Configuration (default_config.json)
+  default_cfg_path = "default_config.json"
+  if not os.path.exists(default_cfg_path):
+    errors.append(f"Missing canonical {default_cfg_path}")
+  else:
+    try:
+      with open(default_cfg_path) as f:
+        d_cfg = json.load(f)
+      assert "models" in d_cfg, f"{default_cfg_path} must declare 'models'"
+      assert "review" in d_cfg, f"{default_cfg_path} must declare 'review'"
+      assert "ci" in d_cfg, f"{default_cfg_path} must declare 'ci'"
+      assert "database" in d_cfg, f"{default_cfg_path} must declare 'database'"
+      assert d_cfg["ci"]["pollIntervalSeconds"] > 0
+      assert d_cfg["ci"]["quiescenceSeconds"] > 0
+      print(f"✔ Canonical default configuration ({default_cfg_path}) valid.")
+    except Exception as e:
+      errors.append(f"Invalid {default_cfg_path}: {e}")
+
   ref_13 = "skills/makefile-workflow/references/13_configuration_and_user_preferences.md"
   if not os.path.exists(ref_13):
     errors.append(f"Missing {ref_13}")

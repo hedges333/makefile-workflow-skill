@@ -1,0 +1,22 @@
+{
+  "$comment": "Canonical default configuration for makefile-workflow. Overridden by .workflow/config.json or ~/.gemini/config/makefile-workflow.json.",
+  "models": {
+    "adversarial-critic": "inherit",
+    "archaeology-worker": "inherit",
+    "tdd-worker": "inherit",
+    "triage-worker": "inherit"
+  },
+  "review": {
+    "maxReviewRounds": 3,
+    "strictSixPillars": true
+  },
+  "ci": {
+    "pollIntervalSeconds": 30,
+    "quiescenceSeconds": 180
+  },
+  "database": {
+    "prodDatabases": [],
+    "testDatabases": [],
+    "prodHosts": []
+  }
+}

@@ -6,18 +6,20 @@ This manual covers remote CI checks, review bot triage, the human landing gate, 
 
 After you open a pull request, do not merge right away. Wait for remote CI runners and review bots to finish.
 
-### Phase 1: Fork the Triage Worker
+### Phase 1: Fast CI and Bot Polling (`workflow_poll_ci`)
 
-Fork a `triage-worker` subagent with `Model` set to `agyModelTiers["triage-worker"]` (default `inherit`):
+Call the `workflow_poll_ci` MCP tool (or run `gh pr view <pr> --json statusCheckRollup,comments,reviews`):
 
-1. Poll `gh pr checks` until every remote CI workflow finishes.
-2. Wait through the configured quiescence duration (default 180 seconds with no new bot comments) so Gemini, Copilot, CodeRabbit, and SonarQube finish posting.
-3. Group every bot finding or CI failure into one of four actions:
+1. It reads `ci.quiescenceSeconds` and `ci.pollIntervalSeconds` from `.workflow/config.json` before falling back to defaults.
+2. It polls CI checks in a fast programmatic loop until all workflows complete.
+3. It waits until the quiescence duration elapses with no new review bot comments from Gemini, Copilot, CodeRabbit, or SonarQube.
+4. If zero bot comments exist and CI succeeds, write `.workflow/state/70_bot_triage.md` and advance directly to Target 75 without launching subagents.
+5. If bot comments exist, pass the pre-fetched comments to a `triage-worker` subagent in a single prompt. The worker groups each comment in one model turn into:
    - `Accept`: Real bug or security defect that needs a code fix.
    - `Defend`: Incorrect bot claim paired with a technical reply.
    - `Defer`: Valid improvement outside ticket scope, logged for a future ticket.
    - `Acknowledge`: Informational note that needs no code change.
-4. Write the triage table to `.workflow/state/70_bot_triage.md`.
+6. Write the triage table to `.workflow/state/70_bot_triage.md`.
 
 ### Phase 2: Fix Accepted Findings
 

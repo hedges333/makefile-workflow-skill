@@ -59,8 +59,10 @@ def run_test():
           "workflow_verify_tree",
           "workflow_safety_check",
           "workflow_get_config",
+          "workflow_poll_ci",
       ):
         assert expected in tool_names
+      assert len(tool_names) == 6
       print(f"✔ MCP tools/list returned {len(tool_names)} tools: {tool_names}")
 
       # 3. Safety check: production hostname and underscore prod_db
@@ -518,9 +520,160 @@ def run_test():
       )
       assert json.loads(env_sc_good["result"]["content"][0]["text"])["safe"] is True
       print("✔ MCP environment variable database overrides passed.")
+
     finally:
       p_env.kill()
       p_env.wait()
+
+  # 10. Single-item partial config override & workflow_poll_ci tests
+  with tempfile.TemporaryDirectory() as partial_ws:
+    os.makedirs(os.path.join(partial_ws, ".workflow"))
+    with open(
+        os.path.join(partial_ws, ".workflow", "config.json"),
+        "w",
+        encoding="utf-8",
+    ) as f:
+      json.dump({"ci": {"quiescenceSeconds": 20}}, f)
+
+    p_partial = subprocess.Popen(
+        [sys.executable, SERVER_SCRIPT],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        cwd=partial_ws,
+        text=True,
+    )
+    try:
+      send_rpc(
+          p_partial,
+          {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}},
+      )
+      partial_cfg_resp = send_rpc(
+          p_partial,
+          {
+              "jsonrpc": "2.0",
+              "id": 50,
+              "method": "tools/call",
+              "params": {
+                  "name": "workflow_get_config",
+                  "arguments": {"workspaceDir": partial_ws},
+              },
+          },
+      )
+      partial_cfg = json.loads(partial_cfg_resp["result"]["content"][0]["text"])
+      assert partial_cfg["ci"]["quiescenceSeconds"] == 20
+      assert partial_cfg["ci"]["pollIntervalSeconds"] == 30, (
+          f"Expected default 30s poll interval, got {partial_cfg['ci']['pollIntervalSeconds']}"
+      )
+      assert partial_cfg["models"]["adversarial-critic"] == "inherit"
+      assert partial_cfg["review"]["strictSixPillars"] is True
+      print("✔ MCP recursive deep-merge single-item override passed.")
+
+      # Test workflow_poll_ci in pure git / missing PR fallback mode
+      poll_resp = send_rpc(
+          p_partial,
+          {
+              "jsonrpc": "2.0",
+              "id": 51,
+              "method": "tools/call",
+              "params": {
+                  "name": "workflow_poll_ci",
+                  "arguments": {
+                      "prNumber": 0,
+                      "workspaceDir": partial_ws,
+                  },
+              },
+          },
+      )
+      poll_data = json.loads(poll_resp["result"]["content"][0]["text"])
+      assert "ciStatus" in poll_data
+      assert "quiescenceSatisfied" in poll_data
+      assert "readyToLand" in poll_data
+      assert "unresolvedBotCommentsCount" in poll_data
+      assert poll_data["mode"] == "pure_git"
+      print("✔ MCP workflow_poll_ci fallback handling passed.")
+    finally:
+      p_partial.kill()
+      p_partial.wait()
+
+  # 11. In-memory unit tests for poll_ci_status GitHub PR parsing & quiescence
+  sys.path.insert(0, REPO_ROOT)
+  from mcp.server import poll_ci_status
+  from unittest.mock import patch, MagicMock
+
+  mock_data_bot = {
+      "statusCheckRollup": [{
+          "name": "ci",
+          "status": "COMPLETED",
+          "conclusion": "SUCCESS",
+          "completedAt": "2026-11-01T08:00:00Z",
+      }],
+      "comments": [{
+          "author": {"login": "coderabbitai[bot]"},
+          "body": "Consider refactoring",
+          "createdAt": "2026-11-01T08:01:00Z",
+      }],
+      "reviews": [],
+      "mergeable": "MERGEABLE",
+      "mergeStateStatus": "CLEAN",
+  }
+  with patch("shutil.which", return_value="/usr/bin/gh"), patch(
+      "subprocess.run"
+  ) as mock_run:
+    mock_run.return_value = MagicMock(
+        stdout=json.dumps(mock_data_bot), stderr="", returncode=0
+    )
+    res = poll_ci_status(
+        ws=REPO_ROOT, pr_number=123, quiescence_sec=10, max_wait_sec=1
+    )
+    assert res["ciStatus"] == "SUCCESS"
+    assert res["readyToLand"] is False
+    assert res["unresolvedBotCommentsCount"] == 1
+
+  mock_data_clean = {
+      "statusCheckRollup": [{
+          "name": "ci",
+          "status": "COMPLETED",
+          "conclusion": "SUCCESS",
+          "completedAt": "2026-11-01T07:00:00Z",
+      }],
+      "comments": [],
+      "reviews": [],
+      "mergeable": "MERGEABLE",
+      "mergeStateStatus": "CLEAN",
+  }
+  with patch("shutil.which", return_value="/usr/bin/gh"), patch(
+      "subprocess.run"
+  ) as mock_run:
+    mock_run.return_value = MagicMock(
+        stdout=json.dumps(mock_data_clean), stderr="", returncode=0
+    )
+    res = poll_ci_status(
+        ws=REPO_ROOT, pr_number=123, quiescence_sec=10, max_wait_sec=1
+    )
+    assert res["ciStatus"] == "SUCCESS"
+    assert res["readyToLand"] is True
+    assert res["unresolvedBotCommentsCount"] == 0
+
+  mock_data_fail = {
+      "statusCheckRollup": [
+          {"name": "lint", "status": "COMPLETED", "conclusion": "FAILURE"}
+      ],
+      "comments": [],
+      "reviews": [],
+  }
+  with patch("shutil.which", return_value="/usr/bin/gh"), patch(
+      "subprocess.run"
+  ) as mock_run:
+    mock_run.return_value = MagicMock(
+        stdout=json.dumps(mock_data_fail), stderr="", returncode=0
+    )
+    res = poll_ci_status(
+        ws=REPO_ROOT, pr_number=123, quiescence_sec=10, max_wait_sec=1
+    )
+    assert res["ciStatus"] == "FAILURE"
+    assert res["failedChecks"] == ["lint"]
+  print("✔ MCP poll_ci_status in-memory branch coverage passed.")
 
   print("\nAll MCP Server test cases passed.")
 

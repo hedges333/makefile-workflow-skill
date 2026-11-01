@@ -4,6 +4,7 @@
 Reads Memento state cards and user configuration from the active workspace.
 """
 
+import copy
 import json
 import os
 import sys
@@ -11,6 +12,7 @@ import sys
 ENV_MAPPINGS = {
     "MAKEFILE_WORKFLOW_CRITIC_MODEL": "adversarial-critic",
     "MAKEFILE_WORKFLOW_WORKER_MODEL": "archaeology-worker",
+    "MAKEFILE_WORKFLOW_ARCHAEOLOGY_MODEL": "archaeology-worker",
     "MAKEFILE_WORKFLOW_TDD_MODEL": "tdd-worker",
     "MAKEFILE_WORKFLOW_TRIAGE_MODEL": "triage-worker",
 }
@@ -43,7 +45,65 @@ def _normalize_str_list(items):
   return [x.strip() for x in items if isinstance(x, str) and x.strip()]
 
 
+def deep_merge(base, override):
+  """Recursively merges override dictionary into base dictionary without mutating base."""
+  result = copy.deepcopy(base) if isinstance(base, dict) else {}
+  if not isinstance(override, dict):
+    return result
+  for key, val in override.items():
+    if key in result and isinstance(result[key], dict) and isinstance(val, dict):
+      result[key] = deep_merge(result[key], val)
+    else:
+      result[key] = copy.deepcopy(val)
+  return result
+
+
+def load_default_config():
+  """Loads canonical default_config.json from repository or install root."""
+  candidates = [
+      os.path.join(
+          os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+          "default_config.json",
+      ),
+      os.path.join(os.getcwd(), "default_config.json"),
+      os.path.expanduser(
+          "~/.gemini/config/plugins/makefile-workflow/default_config.json"
+      ),
+  ]
+  for path in candidates:
+    if os.path.isfile(path):
+      try:
+        with open(path, "r", encoding="utf-8") as f:
+          data = json.load(f)
+        if isinstance(data, dict):
+          return data
+      except Exception:
+        pass
+  return {
+      "models": {
+          "adversarial-critic": "inherit",
+          "archaeology-worker": "inherit",
+          "tdd-worker": "inherit",
+          "triage-worker": "inherit",
+      },
+      "review": {
+          "maxReviewRounds": 3,
+          "strictSixPillars": True,
+      },
+      "ci": {
+          "pollIntervalSeconds": 30,
+          "quiescenceSeconds": 180,
+      },
+      "database": {
+          "prodDatabases": [],
+          "testDatabases": [],
+          "prodHosts": [],
+      },
+  }
+
+
 def get_workflow_config(workspace_paths):
+  default_cfg = load_default_config()
   raw_cfg = {}
   source = None
 
@@ -68,8 +128,10 @@ def get_workflow_config(workspace_paths):
       except Exception:
         pass
 
+  merged_cfg = deep_merge(default_cfg, raw_cfg)
+
   models = {}
-  raw_models = raw_cfg.get("models")
+  raw_models = merged_cfg.get("models")
   if isinstance(raw_models, dict):
     for m_key, m_val in raw_models.items():
       if isinstance(m_key, str) and isinstance(m_val, str) and m_val.strip():
@@ -80,7 +142,7 @@ def get_workflow_config(workspace_paths):
       "testDatabases": [],
       "prodHosts": [],
   }
-  raw_db = raw_cfg.get("database")
+  raw_db = merged_cfg.get("database")
   if isinstance(raw_db, dict):
     for db_key in ("prodDatabases", "testDatabases", "prodHosts"):
       if db_key in raw_db:
@@ -90,7 +152,7 @@ def get_workflow_config(workspace_paths):
       "pollIntervalSeconds": 30,
       "quiescenceSeconds": 180,
   }
-  raw_ci = raw_cfg.get("ci")
+  raw_ci = merged_cfg.get("ci")
   if isinstance(raw_ci, dict):
     if "pollIntervalSeconds" in raw_ci:
       ci_cfg["pollIntervalSeconds"] = _parse_positive_int(
