@@ -249,5 +249,28 @@
     "scars_earned": [
       "SCAR-TEST-10: Pre-Flight Structural Static Analysis Gate"
     ]
+  },
+  {
+    "id": "#12",
+    "issue_url": null,
+    "title": "Codify SCAR-SYS-05 and Implement Safe Cross-User File Promotion",
+    "request": "Implement SCAR-SYS-05 from TODO.md, build reusable safe_copy utility, dedicated unit tests, Makefile test-safe-copy integration, and codify scar across catalog and rules",
+    "branch": "feat/12-cross-user-file-promotion",
+    "subprojects": [
+      "scripts",
+      "skills",
+      "rules",
+      "build"
+    ],
+    "started_at": "2026-10-31T23:38:00Z",
+    "completed_at": "2026-11-01T00:37:00Z",
+    "commit_sha": "80649bc",
+    "pr_number": null,
+    "pr_url": null,
+    "closes_issue": false,
+    "tests_added": 8,
+    "scars_earned": [
+      "SCAR-SYS-05: Cross-User File Promotion (shutil.copyfile over copy2 / copystat)"
+    ]
   }
 ]
