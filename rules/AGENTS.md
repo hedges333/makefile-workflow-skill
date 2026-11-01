@@ -23,6 +23,7 @@ Antigravity renders an interactive review panel for artifacts. Follow these rule
 11. Do not use shell `rm` commands to delete artifacts. Overwriting with the built-in tool updates markdown content and companion JSON attributes safely.
 12. If `.workflow/state/20_plan_approved.md` exists, never re-execute Target 30 from old artifact notifications. Always verify progress from `.workflow/state/`.
 13. Include Testing Strategy and Burden-Balance Analysis (`SCAR-TEST-11`): In Target 20 plans, disclose testing depth against speed and dependency constraints. Prohibit surface-only testing when hermetic boundary testing is feasible.
+14. Socratic Pre-Planning Inquiry and Invariant Audit: Before writing `.workflow/state/20_plan.md`, interrogate the solution with Socratic pre-planning inquiries. Include the mandatory Socratic Invariant Audit table in every plan artifact.
 
 ### 1.2 Pause Gates and Question Prompts
 

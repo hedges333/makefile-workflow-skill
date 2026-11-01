@@ -394,6 +394,10 @@ def validate():
       r02_text = f.read()
     if "burden" not in r02_text.lower() or "Testing Strategy and Burden-Balance" not in r02_text:
       errors.append(f"{ref_02} must mandate Testing Strategy and Burden-Balance Analysis in Target 20 plan disclosures")
+    if "socratic" not in r02_text.lower() or "deliberation" not in r02_text.lower():
+      errors.append(f"{ref_02} must mandate Socratic Pre-Planning Deliberation protocol")
+    if "invariant audit" not in r02_text.lower():
+      errors.append(f"{ref_02} must mandate Socratic Invariant Audit table in plan template")
 
   # Critic agent and Six Pillars review definitions
   critic_agent = "agents/adversarial-critic.md"
@@ -488,6 +492,8 @@ def validate():
       errors.append(f"{skill_md} Target 70 must document 'triage-worker' default inherit")
     if "burden" not in s_text.lower() and "feasibility" not in s_text.lower():
       errors.append(f"{skill_md} must document testing burden balance in Target 15 / Target 20")
+    if "socratic" not in s_text.lower() or "deliberation" not in s_text.lower():
+      errors.append(f"{skill_md} Target 20 must instruct supervisor to evaluate Socratic pre-planning questions")
 
   # 13. Antigravity Plan Artifact Lifecycle & Demotion Rules (rules/AGENTS.md)
   agents_md = "rules/AGENTS.md"
@@ -526,6 +532,8 @@ def validate():
       errors.append(f"{agents_md} Section 2 must document SCAR-SYS-06 native runtime environment path pre-flight")
     if "SCAR-TEST-11" not in a_text or "burden-balance" not in a_text.lower() and "burden balance" not in a_text.lower():
       errors.append(f"{agents_md} Section 1.1 must document SCAR-TEST-11 testing strategy and burden-balance analysis")
+    if "socratic" not in a_text.lower() or "invariant audit" not in a_text.lower():
+      errors.append(f"{agents_md} Section 1.1 must document Socratic pre-planning inquiry and invariant audit table")
     if not any("rules/AGENTS.md" in e for e in errors):
       print(f"✔ Antigravity artifact lifecycle and demotion rules ({agents_md}) valid.")
 
@@ -540,6 +548,9 @@ def validate():
       errors.append(f"{readme_path} must recommend SimpleEnglish companion plugin under Installation with repository URL")
     else:
       print("✔ SimpleEnglish companion plugin recommended in README.md.")
+
+    if "socratic" not in rm_text.lower() or "invariant" not in rm_text.lower():
+      errors.append(f"{readme_path} must provide Socratic ticket intake guidance")
 
     for role in (
         "adversarial-critic",
