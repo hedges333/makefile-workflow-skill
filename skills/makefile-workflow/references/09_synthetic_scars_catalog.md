@@ -64,6 +64,7 @@ references/
 | `SCAR-TOOL-07` | Prefer Dart Over Python for Scratch Scripts | Tooling & HCI | [`scars/tooling_and_hci.md`](./scars/tooling_and_hci.md) |
 | `SCAR-TOOL-13` | Single State Writer Isolation | Tooling & HCI | [`scars/tooling_and_hci.md`](./scars/tooling_and_hci.md) |
 | `SCAR-TOOL-14` | Programmatic Tool Polling vs Subagent Scrape Loops | Tooling & HCI | [`scars/tooling_and_hci.md`](./scars/tooling_and_hci.md) |
+| `SCAR-TOOL-15` | Anchored State Marker Detection vs Substring Matching | Tooling & HCI | [`scars/tooling_and_hci.md`](./scars/tooling_and_hci.md) |
 | `SCAR-HCI-08` | Multi-Choice Prompt Rule | Tooling & HCI | [`scars/tooling_and_hci.md`](./scars/tooling_and_hci.md) |
 | `SCAR-DOC-16` | Concentric Documentation Rings | Tooling & HCI | [`scars/tooling_and_hci.md`](./scars/tooling_and_hci.md) |
 

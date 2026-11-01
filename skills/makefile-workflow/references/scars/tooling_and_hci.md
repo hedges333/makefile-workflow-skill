@@ -9,6 +9,7 @@ This reference manual documents developer tooling, interaction patterns, prompt 
 | `SCAR-TOOL-07` | Prefer Dart Over Python for Scratch Scripts | Temporary Scripts & Escaping |
 | `SCAR-TOOL-13` | Single State Writer Isolation | Subagent State File Concurrency |
 | `SCAR-TOOL-14` | Programmatic Tool Polling vs Subagent Scrape Loops | Remote Polling & Subagent Latency |
+| `SCAR-TOOL-15` | Anchored State Marker Detection vs Substring Matching | Workflow State Parsing |
 | `SCAR-HCI-08` | Multi-Choice Prompt Rule | User Interaction & Choice Gates |
 | `SCAR-DOC-16` | Concentric Documentation Rings | Layered Architecture & Readability |
 
@@ -43,4 +44,11 @@ This reference manual documents developer tooling, interaction patterns, prompt 
 - **Wound**: Polling pull request status checks and review bot comments by delegating to a read-only subagent triggered 29 sequential HTTP API round-trips via `read_url_content` and 89 seconds of model inference latency.
 - **Trap**: Assuming subagents can poll remote endpoints efficiently without recognizing that read-only subagents lack shell tools and must scrape REST APIs across dozens of sequential model turns.
 - **Permanent Reflex**: Keep mechanical polling loops inside programmatic native tools or scripts (`workflow_poll_ci`). Invoke subagents only for single-turn cognitive evaluation after pre-fetching data.
+
+### SCAR-TOOL-15: Anchored State Marker Detection vs Substring Matching
+
+- **Wound**: Coarse substring checks on workflow state files (`"Target 90" in txt` or `"finish" in txt.lower()`) falsely matched static milestone checklists in state card templates, suppressing review checks on feature branches.
+- **Trap**: Assuming substring matching is sufficient to identify active workflow targets without recognizing that milestone templates contain all target names.
+- **Permanent Reflex**: When parsing workflow state files, never use unanchored substring matching. Always use anchored regular expressions that match the active target line or active milestone marker (such as `re.search(r"(?im)^-\s*Active Target:\s*...", txt)`).
+
 

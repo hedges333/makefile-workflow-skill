@@ -462,5 +462,27 @@
     "scars_earned": [
       "SCAR-TOOL-14: Keep mechanical polling loops inside programmatic native tools or scripts instead of subagent REST scrape loops"
     ]
+  },
+  {
+    "id": "GH-4",
+    "issue_url": "https://github.com/hedges333/makefile-workflow-skill/issues/4",
+    "title": "Standardize request history ledger lifecycle and add Target 90 commit and push gates",
+    "request": "Clarify the Git lifecycle for .workflow/history.json and .workflow/history.md across PR mode and pure Git mode, add git push origin main instruction to Target 90, and distinguish Target 90 history commit and push gates from Target 50 / Target 60 feature gates in pre_tool_guard.py and mcp/server.py.",
+    "branch": "fix/4-target-90-history-commit",
+    "subprojects": [
+      "mcp",
+      "scripts",
+      "skills"
+    ],
+    "started_at": "2026-11-01T08:44:00Z",
+    "completed_at": "2026-11-01T17:53:00Z",
+    "commit_sha": "4d19846",
+    "pr_number": 15,
+    "pr_url": "https://github.com/hedges333/makefile-workflow-skill/pull/15",
+    "closes_issue": true,
+    "tests_added": 14,
+    "scars_earned": [
+      "SCAR-TOOL-15: Use anchored state marker detection instead of substring matching when inspecting workflow readerboard cards"
+    ]
   }
 ]
