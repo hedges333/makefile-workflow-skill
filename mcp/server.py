@@ -707,6 +707,9 @@ GIT_GLOBAL_VALUE_FLAGS = {
     "--namespace",
     "--super-prefix",
     "--config-env",
+    "--exec-path",
+    "--attr-source",
+    "--list-cmds",
 }
 
 ENV_ASSIGN_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
