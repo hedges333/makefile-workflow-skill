@@ -293,5 +293,28 @@
     "closes_issue": false,
     "tests_added": 19,
     "scars_earned": []
+  },
+  {
+    "id": "#14",
+    "issue_url": null,
+    "title": "Codify SCAR-SYS-06 and Implement Native Runtime Environment Path Pre-Flight",
+    "request": "Codify SCAR-SYS-06 from TODO.md into synthetic scars catalog, reference manuals, and AGENTS.md rules. Implement reusable env_preflight utility with path validation and environment sanitization, comprehensive unit tests, Makefile test-env-preflight integration, and cross-agent compatibility assertions.",
+    "branch": "feat/14-native-runtime-env-preflight",
+    "subprojects": [
+      "scripts",
+      "skills",
+      "rules",
+      "build"
+    ],
+    "started_at": "2026-11-01T02:09:00Z",
+    "completed_at": "2026-11-01T03:51:00Z",
+    "commit_sha": "f653b1e",
+    "pr_number": null,
+    "pr_url": null,
+    "closes_issue": false,
+    "tests_added": 7,
+    "scars_earned": [
+      "SCAR-SYS-06: Native Runtime Environment Path Pre-Flight (TMPDIR)"
+    ]
   }
 ]

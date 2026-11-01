@@ -15,3 +15,4 @@
 | 2026-10-31 | #11 (Local) | Codify SCAR-TEST-10 and implement pre-flight static analysis gate | `feat/11-scar-test-10-static-analysis-gate` | Local Squash | +9 | `SCAR-TEST-10` |
 | 2026-10-31 | #12 (Local) | Codify SCAR-SYS-05 and implement safe cross-user file promotion | `feat/12-cross-user-file-promotion` | Local Squash | +8 | `SCAR-SYS-05` |
 | 2026-10-31 | #13 (Local) | Default all subagents to inherit model tier and clarify worker roles | `feat/13-subagent-inherit-model-defaults` | Local Squash | +19 | None |
+| 2026-10-31 | #14 (Local) | Codify SCAR-SYS-06 and implement native runtime environment path pre-flight | `feat/14-native-runtime-env-preflight` | Local Squash | +7 | `SCAR-SYS-06` |
