@@ -26,7 +26,7 @@ Use your session model for standard implementation tasks.
 At Target 40, run the Six-Pillar review with a high-reasoning model:
 
 ```bash
-claude -p --model claude-3-opus-20240229 "Run Six-Pillar review on $(git merge-base HEAD origin/main)..HEAD"
+claude -p --model claude-3-opus-20240229 "Run Six-Pillar review on $(git merge-base HEAD origin/main)..$(cat .workflow/state/approved_tree.txt)"
 ```
 
 ## Target Summary

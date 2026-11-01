@@ -55,6 +55,10 @@ def validate():
     assert "Makefile Workflow" in content
     assert "Target 20" in content
     assert "Target 50" in content
+    if "approved_tree.txt" not in content:
+      errors.append("CLAUDE.md Target 40 command must reference .workflow/state/approved_tree.txt")
+    if "..HEAD" in content:
+      errors.append("CLAUDE.md Target 40 command must not diff against ..HEAD (use locked approved_tree)")
     print("✔ Claude Code root instructions (CLAUDE.md) valid.")
 
   # 4. Cursor Rules
@@ -380,6 +384,10 @@ def validate():
   else:
     with open(critic_agent) as f:
       critic_text = f.read()
+    if "approved_tree" not in critic_text:
+      errors.append(f"{critic_agent} Rule 2 must reference approved_tree.txt")
+    if "git diff $(git merge-base HEAD origin/main) HEAD" in critic_text:
+      errors.append(f"{critic_agent} Rule 2 must not diff against HEAD")
     if "comprehensiveness" not in critic_text.lower() and "comprehensive" not in critic_text.lower():
       errors.append(f"{critic_agent} Pillar 2 must assess test comprehensiveness")
     if "burden" not in critic_text.lower() and "balance" not in critic_text.lower():
