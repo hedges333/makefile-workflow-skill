@@ -6,12 +6,16 @@ Provides state queries, DAG transition checks, Git tree checks, safety checks,
 and user configuration lookup.
 """
 
+import copy
+import datetime
 import json
 import os
 import re
 import shlex
+import shutil
 import subprocess
 import sys
+import time
 
 DB_TOOLS = (
     "psql",
@@ -151,13 +155,41 @@ def _parse_csv_env(env_name):
   return [item.strip() for item in raw.split(",") if item.strip()]
 
 
-def resolve_workflow_config(workspace_dir=None):
-  """Resolves workflow configuration from workspace, global path, or environment."""
-  ws = workspace_dir or resolve_workspace_dir({})
-  local_cfg_path = os.path.join(ws, ".workflow", "config.json")
-  global_cfg_path = os.path.expanduser("~/.gemini/config/makefile-workflow.json")
+def deep_merge(base, override):
+  """Recursively merges override dictionary into base dictionary without mutating base."""
+  result = copy.deepcopy(base) if isinstance(base, dict) else {}
+  if not isinstance(override, dict):
+    return result
+  for key, val in override.items():
+    if key in result and isinstance(result[key], dict) and isinstance(val, dict):
+      result[key] = deep_merge(result[key], val)
+    else:
+      result[key] = copy.deepcopy(val)
+  return result
 
-  config = {
+
+def load_default_config():
+  """Loads the canonical default_config.json from repository or install root."""
+  candidates = [
+      os.path.join(
+          os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+          "default_config.json",
+      ),
+      os.path.join(os.getcwd(), "default_config.json"),
+      os.path.expanduser(
+          "~/.gemini/config/plugins/makefile-workflow/default_config.json"
+      ),
+  ]
+  for path in candidates:
+    if os.path.isfile(path):
+      try:
+        with open(path, "r", encoding="utf-8") as f:
+          data = json.load(f)
+        if isinstance(data, dict):
+          return data
+      except Exception:
+        pass
+  return {
       "models": {
           "adversarial-critic": "inherit",
           "archaeology-worker": "inherit",
@@ -177,9 +209,18 @@ def resolve_workflow_config(workspace_dir=None):
           "testDatabases": [],
           "prodHosts": [],
       },
-      "configSource": "defaults",
-      "envOverrides": [],
   }
+
+
+def resolve_workflow_config(workspace_dir=None):
+  """Resolves workflow configuration from workspace, global path, or environment."""
+  ws = workspace_dir or resolve_workspace_dir({})
+  local_cfg_path = os.path.join(ws, ".workflow", "config.json")
+  global_cfg_path = os.path.expanduser("~/.gemini/config/makefile-workflow.json")
+
+  config = load_default_config()
+  config["configSource"] = "defaults"
+  config["envOverrides"] = []
 
   for cfg_path in (local_cfg_path, global_cfg_path):
     if os.path.isfile(cfg_path):
@@ -187,20 +228,12 @@ def resolve_workflow_config(workspace_dir=None):
         with open(cfg_path, "r", encoding="utf-8") as f:
           loaded = json.load(f)
         if isinstance(loaded, dict):
-          if isinstance(loaded.get("models"), dict):
-            for m_key, m_val in loaded["models"].items():
-              if isinstance(m_key, str) and isinstance(m_val, str) and m_val.strip():
-                config["models"][m_key] = m_val.strip()
-          if isinstance(loaded.get("review"), dict):
-            config["review"].update(loaded["review"])
-          if isinstance(loaded.get("ci"), dict):
-            config["ci"].update(loaded["ci"])
-          if isinstance(loaded.get("database"), dict):
-            db_loaded = loaded["database"]
+          config = deep_merge(config, loaded)
+          if "database" in config and isinstance(config["database"], dict):
             for db_key in ("prodDatabases", "testDatabases", "prodHosts"):
-              if db_key in db_loaded:
+              if db_key in config["database"]:
                 config["database"][db_key] = _normalize_str_list(
-                    db_loaded[db_key]
+                    config["database"][db_key]
                 )
           config["configSource"] = cfg_path
           break
@@ -1209,6 +1242,235 @@ def evaluate_git_safety(cmd):
   return True, last_reason
 
 
+def poll_ci_status(
+    pr_number,
+    ws,
+    quiescence_sec=None,
+    poll_interval_sec=None,
+    max_wait_sec=600,
+):
+  cfg = resolve_workflow_config(ws)
+  ci_cfg = cfg.get("ci", {})
+  q_sec = (
+      quiescence_sec
+      if quiescence_sec is not None
+      else ci_cfg.get("quiescenceSeconds", 180)
+  )
+  p_sec = (
+      poll_interval_sec
+      if poll_interval_sec is not None
+      else ci_cfg.get("pollIntervalSeconds", 30)
+  )
+
+  if pr_number <= 0 or not shutil.which("gh"):
+    return {
+        "mode": "pure_git",
+        "ciStatus": "SKIPPED",
+        "quiescenceSatisfied": True,
+        "readyToLand": True,
+        "unresolvedBotCommentsCount": 0,
+        "botComments": [],
+        "message": (
+            "Pure Git Mode: GitHub CLI not available or PR number is 0. Run"
+            " local tests (make all) for verification."
+        ),
+    }
+
+  start_time = time.time()
+  ci_completed_at = None
+
+  while True:
+    now = time.time()
+    elapsed_total = now - start_time
+    if elapsed_total > max_wait_sec:
+      return {
+          "mode": "github",
+          "ciStatus": "TIMEOUT",
+          "quiescenceSatisfied": False,
+          "readyToLand": False,
+          "unresolvedBotCommentsCount": 0,
+          "botComments": [],
+          "message": (
+              f"Timed out after {int(elapsed_total)}s waiting for CI or"
+              " quiescence."
+          ),
+      }
+
+    try:
+      cmd = [
+          "gh",
+          "pr",
+          "view",
+          str(pr_number),
+          "--json",
+          "statusCheckRollup,comments,reviews,state,mergeable,mergeStateStatus",
+      ]
+      res = subprocess.run(
+          cmd, cwd=ws, capture_output=True, text=True, check=True
+      )
+      data = json.loads(res.stdout)
+    except subprocess.CalledProcessError as exc:
+      stderr = (exc.stderr or "").strip()
+      return {
+          "mode": "github_error",
+          "ciStatus": "ERROR",
+          "quiescenceSatisfied": False,
+          "readyToLand": False,
+          "unresolvedBotCommentsCount": 0,
+          "botComments": [],
+          "message": f"gh pr view failed: {stderr}",
+      }
+    except Exception as exc:
+      return {
+          "mode": "github_error",
+          "ciStatus": "ERROR",
+          "quiescenceSatisfied": False,
+          "readyToLand": False,
+          "unresolvedBotCommentsCount": 0,
+          "botComments": [],
+          "message": f"Error parsing gh output: {exc}",
+      }
+
+    checks = data.get("statusCheckRollup") or []
+    all_completed = True
+    has_failure = False
+    failed_checks = []
+    max_check_completed_at = None
+
+    for c in checks:
+      st = c.get("status", "").upper()
+      con = (c.get("conclusion") or "").upper()
+      name = c.get("name") or c.get("context") or "check"
+      if st != "COMPLETED":
+        all_completed = False
+      elif con in (
+          "FAILURE",
+          "CANCELLED",
+          "TIMED_OUT",
+          "STARTUP_FAILURE",
+          "ACTION_REQUIRED",
+      ):
+        has_failure = True
+        failed_checks.append(name)
+
+      completed_str = (
+          c.get("completedAt") or c.get("updatedAt") or c.get("createdAt")
+      )
+      if completed_str:
+        try:
+          dt = datetime.datetime.fromisoformat(
+              completed_str.replace("Z", "+00:00")
+          )
+          ts = dt.timestamp()
+          if max_check_completed_at is None or ts > max_check_completed_at:
+            max_check_completed_at = ts
+        except Exception:
+          pass
+
+    if has_failure:
+      return {
+          "mode": "github",
+          "ciStatus": "FAILURE",
+          "quiescenceSatisfied": False,
+          "readyToLand": False,
+          "failedChecks": failed_checks,
+          "unresolvedBotCommentsCount": 0,
+          "botComments": [],
+          "message": f"CI checks failed: {failed_checks}",
+      }
+
+    raw_comments = data.get("comments") or []
+    raw_reviews = data.get("reviews") or []
+    bot_comments = []
+
+    for cm in raw_comments:
+      author = (cm.get("author") or {}).get("login", "")
+      if "[bot]" in author.lower() or author.lower() in (
+          "github-actions",
+          "coderabbitai",
+          "codecov",
+          "sonarcloud",
+          "gemini-code-assist",
+          "copilot",
+      ):
+        bot_comments.append({
+            "type": "comment",
+            "author": author,
+            "body": cm.get("body", ""),
+            "createdAt": cm.get("createdAt", ""),
+        })
+
+    for rv in raw_reviews:
+      author = (rv.get("author") or {}).get("login", "")
+      if "[bot]" in author.lower() or author.lower() in (
+          "github-actions",
+          "coderabbitai",
+          "codecov",
+          "sonarcloud",
+          "gemini-code-assist",
+          "copilot",
+      ):
+        state = rv.get("state", "").upper()
+        if state not in ("APPROVED", "DISMISSED"):
+          bot_comments.append({
+              "type": "review",
+              "author": author,
+              "body": rv.get("body", ""),
+              "state": state,
+              "submittedAt": rv.get("submittedAt", ""),
+          })
+
+    has_checks = len(checks) > 0 or elapsed_total >= 15
+    if all_completed and has_checks:
+      if ci_completed_at is None:
+        if max_check_completed_at is not None:
+          ci_completed_at = min(now, max_check_completed_at)
+        else:
+          ci_completed_at = now
+
+      latest_activity = ci_completed_at
+      for bc in bot_comments:
+        ts_str = bc.get("createdAt") or bc.get("submittedAt")
+        if ts_str:
+          try:
+            dt = datetime.datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+            ts = dt.timestamp()
+            if ts > latest_activity:
+              latest_activity = min(now, ts)
+          except Exception:
+            pass
+
+      elapsed_since_activity = now - latest_activity
+      if elapsed_since_activity >= q_sec or max_wait_sec <= 1:
+        return {
+            "mode": "github",
+            "ciStatus": "SUCCESS",
+            "quiescenceSatisfied": True,
+            "readyToLand": len(bot_comments) == 0,
+            "unresolvedBotCommentsCount": len(bot_comments),
+            "botComments": bot_comments,
+            "mergeable": data.get("mergeable"),
+            "mergeStateStatus": data.get("mergeStateStatus"),
+            "message": (
+                "CI completed successfully and"
+                f" {int(elapsed_since_activity)}s quiescence satisfied."
+            ),
+        }
+
+    if max_wait_sec <= 1:
+      return {
+          "mode": "github",
+          "ciStatus": "PENDING" if not all_completed else "SUCCESS",
+          "quiescenceSatisfied": False,
+          "readyToLand": False,
+          "unresolvedBotCommentsCount": len(bot_comments),
+          "botComments": bot_comments,
+          "message": "CI in progress or awaiting quiescence window.",
+      }
+
+    time.sleep(p_sec)
+
+
 def handle_initialize(request_id):
   return {
       "jsonrpc": "2.0",
@@ -1338,6 +1600,39 @@ def handle_tools_list(request_id):
                       "description": "Optional project root directory",
                   }
               },
+          },
+      },
+      {
+          "name": "workflow_poll_ci",
+          "description": (
+              "Polls GitHub pull request checks and review comments until CI"
+              " completes and the review bot quiescence window passes."
+          ),
+          "inputSchema": {
+              "type": "object",
+              "properties": {
+                  "prNumber": {
+                      "type": "integer",
+                      "description": "Pull request number to monitor",
+                  },
+                  "workspaceDir": {
+                      "type": "string",
+                      "description": "Optional project root directory",
+                  },
+                  "quiescenceSeconds": {
+                      "type": "integer",
+                      "description": "Seconds of silence with no new bot activity required (overrides config)",
+                  },
+                  "pollIntervalSeconds": {
+                      "type": "integer",
+                      "description": "Seconds between status polls (overrides config)",
+                  },
+                  "maxWaitSeconds": {
+                      "type": "integer",
+                      "description": "Maximum seconds before polling timeout (default 600)",
+                  },
+              },
+              "required": ["prNumber"],
           },
       },
   ]
@@ -1522,6 +1817,30 @@ def handle_tools_call(request_id, tool_name, arguments):
             "content": [{
                 "type": "text",
                 "text": json.dumps(cfg, indent=2),
+            }]
+        },
+    }
+
+  elif tool_name == "workflow_poll_ci":
+    pr_num = arguments.get("prNumber", 0)
+    ws = resolve_workspace_dir(arguments)
+    q_sec = arguments.get("quiescenceSeconds")
+    p_sec = arguments.get("pollIntervalSeconds")
+    max_wait = arguments.get("maxWaitSeconds", 600)
+    res = poll_ci_status(
+        pr_number=pr_num,
+        ws=ws,
+        quiescence_sec=q_sec,
+        poll_interval_sec=p_sec,
+        max_wait_sec=max_wait,
+    )
+    return {
+        "jsonrpc": "2.0",
+        "id": request_id,
+        "result": {
+            "content": [{
+                "type": "text",
+                "text": json.dumps(res, indent=2),
             }]
         },
     }

@@ -89,7 +89,7 @@ At the start of each turn or after context compaction (automatic chat history co
 | `45` | `40_critic_review.md` reports `0 BLOCKERS` | `approved-review` | Print Six Pillars summary, match tree hash, and pause for `human-review-approval`. |
 | `50` | `45_review_approved.md` exists and changes are uncommitted | `commit` | Format, lint, run full repository tests, pause for `human-commit-approval`, then commit. |
 | `60` | Commit exists locally and branch is unpushed | `push` | Run `git merge-tree`, pause for `human-push-approval`, push branch, and open pull request. |
-| `70` | Pull request is open and CI or review bots are active | `bot-quiescence` | Fork `triage-worker` ([`references/07`](./references/07_ci_and_bot_triage.md)), poll CI and bots (quiescence window), write `70_bot_triage.md`. |
+| `70` | Pull request is open and CI or review bots are active | `bot-quiescence` | Call `workflow_poll_ci` ([`references/07`](./references/07_ci_and_bot_triage.md)), write `70_bot_triage.md`, triage bot comments if present. |
 | `75` | CI is green and zero open bot comments remain | `ready-to-land` | Print CI assertions and 7-criteria policy table, then pause for `human-landing-approval`. |
 | `80` | Human approved landing | `land` | Squash-merge pull request, delete ticket branch, and fast-forward default branch. |
 | `90` | Pull request merged and ticket branch deleted | `finish` | Record scars, update `.workflow/history.json` and `.workflow/history.md`, mark `99_next_action.md` complete. |
@@ -209,9 +209,9 @@ Read [`references/06`](./references/06_clean_commit_and_pr.md) for landability r
 Read [`references/07`](./references/07_ci_and_bot_triage.md) for polling and triage rules.
 
 1. In Pure Git Mode, run full local repository tests (`make all`), write `.workflow/state/70_bot_triage.md` noting pure Git validation, and advance to Target 75.
-2. In PR mode, fork `triage-worker` with `Model` set to `agyModelTiers["triage-worker"]` (default `inherit`).
-3. Poll `gh pr checks` and review comments until CI passes and configured quiescence (default 180 seconds with no new bot comments) completes.
-4. Write the triage table (`Accept`, `Defend`, `Defer`, `Acknowledge`) to `.workflow/state/70_bot_triage.md`.
+2. In PR mode, call `workflow_poll_ci` via MCP or run `gh pr view`.
+3. Wait until CI passes and the configured quiescence duration elapses with no new bot comments.
+4. If zero bot comments exist, write `.workflow/state/70_bot_triage.md` and advance directly to Target 75. If comments exist, fork `triage-worker` with `Model` set to `agyModelTiers["triage-worker"]` (default `inherit`) with pre-fetched comments for single-turn categorization.
 5. If accepted fixes need code edits, return to Target 30 and repeat Targets 40, 45, 50, 60, and 70.
 6. When CI is green and zero open comments remain, advance to Target 75.
 

@@ -595,6 +595,23 @@ def test_session_start():
     assert "ci.quiescence=45s" in msg
     assert "ci.poll=15s" in msg
 
+    # 1b. Single-item partial config override (preserves default poll interval)
+    with open(
+        os.path.join(ws_dir, ".workflow", "config.json"),
+        "w",
+        encoding="utf-8",
+    ) as f:
+      json.dump({"ci": {"quiescenceSeconds": 20}}, f)
+
+    res_partial = run_hook(
+        SESSION_START,
+        {"workspacePaths": [ws_dir]},
+        cwd=hook_cwd,
+    )
+    msg_partial = res_partial["injectSteps"][0]["systemMessage"]["systemMessage"]
+    assert "ci.quiescence=20s" in msg_partial
+    assert "ci.poll=30s" in msg_partial
+
     # 2. Environment variable database overrides in SessionStart
     env_override = dict(os.environ)
     env_override["MAKEFILE_WORKFLOW_PROD_DBS"] = "warehouse_live"
