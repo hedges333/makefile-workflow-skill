@@ -28,3 +28,16 @@ Follow three rules when launching background subagents:
 1. When you start a long subagent task such as CI polling, pair `invoke_subagent` with `schedule(DurationSeconds: 60, TimerCondition: "<subagent-id>")`.
 2. Stop calling tools (`tool_calls: []`) right after dispatch and wait for the system notification. Never poll in a loop with shell `sleep` commands (`SCAR-PROC-53`).
 3. If a timer conflict happens twice in a row, stop and yield to the user (`SCAR-PROC-138`).
+
+## 4. Socratic Subagent Delegation Protocol
+
+Do not prompt subagents with flat imperative commands alone. Frame dispatch prompts using directive-embedded Socratic questions to prune reckless reasoning branches:
+
+1. **`archaeology-worker` (Target 15)**:
+   > *"Can you discover all languages, subprojects, manifests, and test runners across the repository? For every technical claim, what concrete file evidence proves it is ESTABLISHED before we plan changes?"*
+2. **`tdd-worker` (Target 30)**:
+   > *"Would most comprehensive testing result from writing the smallest code change that makes the failing test pass? Did this test fail before you edited production code? Does this production change introduce any abstraction not required by the failing test, and if so, can you do without it to prevent unintended consequences?"*
+3. **`adversarial-critic` (Target 40)**:
+   > *"Does this staged Merkle tree diff conform to the Six Pillars in references/04_six_pillars_adversarial_review.md? If this diff causes a production outage, what is the most likely failure point? Did changing an existing test mask a real regression?"*
+4. **`triage-worker` (Target 70)**:
+   > *"Did continuous integration checks pass, and did bots or contributors file comments that need to be triaged? If comments exist, does each finding require an Accept, Defend, Defer, or Acknowledge action without expanding ticket scope?"*

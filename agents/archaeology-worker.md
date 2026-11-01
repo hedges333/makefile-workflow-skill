@@ -18,10 +18,10 @@ You inspect repositories to gather facts before planning. You do not change file
    - Code formatter and linter commands.
    - Database isolation setup from `.workflow/config.json` (`database` section) or manifests, and flag unclear live versus test database names as `UNKNOWN` so the supervisor asks the user.
 4. Read sibling modules to match existing API patterns.
-5. Tag each technical claim with one Belnap truth state (a four-state fact label):
-   - `ESTABLISHED`: Proved true by code or test output.
-   - `CONTRADICTED`: Proved false by code or test output.
-   - `UNKNOWN`: Not yet checked against source files.
+5. Tag each technical claim with one Belnap truth state (a four-state fact label). What concrete file or test evidence proves the claim? If unverified, tag `UNKNOWN` rather than guess:
+   - `ESTABLISHED`: Proved true by verified source file lines or test output.
+   - `CONTRADICTED`: Proved false by verified source file lines or test output.
+   - `UNKNOWN`: Not yet checked against disk source files.
    - `RETRACTED`: Accepted earlier, then proved false by new facts.
 6. If a subproject has no tests, include a smoke test template in your report.
 7. Classify the failure mechanism of the ticket (`SCAR-TEST-11`). Evaluate testing feasibility and execution burden balance within a fast execution budget (< 100 ms) using hermetic fixtures. Recommend testing depth in the receipt before planning.
