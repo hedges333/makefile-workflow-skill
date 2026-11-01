@@ -23,7 +23,7 @@ Store both ledger files inside `.workflow/` at the repository root:
 ```json
 [
   {
-    "id": "#42",
+    "id": "GH-42",
     "issue_url": "https://github.com/owner/repo/issues/42",
     "title": "Fix login redirect timeout on HTTPS",
     "request": "Handle 301 and 308 redirects without dropping authorization header",
@@ -41,11 +41,11 @@ Store both ledger files inside `.workflow/` at the repository root:
     ]
   },
   {
-    "id": "#1",
+    "id": "LOCAL-1",
     "issue_url": null,
     "title": "Add health endpoint",
     "request": "Add /api/health endpoint returning uptime and database ping",
-    "branch": "feat/1-health-endpoint",
+    "branch": "feat/local-1-health-endpoint",
     "subprojects": ["backend"],
     "started_at": "2026-10-29T11:00:00Z",
     "completed_at": "2026-10-29T11:30:00Z",
@@ -66,8 +66,8 @@ Store both ledger files inside `.workflow/` at the repository root:
 
 | Date | Ticket | Summary | Branch | PR | Tests | Scars Earned |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 2026-10-29 | [#42](https://github.com/owner/repo/issues/42) | Fix login redirect timeout on HTTPS | `fix/42-login-redirect` | [#45](https://github.com/owner/repo/pull/45) | +3 | `SCAR-AUTH-02` |
-| 2026-10-29 | #1 (Local) | Add health endpoint | `feat/1-health-endpoint` | [#46](https://github.com/owner/repo/pull/46) | +2 | - |
+| 2026-10-29 | [GH-42](https://github.com/owner/repo/issues/42) | Fix login redirect timeout on HTTPS | `fix/42-login-redirect` | [#45](https://github.com/owner/repo/pull/45) | +3 | `SCAR-AUTH-02` |
+| 2026-10-29 | LOCAL-1 | Add health endpoint | `feat/local-1-health-endpoint` | [#46](https://github.com/owner/repo/pull/46) | +2 | - |
 ```
 
 ## 3. Update Steps at Target 90

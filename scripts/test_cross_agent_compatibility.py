@@ -609,6 +609,86 @@ def validate():
     if '["python3"' in mt_text or "['python3'" in mt_text:
       errors.append(f"{mcp_test_script} must not hardcode 'python3' in subprocess calls")
 
+  # 17. Ticket Disambiguation, Branch Naming, and Ledger Schema
+  history_json_path = ".workflow/history.json"
+  if not os.path.exists(history_json_path):
+    errors.append(f"Missing {history_json_path}")
+  else:
+    try:
+      with open(history_json_path) as f:
+        history_data = json.load(f)
+      import re
+      local_id_regex = re.compile(r"^LOCAL-[1-9][0-9]*$")
+      gh_id_regex = re.compile(r"^GH-[1-9][0-9]*$")
+      for idx, item in enumerate(history_data):
+        item_id = item.get("id")
+        issue_url = item.get("issue_url")
+        if not item_id:
+          errors.append(f"{history_json_path} entry {idx} is missing 'id'")
+          continue
+        if local_id_regex.match(item_id):
+          if issue_url is not None:
+            errors.append(f"{history_json_path} entry {idx} ({item_id}) is a local ticket but has non-null issue_url: {issue_url}")
+        elif gh_id_regex.match(item_id):
+          if not issue_url or not issue_url.startswith("https://github.com/"):
+            errors.append(f"{history_json_path} entry {idx} ({item_id}) is a GitHub ticket but lacks valid GitHub issue_url")
+        else:
+          errors.append(f"{history_json_path} entry {idx} has invalid id '{item_id}' - must match LOCAL-<N> or GH-<N>")
+    except Exception as e:
+      errors.append(f"Error parsing {history_json_path}: {e}")
+
+  history_md_path = ".workflow/history.md"
+  if not os.path.exists(history_md_path):
+    errors.append(f"Missing {history_md_path}")
+  else:
+    with open(history_md_path) as f:
+      hmd_text = f.read()
+    if "(Local)" in hmd_text:
+      errors.append(f"{history_md_path} must use LOCAL-<N> instead of '#<N> (Local)'")
+    if "GH-1" not in hmd_text:
+      errors.append(f"{history_md_path} must use GH-<N> for GitHub issue links")
+
+  intake_ref = "skills/makefile-workflow/references/01_intake_and_branching.md"
+  if os.path.exists(intake_ref):
+    with open(intake_ref) as f:
+      intake_text = f.read()
+    if "feat/local-" not in intake_text and "feat/local-<N>" not in intake_text:
+      errors.append(f"{intake_ref} must mandate 'feat/local-<N>-<slug>' or 'fix/local-<N>-<slug>' for ad-hoc / local tasks")
+
+  hygiene_ref = "skills/makefile-workflow/references/05_pre_commit_hygiene.md"
+  if os.path.exists(hygiene_ref):
+    with open(hygiene_ref) as f:
+      hygiene_text = f.read()
+    if "Ticket: LOCAL-" not in hygiene_text:
+      errors.append(f"{hygiene_ref} must document 'Ticket: LOCAL-<N>' for local session commits")
+    if "closes #" in hygiene_text.lower() and "never" not in hygiene_text.lower() and "prohibit" not in hygiene_text.lower() and "forbid" not in hygiene_text.lower():
+      errors.append(f"{hygiene_ref} must explicitly forbid 'closes #' on local session commits")
+
+  agents_rule = "rules/AGENTS.md"
+  if os.path.exists(agents_rule):
+    with open(agents_rule) as f:
+      agents_text = f.read()
+    if "LOCAL-" not in agents_text:
+      errors.append(f"{agents_rule} must codify LOCAL-<N> ticket disambiguation")
+    if "closes #" not in agents_text and "Closes #" not in agents_text:
+      errors.append(f"{agents_rule} must forbid 'closes #' syntax on local session commits")
+
+  # Adapter and Platform Guidance Alignment for Local Tickets
+  for path, expected_tokens in [
+      ("CLAUDE.md", ["feat/local-", "closes #"]),
+      (".cursorrules", ["feat/local-", "closes #"]),
+      (".cursor/rules/makefile-workflow.mdc", ["feat/local-", "closes #"]),
+      (".github/copilot-instructions.md", ["feat/local-", "closes #"]),
+      ("adapters/chatgpt/instructions.md", ["feat/local-", "closes #"]),
+      ("skills/makefile-workflow/SKILL.md", ["feat/local-", "closes #", "LOCAL-", "GH-"]),
+  ]:
+    if os.path.exists(path):
+      with open(path) as f:
+        content = f.read()
+      for token in expected_tokens:
+        if token not in content:
+          errors.append(f"{path} missing expected token '{token}' for local ticket disambiguation")
+
   if errors:
     print(f"\n❌ Validation failed with {len(errors)} error(s):")
     for err in errors:

@@ -111,11 +111,11 @@ Read [`references/00`](./references/00_quickstart_and_mental_model.md), [`refere
 
 Read [`references/01`](./references/01_intake_and_branching.md) for intake modes and branch naming rules.
 
-1. In Mode A, extract the ticket ID and scope from the user request or GitHub issue.
+1. In Mode A, extract the ticket ID and scope from the user request or GitHub issue. Use `GH-<N>` for GitHub issues and `LOCAL-<N>` for local session tasks.
 2. In Mode B, list open backlog items sorted by priority (`P0`, `P1`, `P2`, `P3`).
 3. Make sure that `git status --short` is clean on the default branch (`main` or `master`).
 4. Exclude local state cards from Git: run `git check-ignore -q .workflow/state/ || echo ".workflow/state/" >> .git/info/exclude`.
-5. Create and switch to a branch named `feat/<id>-<slug>`, `fix/<id>-<slug>`, or `ticket/<id>-<slug>`.
+5. Create and switch to a branch named `feat/<id>-<slug>`, `fix/<id>-<slug>`, or `ticket/<id>-<slug>`. For local tasks, prefix with `local-` (e.g. `feat/local-<n>-<slug>`).
 6. Write `.workflow/state/10_ticket.md` and advance to Target 15.
 
 ### Target 15: `archaeology-verified` (Fact-Finding and Polyglot Scan)
@@ -192,7 +192,7 @@ Read [`references/05`](./references/05_pre_commit_hygiene.md) for pre-commit com
 1. Run code formatters and linters across changed subprojects under `set -euo pipefail`.
 2. Run the full test suite across every subproject in the repository.
 3. Make sure that no unstaged or untracked files exist and `git write-tree` matches `.workflow/state/approved_tree.txt`.
-4. Write the proposed commit message to `.workflow/state/50_commit_msg.txt` and print it in chat with staged file paths.
+4. Write the proposed commit message to `.workflow/state/50_commit_msg.txt` and print it in chat with staged file paths. For local session tasks, forbid `closes #<N>` and write `Ticket: LOCAL-<N>`.
 5. Stop tool calls (`tool_calls: []`) and wait for `human-commit-approval`.
 6. After user approval, run `git commit -F .workflow/state/50_commit_msg.txt`, match `HEAD^{tree}`, and advance to Target 60.
 

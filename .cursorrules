@@ -3,11 +3,11 @@
 Follow these rules for every coding task in Cursor:
 
 1. Read existing files, detect project languages, and follow the 14-target Makefile DAG (a dependency graph without loops) before you edit code.
-2. Create a dedicated Git branch for each task, such as `feat/<id>-<slug>` or `fix/<id>-<slug>`.
+2. Create a dedicated Git branch for each task, such as `feat/<id>-<slug>` or `fix/<id>-<slug>` (use `feat/local-<n>-<slug>` for local tasks).
 3. Read target files before you edit them, apply small changes, and favor object composition. If large datasets outgrow an ORM, encapsulate parameterized SQL or NoSQL queries behind repository methods.
 4. Point tests to `*_test` databases, configured `database.testDatabases`, in-memory databases, or mock fixtures. Never connect to production databases.
 5. Write failing unit tests before you write feature logic, and run tests in the active subproject directory.
-6. Never run `git commit`, `git push`, or merge commands without explicit user approval in chat.
+6. Never run `git commit`, `git push`, or merge commands without explicit user approval in chat. Forbid `closes #` on local session commits.
 7. In multi-language repositories, run subproject tests during development and run the full test suite before commit.
 8. Write documentation and commit messages in Simple English: short sentences, active voice, and terms defined at first use.
 9. If `.workflow/config.json` or `~/.gemini/config/makefile-workflow.json` exists, read it to load user configuration.

@@ -28,11 +28,11 @@ When the user provides a task description, issue number, or issue URL, run these
    git check-ignore -q .workflow/state/ || echo ".workflow/state/" >> .git/info/exclude
    ```
 5. Create and switch to a feature branch that matches standard Git naming rules:
-   - GitHub Bug (`#<number>`): `fix/<number>-<slug>`, for example `fix/42-login-redirect`.
-   - GitHub Feature (`#<number>`): `feat/<number>-<slug>`, for example `feat/101-csv-export`.
-   - General GitHub Issue (`#<number>`): `ticket/<number>-<slug>`, for example `ticket/55-upgrade-deps`.
+   - GitHub Bug (`#<number>` or `GH-<number>`): `fix/<number>-<slug>`, for example `fix/42-login-redirect`. Ticket ID is `GH-<number>`.
+   - GitHub Feature (`#<number>` or `GH-<number>`): `feat/<number>-<slug>`, for example `feat/101-csv-export`. Ticket ID is `GH-<number>`.
+   - General GitHub Issue (`#<number>` or `GH-<number>`): `ticket/<number>-<slug>`, for example `ticket/55-upgrade-deps`. Ticket ID is `GH-<number>`.
    - Jira or Linear Issue (`<PROJECT>-<NUMBER>`): `feat/<project>-<number>-<slug>` or `fix/<project>-<number>-<slug>`.
-   - Ad-hoc Chat Task (no external tracker): Read `.workflow/history.json` for count `N`, then use `feat/<N+1>-<slug>` or `fix/<N+1>-<slug>`.
+   - Ad-hoc Chat Task / Pure Git Session (no external tracker): Determine next local count `N` from the highest `LOCAL-<N>` in `.workflow/history.json`. Use `feat/local-<N+1>-<slug>` or `fix/local-<N+1>-<slug>`. Ticket ID is `LOCAL-<N+1>`. Never use bare integers for local branches.
 6. Format `<slug>` with lowercase letters, digits, and single hyphens (`[a-z0-9-]`), up to 40 characters.
 7. Write the ticket details to `<workspace>/.workflow/state/10_ticket.md` and advance to Target 15.
 
