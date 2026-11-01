@@ -439,5 +439,28 @@
     "closes_issue": true,
     "tests_added": 26,
     "scars_earned": []
+  },
+  {
+    "id": "GH-13",
+    "issue_url": "https://github.com/hedges333/makefile-workflow-skill/issues/13",
+    "title": "Centralize default configuration and add workflow_poll_ci MCP tool for fast bot triage",
+    "request": "Factor default configuration items into canonical default_config.json, implement recursive deep-merge overrides, and add workflow_poll_ci MCP tool for fast programmatic CI and review bot quiescence polling.",
+    "branch": "feat/13-centralize-config-poll-ci",
+    "subprojects": [
+      "mcp",
+      "scripts",
+      "skills",
+      "agents"
+    ],
+    "started_at": "2026-11-01T07:35:00Z",
+    "completed_at": "2026-11-01T08:38:30Z",
+    "commit_sha": "5ee6c33",
+    "pr_number": 14,
+    "pr_url": "https://github.com/hedges333/makefile-workflow-skill/pull/14",
+    "closes_issue": true,
+    "tests_added": 21,
+    "scars_earned": [
+      "SCAR-TOOL-14: Keep mechanical polling loops inside programmatic native tools or scripts instead of subagent REST scrape loops"
+    ]
   }
 ]

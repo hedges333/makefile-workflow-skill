@@ -63,6 +63,7 @@ references/
 | `SCAR-AUTH-02` | Preserve Authorization on Same-Origin Redirects | Security & Auth | [`scars/security_and_auth.md`](./scars/security_and_auth.md) |
 | `SCAR-TOOL-07` | Prefer Dart Over Python for Scratch Scripts | Tooling & HCI | [`scars/tooling_and_hci.md`](./scars/tooling_and_hci.md) |
 | `SCAR-TOOL-13` | Single State Writer Isolation | Tooling & HCI | [`scars/tooling_and_hci.md`](./scars/tooling_and_hci.md) |
+| `SCAR-TOOL-14` | Programmatic Tool Polling vs Subagent Scrape Loops | Tooling & HCI | [`scars/tooling_and_hci.md`](./scars/tooling_and_hci.md) |
 | `SCAR-HCI-08` | Multi-Choice Prompt Rule | Tooling & HCI | [`scars/tooling_and_hci.md`](./scars/tooling_and_hci.md) |
 | `SCAR-DOC-16` | Concentric Documentation Rings | Tooling & HCI | [`scars/tooling_and_hci.md`](./scars/tooling_and_hci.md) |
 
