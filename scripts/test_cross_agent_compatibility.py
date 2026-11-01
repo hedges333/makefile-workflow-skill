@@ -272,6 +272,8 @@ def validate():
       errors.append(f"{ref_09} must document SCAR-SYS-05")
     if "SCAR-SYS-06" not in r09_text:
       errors.append(f"{ref_09} must document SCAR-SYS-06")
+    if "SCAR-TEST-11" not in r09_text:
+      errors.append(f"{ref_09} must document SCAR-TEST-11")
     if "Hub-and-Spoke" not in r09_text and "Master Routing" not in r09_text and "Master Index" not in r09_text:
       errors.append(f"{ref_09} must document Hub-and-Spoke architecture and Master Index")
     if "scars/process.md" not in r09_text or "scars/testing.md" not in r09_text:
@@ -299,6 +301,10 @@ def validate():
       t_text = f.read()
     if "SCAR-TEST-10" not in t_text:
       errors.append(f"{testing_spoke} must document SCAR-TEST-10")
+    if "SCAR-TEST-11" not in t_text:
+      errors.append(f"{testing_spoke} must document SCAR-TEST-11")
+    if "burden" not in t_text.lower() or "shift-left" not in t_text.lower():
+      errors.append(f"{testing_spoke} must document shift-left testing burden balance for SCAR-TEST-11")
 
   system_spoke = os.path.join(scars_dir, "system_and_os.md")
   if os.path.exists(system_spoke):
@@ -347,6 +353,25 @@ def validate():
       errors.append(f"{ref_04} must document SCAR-TEST-08 and two-tier test isolation")
     if "ephemeral loopback socket" not in r04_text.lower() and "127.0.0.1:0" not in r04_text:
       errors.append(f"{ref_04} must document self-contained ephemeral loopback sockets (127.0.0.1:0)")
+
+  # Archaeology worker and planning manual shift-left checks (SCAR-TEST-11)
+  arch_worker = "agents/archaeology-worker.md"
+  if not os.path.exists(arch_worker):
+    errors.append(f"Missing {arch_worker}")
+  else:
+    with open(arch_worker) as f:
+      aw_text = f.read()
+    if "failure mechanism" not in aw_text.lower() or "burden" not in aw_text.lower():
+      errors.append(f"{arch_worker} must instruct worker to classify failure mechanisms and evaluate testing burden balance")
+
+  ref_02 = "skills/makefile-workflow/references/02_archaeology_and_planning.md"
+  if not os.path.exists(ref_02):
+    errors.append(f"Missing {ref_02}")
+  else:
+    with open(ref_02) as f:
+      r02_text = f.read()
+    if "burden" not in r02_text.lower() or "Testing Strategy and Burden-Balance" not in r02_text:
+      errors.append(f"{ref_02} must mandate Testing Strategy and Burden-Balance Analysis in Target 20 plan disclosures")
 
   # Critic agent and Six Pillars review definitions
   critic_agent = "agents/adversarial-critic.md"
@@ -426,6 +451,8 @@ def validate():
       errors.append(f"{skill_md} Target 40 must document 'adversarial-critic' default inherit")
     if "`agyModelTiers[\"triage-worker\"]` (default `inherit`)" not in s_text:
       errors.append(f"{skill_md} Target 70 must document 'triage-worker' default inherit")
+    if "burden" not in s_text.lower() and "feasibility" not in s_text.lower():
+      errors.append(f"{skill_md} must document testing burden balance in Target 15 / Target 20")
 
   # 13. Antigravity Plan Artifact Lifecycle & Demotion Rules (rules/AGENTS.md)
   agents_md = "rules/AGENTS.md"
@@ -462,6 +489,8 @@ def validate():
       errors.append(f"{agents_md} Section 2 must document SCAR-SYS-05 cross-user file promotion")
     if "SCAR-SYS-06" not in a_text or "validate_runtime_path" not in a_text and "TMPDIR" not in a_text:
       errors.append(f"{agents_md} Section 2 must document SCAR-SYS-06 native runtime environment path pre-flight")
+    if "SCAR-TEST-11" not in a_text or "burden-balance" not in a_text.lower() and "burden balance" not in a_text.lower():
+      errors.append(f"{agents_md} Section 1.1 must document SCAR-TEST-11 testing strategy and burden-balance analysis")
     if not any("rules/AGENTS.md" in e for e in errors):
       print(f"✔ Antigravity artifact lifecycle and demotion rules ({agents_md}) valid.")
 

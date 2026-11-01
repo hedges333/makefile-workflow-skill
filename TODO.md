@@ -28,6 +28,11 @@ Plan comprehensive tests with reasonable balance for performance and dependency 
   - **Trap**: Relying exclusively on runtime test execution to detect static syntax or import defects in un-executed code branches.
   - **Permanent Reflex**: Run structural static analysis (e.g. `flake8 --select=E9,F63,F7,F82` or compiler checks) as an immediate pre-flight step before running functional test suites.
 
+- [x] **SCAR-TEST-11: Shift-Left Testing Balance in Archaeology and Planning**
+  - **Wound**: An agent plans shallow tests that check only strings or metadata, requiring human intervention at Target 20 or causing a critic rejection at Target 40. Alternatively, the agent overburdens the build with heavy external compilers or daemons.
+  - **Trap**: Postponing test comprehensiveness and burden balance evaluation to Target 40 code review instead of evaluating it during Target 15 archaeology and Target 20 planning.
+  - **Permanent Reflex**: Evaluate test feasibility, depth, and burden balance during Target 15 and Target 20. In Target 15 receipts, classify the failure mechanism and test feasibility within hermetic fixtures. In Target 20 plans, disclose the testing balance and prohibit surface-only testing when hermetic boundary testing is possible.
+
 ---
 
 ## Batch 2: Operating System, Filesystem & Process Scars

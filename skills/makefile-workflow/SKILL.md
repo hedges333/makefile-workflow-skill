@@ -127,20 +127,22 @@ Read [`references/02`](./references/02_archaeology_and_planning.md) and [`refere
 3. Locate existing test runners, or prepare smoke test templates when no tests exist.
 4. Inspect `.workflow/config.json` and database manifests. If live versus test database names remain unclear, ask the user before Target 30.
 5. Inspect sibling modules so that new code matches existing names, types, and error patterns.
-6. Tag each technical claim with a Belnap truth state (a four-state fact label: `ESTABLISHED`, `CONTRADICTED`, `UNKNOWN`, or `RETRACTED`).
-7. Write `.workflow/state/15_archaeology_receipt.md` and advance to Target 20.
+6. Classify failure mechanisms and evaluate testing feasibility and execution burden balance (`SCAR-TEST-11`).
+7. Tag each technical claim with a Belnap truth state (a four-state fact label: `ESTABLISHED`, `CONTRADICTED`, `UNKNOWN`, or `RETRACTED`).
+8. Write `.workflow/state/15_archaeology_receipt.md` and advance to Target 20.
 
 ### Target 20: `approved-plan` (Plan File and Human Approval)
 
 Read [`references/02`](./references/02_archaeology_and_planning.md) for plan disclosures.
 
 1. Write the plan to `.workflow/state/20_plan.md`.
-2. Include these five disclosures in the plan:
+2. Include these six disclosures in the plan:
    - Exact file paths to create or edit.
    - Targeted subproject test commands and full repository test commands.
    - Smoke test templates if the subproject lacks tests.
    - Any existing tests that must change and the technical reason for each change.
    - Database and file isolation details proving that tests never touch production data.
+   - Testing strategy and burden balance justifying depth against execution speed and dependencies (`SCAR-TEST-11`).
 3. Print the plan summary in chat with a `file://` link and stop tool calls (`tool_calls: []`) for `human-plan-approval`.
 4. After the user approves the plan, write `.workflow/state/20_plan_approved.md` and advance to Target 30.
 

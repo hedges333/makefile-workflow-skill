@@ -10,6 +10,7 @@ This reference manual documents testing and verification scars (`SCAR-TEST-*`). 
 | `SCAR-TEST-08` | Two-Tier Test Isolation | Hermetic Unit vs Integration Fixtures |
 | `SCAR-TEST-09` | Fail-Fast Targeted TDD Loop | Red-Green Test Iteration (`-x -v`) |
 | `SCAR-TEST-10` | Pre-Flight Structural Static Analysis Gate | Fast Structural Syntax Pre-Flight Check |
+| `SCAR-TEST-11` | Shift-Left Testing Burden Balance | Up-Front Testing Feasibility & Burden Budget |
 
 ---
 
@@ -36,3 +37,11 @@ This reference manual documents testing and verification scars (`SCAR-TEST-*`). 
 - **Wound**: Running a slow runtime test suite on code with syntax errors or undefined symbols wastes time and pollutes logs.
 - **Trap**: Relying on full runtime test suites to detect basic structural syntax mistakes or missing imports.
 - **Permanent Reflex**: Run fast structural static analysis before you execute functional tests. Use `ruff` or `flake8` with `--select=E9,F63,F7,F82`, or fall back to standard library AST parsing.
+
+---
+
+### SCAR-TEST-11: Shift-Left Testing Burden Balance in Archaeology and Planning
+
+- **Wound**: An agent writes a shallow implementation plan that tests only documentation strings or superficial metadata. This requires human operator intervention at Target 20 or causes an adversarial critic rejection at Target 40. Alternatively, an agent over-engineers tests by pulling in heavy external compilers, slow daemons, or unneeded dependencies.
+- **Trap**: Postponing test comprehensiveness and burden balance evaluation to the Target 40 adversarial review causes delays and rework loops.
+- **Permanent Reflex**: Shift-left Pillar 2 evaluation into Target 15 and Target 20. In Target 15 archaeology receipts, classify the failure mechanism and evaluate test feasibility within hermetic fixtures (< 100 ms). In Target 20 plans, disclose the testing balance and prohibit surface-only testing when hermetic boundary testing is possible.

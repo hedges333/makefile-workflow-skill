@@ -50,6 +50,7 @@ references/
 | `SCAR-TEST-08` | Two-Tier Test Isolation | Testing | [`scars/testing.md`](./scars/testing.md) |
 | `SCAR-TEST-09` | Fail-Fast Targeted TDD Loop | Testing | [`scars/testing.md`](./scars/testing.md) |
 | `SCAR-TEST-10` | Pre-Flight Structural Static Analysis Gate | Testing | [`scars/testing.md`](./scars/testing.md) |
+| `SCAR-TEST-11` | Shift-Left Testing Burden Balance | Testing | [`scars/testing.md`](./scars/testing.md) |
 | `SCAR-SH-03` | Shell Redirection and Comment Stripping | Git & Shell | [`scars/git_and_shell.md`](./scars/git_and_shell.md) |
 | `SCAR-GIT-20` | Pre-Push Merge Check | Git & Shell | [`scars/git_and_shell.md`](./scars/git_and_shell.md) |
 | `SCAR-GIT-25` | Destructive Working-Tree and History Guards | Git & Shell | [`scars/git_and_shell.md`](./scars/git_and_shell.md) |

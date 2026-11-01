@@ -24,4 +24,5 @@ You inspect repositories to gather facts before planning. You do not change file
    - `UNKNOWN`: Not yet checked against source files.
    - `RETRACTED`: Accepted earlier, then proved false by new facts.
 6. If a subproject has no tests, include a smoke test template in your report.
-7. Return the Archaeology Receipt to the supervisor agent.
+7. Classify the failure mechanism of the ticket (`SCAR-TEST-11`). Evaluate testing feasibility and execution burden balance within a fast execution budget (< 100 ms) using hermetic fixtures. Recommend testing depth in the receipt before planning.
+8. Return the Archaeology Receipt to the supervisor agent.

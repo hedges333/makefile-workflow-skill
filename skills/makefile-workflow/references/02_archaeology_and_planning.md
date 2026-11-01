@@ -18,13 +18,14 @@ Do not plan code edits from guesswork. Inspect the repository first to gather fa
 6. If a project uses databases and live versus test database names remain `UNKNOWN`, ask the user and offer to save them in `.workflow/config.json`.
 7. Convert user requirements into Given-When-Then scenarios that become unit tests in Target 30.
 8. If the target subproject has no test runner or test directory, prepare a smoke test template.
-9. Write `.workflow/state/15_archaeology_receipt.md` and advance to Target 20.
+9. Classify the underlying failure mechanism and evaluate testing feasibility and execution burden balance (< 100 ms execution budget, hermetic fixtures) (`SCAR-TEST-11`).
+10. Write `.workflow/state/15_archaeology_receipt.md` and advance to Target 20.
 
 ## 2. Target 20: Plan File Creation (`20_plan.md`)
 
 Write the implementation plan to `.workflow/state/20_plan.md`.
 
-Include these six items in every plan:
+Include these seven items in every plan:
 
 1. Target subprojects and programming languages involved in the task.
 2. Exact file paths to create or edit.
@@ -32,6 +33,7 @@ Include these six items in every plan:
 4. Smoke test files and directories to create if the subproject lacks tests.
 5. Any existing tests that must change, paired with the technical reason for each change.
 6. Database and file isolation rules proving that tests use `*_test` databases, in-memory stores, or mocks, never production data.
+7. Testing Strategy and Burden-Balance Analysis (`SCAR-TEST-11`): Disclose testing depth against speed and dependency constraints. Prohibit surface-only testing when hermetic boundary testing is feasible.
 
 ## 3. Human Plan Approval Gate
 
