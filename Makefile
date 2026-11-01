@@ -2,6 +2,7 @@
 
 PLUGIN_NAME = makefile-workflow
 INSTALL_DIR = $(HOME)/.gemini/config/plugins/$(PLUGIN_NAME)
+PYTHON ?= python3
 
 .PHONY: all validate install uninstall test test-static test-safe-copy test-env-preflight test-mcp test-compat test-hooks help
 
@@ -30,28 +31,28 @@ validate:
 
 test-static:
 	@echo "Running pre-flight structural static analysis..."
-	@python3 scripts/static_check.py
-	@python3 scripts/test_static_analysis.py
+	@$(PYTHON) scripts/static_check.py
+	@$(PYTHON) scripts/test_static_analysis.py
 
 test-safe-copy:
 	@echo "Testing safe cross-user file promotion..."
-	@python3 scripts/test_safe_copy.py
+	@$(PYTHON) scripts/test_safe_copy.py
 
 test-env-preflight:
 	@echo "Testing native runtime environment path pre-flight..."
-	@python3 scripts/test_env_preflight.py -v
+	@$(PYTHON) scripts/test_env_preflight.py -v
 
 test-mcp:
 	@echo "Testing MCP server JSON-RPC protocol..."
-	@python3 scripts/test_mcp_server.py
+	@$(PYTHON) scripts/test_mcp_server.py
 
 test-compat:
 	@echo "Testing cross-agent compatibility..."
-	@python3 scripts/test_cross_agent_compatibility.py
+	@$(PYTHON) scripts/test_cross_agent_compatibility.py
 
 test-hooks:
 	@echo "Testing SessionStart and PreToolUse hooks..."
-	@python3 scripts/test_hooks.py
+	@$(PYTHON) scripts/test_hooks.py
 
 test: test-static test-safe-copy test-env-preflight test-compat test-mcp test-hooks
 	@echo "Testing file structure..."
