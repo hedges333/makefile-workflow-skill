@@ -557,6 +557,10 @@ def validate():
       errors.append(f"{makefile_path} must define 'test-env-preflight:' target")
     if "test-env-preflight" not in mk_text.split("test:")[1].split("\n")[0]:
       errors.append(f"{makefile_path} 'test:' target must list 'test-env-preflight' prerequisite")
+    if "PYTHON ?= python3" not in mk_text and "PYTHON ?=" not in mk_text:
+      errors.append(f"{makefile_path} must declare 'PYTHON ?= python3' configurable interpreter macro")
+    if "@python3 " in mk_text:
+      errors.append(f"{makefile_path} test recipes must use $(PYTHON) instead of hardcoded python3")
 
   static_check_script = "scripts/static_check.py"
   if not os.path.exists(static_check_script):
@@ -576,6 +580,25 @@ def validate():
   env_preflight_test_script = "scripts/test_env_preflight.py"
   if not os.path.exists(env_preflight_test_script):
     errors.append(f"Missing {env_preflight_test_script}")
+
+  # 16. Python Interpreter Inheritance (sys.executable in test subprocesses)
+  hooks_test_script = "scripts/test_hooks.py"
+  if os.path.exists(hooks_test_script):
+    with open(hooks_test_script) as f:
+      ht_text = f.read()
+    if "sys.executable" not in ht_text:
+      errors.append(f"{hooks_test_script} must use sys.executable for child subprocesses")
+    if '["python3"' in ht_text or "['python3'" in ht_text:
+      errors.append(f"{hooks_test_script} must not hardcode 'python3' in subprocess calls")
+
+  mcp_test_script = "scripts/test_mcp_server.py"
+  if os.path.exists(mcp_test_script):
+    with open(mcp_test_script) as f:
+      mt_text = f.read()
+    if "sys.executable" not in mt_text:
+      errors.append(f"{mcp_test_script} must use sys.executable for child subprocesses")
+    if '["python3"' in mt_text or "['python3'" in mt_text:
+      errors.append(f"{mcp_test_script} must not hardcode 'python3' in subprocess calls")
 
   if errors:
     print(f"\n❌ Validation failed with {len(errors)} error(s):")

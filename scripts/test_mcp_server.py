@@ -13,6 +13,7 @@ Checks JSON-RPC 2.0 communication over standard input/output:
 import json
 import os
 import subprocess
+import sys
 import tempfile
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -28,7 +29,7 @@ def send_rpc(proc, msg):
 def run_test():
   with tempfile.TemporaryDirectory() as non_git_cwd:
     p = subprocess.Popen(
-        ["python3", SERVER_SCRIPT],
+        [sys.executable, SERVER_SCRIPT],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -440,7 +441,7 @@ def run_test():
     custom_env["MAKEFILE_WORKFLOW_TDD_MODEL"] = "pro"
     custom_env["MAKEFILE_WORKFLOW_TRIAGE_MODEL"] = "flash"
     p_env = subprocess.Popen(
-        ["python3", SERVER_SCRIPT],
+        [sys.executable, SERVER_SCRIPT],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,

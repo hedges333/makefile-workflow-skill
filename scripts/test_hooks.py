@@ -5,6 +5,7 @@ import importlib.util
 import json
 import os
 import subprocess
+import sys
 import tempfile
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -15,7 +16,7 @@ MCP_SERVER = os.path.join(REPO_ROOT, "mcp", "server.py")
 
 def run_hook(script_path, payload, cwd=None, env=None):
   proc = subprocess.run(
-      ["python3", script_path],
+      [sys.executable, script_path],
       input=json.dumps(payload),
       text=True,
       capture_output=True,
