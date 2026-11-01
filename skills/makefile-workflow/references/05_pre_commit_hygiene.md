@@ -18,7 +18,9 @@ Run these four checks under `set -euo pipefail` before you propose a commit:
 
 ## 2. Commit Message Format
 
-Write an atomic commit message to `.workflow/state/50_commit_msg.txt` using Conventional Commits (v1.0.0):
+Write an atomic commit message to `.workflow/state/50_commit_msg.txt` using Conventional Commits (v1.0.0).
+
+### Mode A: Tracked Remote Issue (GitHub / GitLab)
 
 ```text
 <type>(<scope>): <short summary> (closes #<ISSUE_ID>)
@@ -30,6 +32,20 @@ Reviewed-by: adversarial-critic
 ```
 
 On GitHub and GitLab, `closes #<ISSUE_ID>` links the pull request and closes the issue automatically upon merge.
+
+### Mode B: Local Session Task (Pure Git Mode / Ad-Hoc Task)
+
+```text
+<type>(<scope>): <short summary>
+
+<plain English explanation of what changed and why>
+
+Ticket: LOCAL-<N>
+Reviewed-by: adversarial-critic
+```
+
+> [!WARNING]
+> Never use `closes #<N>`, `Closes #<N>`, `fixes #<N>`, or bare `#<N>` on local session commits. Remote git hosting services treat bare `#<N>` as an issue reference. Pushing a local commit with `closes #<N>` will trigger webhooks that accidentally close unrelated remote issues. Explicitly forbid auto-closing syntax on all local session commits.
 
 ## 3. Human Commit Approval Gate
 

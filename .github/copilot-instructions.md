@@ -3,13 +3,13 @@
 Follow the Makefile Workflow lifecycle when assisting in this repository:
 
 1. Read target files and their existing tests before you propose changes.
-2. Do all work on a dedicated branch, such as `feat/<id>-<slug>` or `fix/<id>-<slug>`.
+2. Do all work on a dedicated branch, such as `feat/<id>-<slug>` or `fix/<id>-<slug>` (use `feat/local-<n>-<slug>` for local tasks).
 3. Write failing tests that reproduce the bug or specify the feature before you write production code.
 4. Point tests to `*_test` databases, configured `database.testDatabases`, in-memory databases, or mock fixtures. Never connect to production databases.
 5. Keep edits small and favor object composition. If large datasets outgrow an ORM, encapsulate parameterized SQL or NoSQL queries behind repository methods.
 6. Audit every diff against the Six Pillars: Intent, Verification, Architecture, Blast Radius, Readability, and Error Handling.
 7. In multi-language repositories, run tests in the affected subproject first, then run the full suite before commit.
-8. Write commit messages, documentation, and pull request summaries in Simple English: short sentences, active voice, and clear terms.
+8. Write commit messages, documentation, and pull request summaries in Simple English: short sentences, active voice, and clear terms. Forbid `closes #` on local session commits.
 9. If `.workflow/config.json` or `~/.gemini/config/makefile-workflow.json` exists, read it to load user configuration.
 
 ## Interactive Model Switch Reminder

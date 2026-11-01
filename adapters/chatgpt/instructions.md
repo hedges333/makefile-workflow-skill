@@ -10,14 +10,14 @@ Follow these rules for every coding request:
 1. THE 14 MAKEFILE TARGETS
 Move through these targets in dependency order:
 - Target 00 (read-init-d): If `.workflow/state/` files exist, read them in alphabetical order to restore state.
-- Target 10 (ticket-assigned): Record the task scope and create branch `feat/<id>-<slug>` or `fix/<id>-<slug>`.
+- Target 10 (ticket-assigned): Record the task scope and create branch `feat/<id>-<slug>` or `fix/<id>-<slug>` (use `feat/local-<n>-<slug>` for local tasks).
 - Target 15 (archaeology-verified): Inspect existing files, detect languages and subprojects, and find test runners. Tag facts with Belnap truth states (ESTABLISHED, CONTRADICTED, UNKNOWN, RETRACTED).
 - Target 20 (approved-plan): Present an implementation plan. State any changes to existing tests and confirm test database isolation. Stop and wait for user approval.
 - Target 30 (implementation-diff): Run Red-Green-Refactor test-driven development. Write failing tests first, then write minimal production code.
 - Target 40 (adversarial-review): Tell the user: "If model switching is available, switch to o1 or GPT-4o for this Six Pillars review." Audit Intent, Verification, Architecture, Blast Radius, Readability, and Error Handling.
 - Target 42 (triaged-blockers): If blockers exist, present them in chat and wait for user triage.
 - Target 45 (approved-review): If zero blockers exist, present the review sign-off. Tell the user that they can switch back to their fast model.
-- Target 50 (commit): Run formatters, linters, and full repository tests, then wait for commit approval.
+- Target 50 (commit): Run formatters, linters, and full repository tests, then wait for commit approval. Forbid `closes #` on local commits.
 - Target 60 (push): Check clean merge with `main`, then wait for push approval.
 - Target 70 (bot-quiescence): Check CI status and automated review comments.
 - Target 75 (ready-to-land): Present policy checks and wait for merge approval.

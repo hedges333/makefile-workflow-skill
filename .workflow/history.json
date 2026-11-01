@@ -1,6 +1,6 @@
 [
   {
-    "id": "#1",
+    "id": "LOCAL-1",
     "issue_url": null,
     "title": "Add design patterns manual, hybrid database guards, and 27-language polyglot guides",
     "request": "Add GoF class and object patterns, Nystrom Game Programming Patterns, ORM vs parameterized large-dataset query rules, configurable hybrid database safety guards, and polyglot guides for GDScript, Nim, Haxe, Odin, and D",
@@ -26,7 +26,7 @@
     ]
   },
   {
-    "id": "#2",
+    "id": "LOCAL-2",
     "issue_url": null,
     "title": "Add destructive Git command guards and rebase and force-branch approval gates",
     "request": "Protect repositories against overly eager agents running destructive Git commands that are unnecessary in the normal plugin workflow",
@@ -49,7 +49,7 @@
     ]
   },
   {
-    "id": "#3",
+    "id": "LOCAL-3",
     "issue_url": null,
     "title": "Enforce platform-neutral skills, Antigravity artifact demotion, and Pure Git hosting fallback",
     "request": "Fix Target 20 plan artifact re-execution in long sessions by demoting artifacts via built-in tools, keep SKILL.md platform-neutral, and support Pure Git mode without gh CLI",
@@ -72,7 +72,7 @@
     ]
   },
   {
-    "id": "#4",
+    "id": "LOCAL-4",
     "issue_url": null,
     "title": "Prefer Dart over Python for scratch scripts and temporary utilities when installed",
     "request": "Implement Randal Schwartz recommendation to prefer Dart over Python for one-off scripts and automation tools when installed, fall back to Python if Dart is missing, never attempt to install Dart, and write temporary scripts to system temp directory to bypass shell quoting",
@@ -94,7 +94,7 @@
     ]
   },
   {
-    "id": "#5",
+    "id": "LOCAL-5",
     "issue_url": null,
     "title": "Codify SCAR-PROC-104 for review before edit and targeted test loops",
     "request": "Add SCAR-PROC-104 to synthetic scars catalog, update AGENTS.md rules, and add automated regression test in test_cross_agent_compatibility.py",
@@ -116,7 +116,7 @@
     ]
   },
   {
-    "id": "#6",
+    "id": "LOCAL-6",
     "issue_url": null,
     "title": "Codify SCAR-TEST-08 for two-tier test isolation",
     "request": "Codify SCAR-TEST-08 into synthetic scars catalog and document two-tier test isolation architecture in testing isolation reference manual and AGENTS.md. Add automated regression tests in test_cross_agent_compatibility.py",
@@ -138,7 +138,7 @@
     ]
   },
   {
-    "id": "#7",
+    "id": "LOCAL-7",
     "issue_url": null,
     "title": "Codify SCAR-TEST-09 for fail-fast targeted TDD loops",
     "request": "Codify SCAR-TEST-09 into synthetic scars catalog and document fail-fast targeted test loops in TDD reference manual and AGENTS.md. Add automated regression tests in test_cross_agent_compatibility.py",
@@ -160,7 +160,7 @@
     ]
   },
   {
-    "id": "#8",
+    "id": "LOCAL-8",
     "issue_url": null,
     "title": "Enhance Pillar 2: Comprehensive Test Coverage, Burden Balance, and Ephemeral Socket Isolation",
     "request": "Enhance Pillar 2 of Six-Pillar Adversarial Review to evaluate test comprehensiveness, boundary conditions, and execution burden balance, and clarify that hermetic testing permits self-contained ephemeral loopback sockets (127.0.0.1:0 and temporary Unix sockets) while forbidding unmanaged external host daemons",
@@ -183,7 +183,7 @@
     ]
   },
   {
-    "id": "#9",
+    "id": "LOCAL-9",
     "issue_url": null,
     "title": "Restructure Scars into Hub-and-Spoke Catalog and Standardize Category-Scoped Numbering",
     "request": "Restructure synthetic scars catalog into Hub-and-Spoke architecture with domain category files under references/scars/, Master Routing Table in 09_synthetic_scars_catalog.md, category-scoped sequential monotonic numbering, and full language name polyglot scars",
@@ -205,7 +205,7 @@
     ]
   },
   {
-    "id": "#10",
+    "id": "LOCAL-10",
     "issue_url": null,
     "title": "Enhance Pillar 5 Readability with Simple English Rules, Plugin Discovery Hook, and README Recommendation",
     "request": "Enhance Pillar 5 of Six-Pillar Adversarial Review to audit diffs and documentation against Simple English standards, add companion plugin discovery in SessionStart hook, and recommend SimpleEnglish in README.md",
@@ -228,7 +228,7 @@
     ]
   },
   {
-    "id": "#11",
+    "id": "LOCAL-11",
     "issue_url": null,
     "title": "Codify SCAR-TEST-10 and Implement Pre-Flight Structural Static Analysis Gate",
     "request": "Implement SCAR-TEST-10 from TODO.md, build a standalone static check runner with fallback, dedicated tests, Makefile test-static integration, and codify scar across catalog and rules",
@@ -251,7 +251,7 @@
     ]
   },
   {
-    "id": "#12",
+    "id": "LOCAL-12",
     "issue_url": null,
     "title": "Codify SCAR-SYS-05 and Implement Safe Cross-User File Promotion",
     "request": "Implement SCAR-SYS-05 from TODO.md, build reusable safe_copy utility, dedicated unit tests, Makefile test-safe-copy integration, and codify scar across catalog and rules",
@@ -274,7 +274,7 @@
     ]
   },
   {
-    "id": "#13",
+    "id": "LOCAL-13",
     "issue_url": null,
     "title": "Default All Subagents to Inherit Model Tier and Document Worker Roles",
     "request": "Default all subagent roles to inherit model tier, document Antigravity specificity, 4 enum tiers, session effort inheritance, and worker explanations in README.md",
@@ -295,7 +295,7 @@
     "scars_earned": []
   },
   {
-    "id": "#14",
+    "id": "LOCAL-14",
     "issue_url": null,
     "title": "Codify SCAR-SYS-06 and Implement Native Runtime Environment Path Pre-Flight",
     "request": "Codify SCAR-SYS-06 from TODO.md into synthetic scars catalog, reference manuals, and AGENTS.md rules. Implement reusable env_preflight utility with path validation and environment sanitization, comprehensive unit tests, Makefile test-env-preflight integration, and cross-agent compatibility assertions.",
@@ -318,7 +318,7 @@
     ]
   },
   {
-    "id": "#15",
+    "id": "LOCAL-15",
     "issue_url": null,
     "title": "Codify SCAR-TEST-11 and Shift-Left Testing Balance in Archaeology and Planning",
     "request": "Codify SCAR-TEST-11 in synthetic scars catalog, reference manuals, agent rules, and worker prompts. Mandate failure mechanism classification in Target 15 archaeology and a 7th disclosure in Target 20 plans for Testing Strategy and Burden-Balance Analysis while retaining independent Pillar 2 adversarial review at Target 40.",
@@ -341,7 +341,7 @@
     ]
   },
   {
-    "id": "#1 (GH-1)",
+    "id": "GH-1",
     "issue_url": "https://github.com/hedges333/makefile-workflow-skill/issues/1",
     "title": "Fix Target 40 critic prompt to diff against locked APPROVED_TREE instead of HEAD",
     "request": "Fix Target 40 critic prompt in agents/adversarial-critic.md and CLAUDE.md to diff against locked Merkle tree hash from .workflow/state/approved_tree.txt instead of uncommitted HEAD, preventing vacuous review approvals.",
@@ -361,7 +361,7 @@
     "scars_earned": []
   },
   {
-    "id": "#2 (GH-2)",
+    "id": "GH-2",
     "issue_url": "https://github.com/hedges333/makefile-workflow-skill/issues/2",
     "title": "Use sys.executable in test subprocesses and configurable PYTHON macro in Makefile",
     "request": "Fix test_hooks.py and test_mcp_server.py to pass sys.executable instead of hardcoded 'python3' to subprocess calls, define PYTHON ?= python3 in Makefile, and add regression tests in test_cross_agent_compatibility.py.",
@@ -380,7 +380,7 @@
     "scars_earned": []
   },
   {
-    "id": "#3 (GH-3)",
+    "id": "GH-3",
     "issue_url": "https://github.com/hedges333/makefile-workflow-skill/issues/3",
     "title": "Prevent global Git flag bypasses and enforce force-push protection in hooks",
     "request": "Add --exec-path, --attr-source, and --list-cmds to GIT_GLOBAL_VALUE_FLAGS in pre_tool_guard.py and mcp/server.py, and add comprehensive regression tests in test_hooks.py.",
@@ -399,7 +399,7 @@
     "scars_earned": []
   },
   {
-    "id": "#9 (GH-9)",
+    "id": "GH-9",
     "issue_url": "https://github.com/hedges333/makefile-workflow-skill/issues/9",
     "title": "Propagate and enforce ci.quiescenceSeconds configuration across workflow",
     "request": "Extract ci.quiescenceSeconds and ci.pollIntervalSeconds in session_start.py, support environment variable overrides in hooks and MCP server, and update agent rules and skill docs.",

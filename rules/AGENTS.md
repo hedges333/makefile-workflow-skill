@@ -31,6 +31,17 @@ Antigravity renders an interactive review panel for artifacts. Follow these rule
 3. Before you ask for a decision, print the full facts in the chat message.
 4. Add a `file://` markdown link for every file, diff, plan, or review card that you name.
 
+### 1.3 Ticket Disambiguation and Commit Protocol
+
+To prevent accidental GitHub issue closures, distinguish local session tasks from remote issues:
+
+1. Label local session tasks with the prefix `LOCAL-<N>`.
+2. Label GitHub issues with the prefix `GH-<N>`.
+3. For local session tasks, create branches named `feat/local-<N>-<slug>` or `fix/local-<N>-<slug>`.
+4. Never use bare integer branch names for local tasks.
+5. On local session commits, write `Ticket: LOCAL-<N>`.
+6. Never write `closes #<N>`, `Closes #<N>`, or bare `#<N>` in local commit messages.
+
 ## 2. Production Data Protection Rules
 
 Never connect tests or agent commands to live systems.
