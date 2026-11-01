@@ -272,5 +272,26 @@
     "scars_earned": [
       "SCAR-SYS-05: Cross-User File Promotion (shutil.copyfile over copy2 / copystat)"
     ]
+  },
+  {
+    "id": "#13",
+    "issue_url": null,
+    "title": "Default All Subagents to Inherit Model Tier and Document Worker Roles",
+    "request": "Default all subagent roles to inherit model tier, document Antigravity specificity, 4 enum tiers, session effort inheritance, and worker explanations in README.md",
+    "branch": "feat/13-subagent-inherit-model-defaults",
+    "subprojects": [
+      "mcp",
+      "scripts",
+      "skills",
+      "docs"
+    ],
+    "started_at": "2026-11-01T01:30:00Z",
+    "completed_at": "2026-11-01T01:57:44Z",
+    "commit_sha": "b982fbd",
+    "pr_number": null,
+    "pr_url": null,
+    "closes_issue": false,
+    "tests_added": 19,
+    "scars_earned": []
   }
 ]
