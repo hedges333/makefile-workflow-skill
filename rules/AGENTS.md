@@ -39,6 +39,7 @@ Never connect tests or agent commands to live systems.
 3. Run file operations during tests inside temporary directories or mocked file systems.
 4. Partition tests into two tiers (`SCAR-TEST-08`): Run pure unit tests in memory with zero external socket or daemon dependencies. Isolate integration tests behind explicit markers, and never connect live sockets or database DDL inside global autouse session fixtures. Tests may use self-contained ephemeral loopback sockets (`127.0.0.1:0` or temporary Unix domain sockets) for protocol or daemon verification.
 5. Use safe file promotion (`SCAR-SYS-05`): When copying files across system users or service accounts, use `shutil.copyfile` to stream content bytes. Do not use `shutil.copy2` or `copystat` across user boundaries. Create destination directories with caller permissions.
+6. Native runtime environment path pre-flight (`SCAR-SYS-06`): Before launching processes that initialize native compiled extensions, verify that temporary directories (`TMPDIR`) exist and are writable using `validate_runtime_path`. If an environment path is missing or unwritable, sanitize the environment with a verified safe fallback path.
 
 ## 3. Code Edit and Architecture Rules (`SCAR-PROC-104`)
 

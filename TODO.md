@@ -37,7 +37,7 @@ Plan comprehensive tests with reasonable balance for performance and dependency 
   - **Trap**: Assuming standard library helpers like `shutil.copy2` or `shutil.copytree` are safe across user boundaries; they invoke `copystat` (`chmod`/`utime`), which requires ownership privileges.
   - **Permanent Reflex**: When copying across system users or daemons, copy file contents only (`shutil.copyfile`) or create destination directories with caller permissions rather than copying permission bits and ownership.
 
-- [ ] **SCAR-SYS-06: Native Runtime Environment Path Pre-Flight (`TMPDIR`)**
+- [x] **SCAR-SYS-06: Native Runtime Environment Path Pre-Flight (`TMPDIR`)**
   - **Wound**: Compiled C/C++ libraries, GPU runtimes, or native database drivers crash with a silent segmentation fault during startup without a Python stack trace.
   - **Trap**: Assuming native compiled extensions validate paths in environment variables like `TMPDIR` or `CACHE_DIR` and raise clean exceptions.
   - **Permanent Reflex**: Verify that target cache and temporary directories exist and are writable before launching processes that initialize native compiled runtimes.

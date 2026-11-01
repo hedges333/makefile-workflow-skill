@@ -56,6 +56,7 @@ references/
 | `SCAR-GIT-30` | Pure Git Mode and Tool Discovery | Git & Shell | [`scars/git_and_shell.md`](./scars/git_and_shell.md) |
 | `SCAR-ENV-04` | Shared Workspace Umask Permissions | System & OS | [`scars/system_and_os.md`](./scars/system_and_os.md) |
 | `SCAR-SYS-05` | Cross-User File Promotion | System & OS | [`scars/system_and_os.md`](./scars/system_and_os.md) |
+| `SCAR-SYS-06` | Native Runtime Environment Path Pre-Flight | System & OS | [`scars/system_and_os.md`](./scars/system_and_os.md) |
 | `SCAR-DB-09` | Pipeline Splitting and URI Userinfo Stripping | Data & Database | [`scars/data_and_database.md`](./scars/data_and_database.md) |
 | `SCAR-SEC-01` | Untrusted External Text Airlock | Security & Auth | [`scars/security_and_auth.md`](./scars/security_and_auth.md) |
 | `SCAR-AUTH-02` | Preserve Authorization on Same-Origin Redirects | Security & Auth | [`scars/security_and_auth.md`](./scars/security_and_auth.md) |

@@ -57,3 +57,12 @@ Promoting files across service accounts, daemons, or system users requires permi
 2. If the caller does not own the destination file, standard `copystat` calls (`os.chmod` and `os.utime`) fail with `PermissionError: [Errno 1] EPERM`.
 3. Stream file contents with `shutil.copyfile` so new files receive standard permissions from the caller umask (`SCAR-ENV-04`).
 4. When copying directory trees, create destination directories with caller permissions and stream child files with `safe_copy_file`.
+
+## 6. Native Runtime Environment Path Pre-Flight (`SCAR-SYS-06`)
+
+Native compiled extensions call C `getenv()` directly and fail catastrophically if paths are invalid:
+
+1. When invoking subprocesses or native runtimes, inspect standard environment variables: `TMPDIR`, `TEMP`, `TMP`, `CACHE_DIR`, and `XDG_CACHE_HOME`.
+2. Verify that each directory exists and possesses write permissions before process startup.
+3. Use `scripts/env_preflight.py` to validate paths and sanitize environment variables.
+4. If a directory is missing, replace it with a verified fallback path such as `tempfile.gettempdir()`.

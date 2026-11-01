@@ -270,6 +270,8 @@ def validate():
       errors.append(f"{ref_09} must document SCAR-TEST-10")
     if "SCAR-SYS-05" not in r09_text:
       errors.append(f"{ref_09} must document SCAR-SYS-05")
+    if "SCAR-SYS-06" not in r09_text:
+      errors.append(f"{ref_09} must document SCAR-SYS-06")
     if "Hub-and-Spoke" not in r09_text and "Master Routing" not in r09_text and "Master Index" not in r09_text:
       errors.append(f"{ref_09} must document Hub-and-Spoke architecture and Master Index")
     if "scars/process.md" not in r09_text or "scars/testing.md" not in r09_text:
@@ -306,6 +308,10 @@ def validate():
       errors.append(f"{system_spoke} must document SCAR-SYS-05")
     if "shutil.copyfile" not in sys_text or "copystat" not in sys_text:
       errors.append(f"{system_spoke} must document shutil.copyfile and copystat for SCAR-SYS-05")
+    if "SCAR-SYS-06" not in sys_text:
+      errors.append(f"{system_spoke} must document SCAR-SYS-06")
+    if "TMPDIR" not in sys_text or "validate_runtime_path" not in sys_text:
+      errors.append(f"{system_spoke} must document TMPDIR and validate_runtime_path for SCAR-SYS-06")
 
   # 11c. Full Language Name Polyglot Scars (dart_flutter.md)
   dart_guide = "skills/makefile-workflow/references/polyglot/dart_flutter.md"
@@ -389,6 +395,8 @@ def validate():
       errors.append(f"{ref_10} must document Dart scratch script and temporary directory rules")
     if "SCAR-SYS-05" not in r10_text or "copyfile" not in r10_text.lower():
       errors.append(f"{ref_10} Section 5 must document SCAR-SYS-05 and cross-user file promotion")
+    if "SCAR-SYS-06" not in r10_text or "TMPDIR" not in r10_text:
+      errors.append(f"{ref_10} Section 6 must document SCAR-SYS-06 and native runtime environment path pre-flight")
 
   # 12. SKILL.md Single-Page Size Ceiling (SCAR-PROC-99)
   skill_md = "skills/makefile-workflow/SKILL.md"
@@ -452,6 +460,8 @@ def validate():
       errors.append(f"{agents_md} Section 2 must clarify ephemeral loopback socket permissions")
     if "SCAR-SYS-05" not in a_text or "shutil.copyfile" not in a_text:
       errors.append(f"{agents_md} Section 2 must document SCAR-SYS-05 cross-user file promotion")
+    if "SCAR-SYS-06" not in a_text or "validate_runtime_path" not in a_text and "TMPDIR" not in a_text:
+      errors.append(f"{agents_md} Section 2 must document SCAR-SYS-06 native runtime environment path pre-flight")
     if not any("rules/AGENTS.md" in e for e in errors):
       print(f"✔ Antigravity artifact lifecycle and demotion rules ({agents_md}) valid.")
 
@@ -506,6 +516,10 @@ def validate():
       errors.append(f"{makefile_path} must define 'test-safe-copy:' target")
     if "test-safe-copy" not in mk_text.split("test:")[1].split("\n")[0]:
       errors.append(f"{makefile_path} 'test:' target must list 'test-safe-copy' prerequisite")
+    if "test-env-preflight:" not in mk_text:
+      errors.append(f"{makefile_path} must define 'test-env-preflight:' target")
+    if "test-env-preflight" not in mk_text.split("test:")[1].split("\n")[0]:
+      errors.append(f"{makefile_path} 'test:' target must list 'test-env-preflight' prerequisite")
 
   static_check_script = "scripts/static_check.py"
   if not os.path.exists(static_check_script):
@@ -519,6 +533,12 @@ def validate():
   safe_copy_test_script = "scripts/test_safe_copy.py"
   if not os.path.exists(safe_copy_test_script):
     errors.append(f"Missing {safe_copy_test_script}")
+  env_preflight_script = "scripts/env_preflight.py"
+  if not os.path.exists(env_preflight_script):
+    errors.append(f"Missing {env_preflight_script}")
+  env_preflight_test_script = "scripts/test_env_preflight.py"
+  if not os.path.exists(env_preflight_test_script):
+    errors.append(f"Missing {env_preflight_test_script}")
 
   if errors:
     print(f"\n❌ Validation failed with {len(errors)} error(s):")
