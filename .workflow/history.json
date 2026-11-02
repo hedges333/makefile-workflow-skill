@@ -564,5 +564,25 @@
     "closes_issue": true,
     "tests_added": 18,
     "scars_earned": []
+  },
+  {
+    "id": "GH-48",
+    "issue_url": "https://github.com/hedges333/makefile-workflow-skill/issues/48",
+    "title": "Delegate Target 70 CI and bot polling to triage-worker subagent with reactive wakeup",
+    "request": "Refactor Target 70 (bot-quiescence) to delegate remote CI status checks and review bot quiescence polling to an asynchronous triage-worker subagent, eliminating blocking MCP time.sleep() loops in the supervisor in compliance with SCAR-PROC-53 and SCAR-PROC-95.",
+    "branch": "feat/48-triage-worker-subagent",
+    "subprojects": [
+      "agents",
+      "scripts",
+      "skills"
+    ],
+    "started_at": "2026-11-02T20:43:00Z",
+    "completed_at": "2026-11-02T20:56:31Z",
+    "commit_sha": "c971219",
+    "pr_number": 49,
+    "pr_url": "https://github.com/hedges333/makefile-workflow-skill/pull/49",
+    "closes_issue": true,
+    "tests_added": 4,
+    "scars_earned": []
   }
 ]
