@@ -457,10 +457,27 @@ def validate():
       errors.append(f"{critic_agent} Rule 2 must reference approved_tree.txt")
     if "git diff $(git merge-base HEAD origin/main) HEAD" in critic_text:
       errors.append(f"{critic_agent} Rule 2 must not diff against HEAD")
-    if "does the diff solve" not in critic_text.lower():
-      errors.append(f"{critic_agent} Pillar 1 must use diagnostic question format matching references/04")
+    canonical_pillars = [
+        "1. Intent",
+        "2. Verification",
+        "3. Architecture",
+        "4. Blast Radius",
+        "5. Reviewer Defense",
+        "6. Immune Defenses & Crash Antibodies",
+    ]
+    for pillar in canonical_pillars:
+      if f"### {pillar}" not in critic_text:
+        errors.append(f"{critic_agent} must contain canonical heading '### {pillar}'")
+    if "blast radius" not in critic_text.lower():
+      errors.append(f"{critic_agent} must inspect blast radius as mandatory canary")
+    if "compressed" not in critic_text.lower() and "table" not in critic_text.lower():
+      errors.append(f"{critic_agent} must prohibit compressed summary tables")
     if "comprehensiveness" not in critic_text.lower() and "comprehensive" not in critic_text.lower():
       errors.append(f"{critic_agent} Pillar 2 must assess test comprehensiveness")
+    if "tdd" not in critic_text.lower() and "test-driven" not in critic_text.lower():
+      errors.append(f"{critic_agent} Pillar 2 must mandate TDD methodology")
+    if "failure falsification" not in critic_text.lower():
+      errors.append(f"{critic_agent} Pillar 2 must mandate failure falsification")
     if "burden" not in critic_text.lower() and "balance" not in critic_text.lower():
       errors.append(f"{critic_agent} Pillar 2 must assess test execution burden balance")
     if "ephemeral" not in critic_text.lower():
@@ -487,8 +504,31 @@ def validate():
   else:
     with open(ref_04_review) as f:
       r04_rev_text = f.read()
+    for pillar in canonical_pillars:
+      if f"### {pillar}" not in r04_rev_text:
+        errors.append(f"{ref_04_review} must contain canonical heading '### {pillar}'")
+    if "three-tier critic hierarchy" not in r04_rev_text.lower():
+      errors.append(f"{ref_04_review} must document the Progressive Three-Tier Critic Hierarchy")
+    if "tier 3" not in r04_rev_text.lower() or "tier 2" not in r04_rev_text.lower() or "tier 1" not in r04_rev_text.lower():
+      errors.append(f"{ref_04_review} must document Tier 1, Tier 2, and Tier 3 execution mechanisms")
+    if "scar-proc-51" not in r04_rev_text.lower() and "degradation" not in r04_rev_text.lower():
+      errors.append(f"{ref_04_review} must document Dynamic Degradation Fallback (SCAR-PROC-51)")
+    if "scar-proc-114" not in r04_rev_text.lower() and "read-before-define" not in r04_rev_text.lower():
+      errors.append(f"{ref_04_review} must document Sequential Read-Before-Define Barrier (SCAR-PROC-114)")
+    if "scar-proc-115" not in r04_rev_text.lower() and "anti-single-blocker" not in r04_rev_text.lower():
+      errors.append(f"{ref_04_review} must document Anti-Single-Blocker Satisficing (SCAR-PROC-115)")
+    if "scar-proc-121" not in r04_rev_text.lower() and "rubric anchoring" not in r04_rev_text.lower():
+      errors.append(f"{ref_04_review} must document Post-Compaction Rubric Anchoring (SCAR-PROC-121)")
     if "comprehensiveness" not in r04_rev_text.lower() and "comprehensive" not in r04_rev_text.lower():
       errors.append(f"{ref_04_review} Pillar 2 must evaluate test comprehensiveness")
+    if "tdd" not in r04_rev_text.lower() and "test-driven" not in r04_rev_text.lower():
+      errors.append(f"{ref_04_review} Pillar 2 must mandate TDD methodology")
+    if "failure falsification" not in r04_rev_text.lower():
+      errors.append(f"{ref_04_review} Pillar 2 must mandate failure falsification")
+    if "boundary" not in r04_rev_text.lower():
+      errors.append(f"{ref_04_review} Pillar 2 must evaluate boundary limits testing")
+    if "counterfeit" not in r04_rev_text.lower():
+      errors.append(f"{ref_04_review} Pillar 2 must prohibit counterfeit mock-only passes")
     if "burden" not in r04_rev_text.lower():
       errors.append(f"{ref_04_review} Pillar 2 must evaluate test burden balance")
     if "ephemeral" not in r04_rev_text.lower():
