@@ -19,29 +19,32 @@ This reference manual documents testing and verification scars (`SCAR-TEST-*`). 
 - **Wound**: Automated tests connect to a shared or production database and alter live rows.
 - **Trap**: Running test suites with default environment variables instead of dedicated test database credentials.
 - **Permanent Reflex**: Point all tests to `*_test` databases, in-memory stores, or mock fixtures. Never connect tests to production databases.
+- **Socratic Probe**: Could these tests inadvertently connect to a live environment and alter real data? How can you guarantee that tests point exclusively to isolated test databases, in-memory stores, or mocks?
 
 ### SCAR-TEST-08: Two-Tier Test Isolation (Hermetic Unit vs Integration Fixtures)
 
 - **Wound**: An unprivileged test runner or CI container fails session-level database DDL or network initialization in a root fixture, causing the entire test suite to crash before running any pure unit tests.
 - **Trap**: Attaching database connections, socket initialization, or schema migrations to global `autouse=True` session fixtures instead of isolating them behind explicit markers.
 - **Permanent Reflex**: Partition test suites into two tiers: Tier 1 hermetic unit tests with zero external daemon or socket dependencies (allowing self-contained ephemeral loopback sockets such as `127.0.0.1:0` or temporary Unix domain sockets in `tmp_path`), and Tier 2 marked integration tests that verify external dependencies during pre-flight. Never attach live database connections or unmanaged network sockets to un-isolated session fixtures.
+- **Socratic Probe**: If root fixtures initialize live sockets or database DDL, will pure unit tests fail in unprivileged environments? Can you separate hermetic unit tests from external integration fixtures so unit tests always run in memory?
 
 ### SCAR-TEST-09: Fail-Fast Targeted TDD Loop (pytest -x -v)
 
 - **Wound**: Running a large test suite during active debugging generates hundreds of cascading tracebacks, exhausting context limits and obscuring the initial defect.
 - **Trap**: Running broad test suites without fail-fast flags while attempting to iterate on a single failing test.
 - **Permanent Reflex**: Use fail-fast flags (`pytest -x -v` or language equivalent) during active Red-Green TDD cycles. Iterate exclusively on the targeted failing test until green before running the full regression suite.
+- **Socratic Probe**: Can you develop and run targeted tests with fail-fast flags so execution stops immediately on failure? If you iterate on only the failing test until it passes, will you identify defects without drowning in cascading logs?
 
 ### SCAR-TEST-10: Pre-Flight Structural Static Analysis Gate
 
 - **Wound**: Running a slow runtime test suite on code with syntax errors or undefined symbols wastes time and pollutes logs.
 - **Trap**: Relying on full runtime test suites to detect basic structural syntax mistakes or missing imports.
-- **Permanent Reflex**: Run fast structural static analysis before you execute functional tests. Use `ruff` or `flake8` with `--select=E9,F63,F7,F82`, or fall back to standard library AST parsing.
-
----
+- **Permanent Reflex**: Run fast structural static analysis before you execute functional tests. Use available comprehensive linting programs for languages in the project, or fall back to standard library AST parsing.
+- **Socratic Probe**: If the code contains a basic syntax error or missing import, why wait for a heavy test suite to run? Would a fast AST or static linter check catch structural defects in milliseconds?
 
 ### SCAR-TEST-11: Shift-Left Testing Burden Balance in Archaeology and Planning
 
 - **Wound**: An agent writes a shallow implementation plan that tests only documentation strings or superficial metadata. This requires human operator intervention at Target 20 or causes an adversarial critic rejection at Target 40. Alternatively, an agent over-engineers tests by pulling in heavy external compilers, slow daemons, or unneeded dependencies.
 - **Trap**: Postponing test comprehensiveness and burden balance evaluation to the Target 40 adversarial review causes delays and rework loops.
 - **Permanent Reflex**: Shift-left Pillar 2 evaluation into Target 15 and Target 20. In Target 15 archaeology receipts, classify the failure mechanism and evaluate test feasibility within hermetic fixtures (< 100 ms). In Target 20 plans, disclose the testing balance and prohibit surface-only testing when hermetic boundary testing is possible.
+- **Socratic Probe**: Are you settling for superficial assertions when hermetic boundary tests are fast and feasible? Does your test plan strike the right balance between rigorous contract coverage and fast execution without heavy dependencies, or do you need to interview the user to determine if heavy dependencies are necessary for some tests to be comprehensive?

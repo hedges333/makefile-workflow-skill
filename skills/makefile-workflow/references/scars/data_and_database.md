@@ -15,3 +15,4 @@ This reference manual documents database safety, data isolation, and query scars
 - **Wound**: Production database guard hooks fail to block dangerous commands in piped shell commands (such as `echo "sql" | psql production_db`) or trigger false alarms on database passwords embedded in connection URIs.
 - **Trap**: Checking only the primary command name and failing to tokenize pipeline stages or parse connection string URIs.
 - **Permanent Reflex**: Split compound shell pipelines into individual command segments and strip URI userinfo credentials before evaluating database safety tokens.
+- **Socratic Probe**: Could dangerous database commands hide behind piped shell stages, or could passwords in URIs trigger false safety alarms? Did you split pipeline segments and strip userinfo before evaluating database safety?
