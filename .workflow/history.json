@@ -524,5 +524,24 @@
     "closes_issue": true,
     "tests_added": 6,
     "scars_earned": []
+  },
+  {
+    "id": "GH-18",
+    "issue_url": "https://github.com/hedges333/makefile-workflow-skill/issues/18",
+    "title": "Codify concise Socratic Reflex Probes in Synthetic Scars catalog",
+    "request": "Enhance the Synthetic Scars catalog (references/09_synthetic_scars_catalog.md and references/scars/*.md) by defining Four-Part Anatomy and adding a concise, one-sentence Socratic Probe to all 28 documented scars.",
+    "branch": "feat/18-socratic-scars-probes",
+    "subprojects": [
+      "scripts",
+      "skills"
+    ],
+    "started_at": "2026-11-01T20:34:00Z",
+    "completed_at": "2026-11-02T19:45:00Z",
+    "commit_sha": "2c55de7",
+    "pr_number": 21,
+    "pr_url": "https://github.com/hedges333/makefile-workflow-skill/pull/21",
+    "closes_issue": true,
+    "tests_added": 31,
+    "scars_earned": []
   }
 ]
