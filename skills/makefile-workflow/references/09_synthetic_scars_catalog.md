@@ -28,10 +28,20 @@ references/
 1. **Category-Scoped Sequencing**: Scars are ordered monotonically within each category spoke file.
 2. **End-of-Sequence Appending**: When adding a new scar, assign the next sequential integer and append it to the end of the appropriate category file.
 3. **Full Language Names**: Language-specific failure vaccines use full uppercase language names: `SCAR-LANG-<FULL_LANGUAGE>-<NN>`.
-4. **Three-Part Anatomy**: Every scar in a spoke file must record:
+4. **Four-Part Anatomy**: Every scar in a spoke file must record:
    - **Wound**: The exact bug, data loss, or broken build that happened.
    - **Trap**: The false assumption or shortcut that caused the failure.
    - **Permanent Reflex**: The mandatory rule that prevents recurrence.
+   - **Socratic Probe**: A concise heuristic inquiry that tests attention against the specific failure mode during execution.
+
+### Socratic Reflex Protocol
+
+Rules alone can be mechanically recited without changing reasoning behavior. To prevent cognitive bypass, every synthetic scar includes a **Socratic Probe**—a focused diagnostic inquiry.
+
+Agents must use Socratic Probes during:
+1. **Target 15 & Target 20 (Archaeology & Planning)**: Interrogate design assumptions against catalog failure modes before writing code.
+2. **Target 30 (Implementation Loops)**: Evaluate whether proposed edits introduce unnecessary abstractions, violate hermetic isolation, or alter unreviewed code.
+3. **Target 40 (Adversarial Review)**: Scrutinize diffs using probe questions to uncover silent regressions and unhandled failure modes.
 
 ---
 
@@ -85,6 +95,6 @@ During Target 90 cleanup, record lessons from the active ticket:
 
 1. Check the session for user corrections, rejected reviews, or CI surprises.
 2. Open the matching domain spoke in `skills/makefile-workflow/references/scars/` or language guide in `skills/makefile-workflow/references/polyglot/`.
-3. Append the new scar at the end of the file with the next sequential integer using the Wound, Trap, and Permanent Reflex fields.
+3. Append the new scar at the end of the file with the next sequential integer using the Wound, Trap, Permanent Reflex, and Socratic Probe fields.
 4. Add the new entry to the Master Routing Table in this index.
 5. Record the scar ID in `.workflow/history.json` and `.workflow/history.md`.

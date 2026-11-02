@@ -17,6 +17,7 @@ This reference manual documents operating system, filesystem, and runtime enviro
 - **Wound**: Collaborator user accounts or paired agents fail to edit or overwrite newly created workspace files with `Permission denied (EACCES)`.
 - **Trap**: Creating files with default restrictive umask `0022` (read-only for group) in collaborative multi-user or service-account environments.
 - **Permanent Reflex**: Set umask to `0002` in shared group workspaces so team and collaborator accounts retain group write privileges on newly created files.
+- **Socratic Probe**: If you create files with default restrictive permissions, will collaborator accounts or paired agents be unable to edit them? Would setting a group-writable umask allow seamless collaboration without permission errors?
 
 ---
 
@@ -25,6 +26,7 @@ This reference manual documents operating system, filesystem, and runtime enviro
 - **Wound**: Promoting or syncing files across service accounts or system users crashes with `PermissionError: [Errno 1] EPERM`.
 - **Trap**: Assuming standard library helpers like `shutil.copy2` or `shutil.copytree` work across user boundaries. These functions invoke `copystat` (`os.chmod` and `os.utime`). These system calls require ownership privileges on destination files.
 - **Permanent Reflex**: When copying files across user accounts, copy file contents only with `shutil.copyfile`. Create destination directories with caller permissions instead of copying file ownership.
+- **Socratic Probe**: When copying files across different system users, will copying ownership metadata trigger permission errors? Would streaming content bytes with `shutil.copyfile` allow safe file promotion under caller permissions?
 
 ---
 
@@ -33,3 +35,4 @@ This reference manual documents operating system, filesystem, and runtime enviro
 - **Wound**: Compiled C and C++ libraries, GPU runtimes, or native database drivers crash with a silent segmentation fault during startup without a Python stack trace.
 - **Trap**: Developers assume native compiled extensions validate paths in environment variables like `TMPDIR` or `CACHE_DIR` and raise clean exceptions.
 - **Permanent Reflex**: If you launch native runtimes, verify that target cache and temporary directories exist and are writable using `validate_runtime_path`. If an environment path is missing or unwritable, sanitize environment variables using `sanitize_runtime_env` with verified fallback directories.
+- **Socratic Probe**: If a native compiled library encounters an invalid or missing temporary directory, could it crash with a silent segmentation fault? Have you verified that environment paths exist and are writable before spawning native processes?

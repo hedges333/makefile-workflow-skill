@@ -12,6 +12,7 @@ Verifies the configuration files, manifests, and rules for:
 
 import json
 import os
+import re
 import sys
 
 
@@ -305,6 +306,12 @@ def validate():
       errors.append(f"{ref_09} must document Hub-and-Spoke architecture and Master Index")
     if "scars/process.md" not in r09_text or "scars/testing.md" not in r09_text:
       errors.append(f"{ref_09} must link to domain spoke category files")
+    if "Four-Part Anatomy" not in r09_text:
+      errors.append(f"{ref_09} must define Four-Part Anatomy")
+    if "Socratic Probe" not in r09_text:
+      errors.append(f"{ref_09} must reference Socratic Probe")
+    if "Socratic Reflex Protocol" not in r09_text:
+      errors.append(f"{ref_09} must document Socratic Reflex Protocol")
 
   # 11b. Hub-and-Spoke Category Files (references/scars/)
   scars_dir = "skills/makefile-workflow/references/scars"
@@ -321,6 +328,27 @@ def validate():
     sf_path = os.path.join(scars_dir, sf)
     if not os.path.exists(sf_path):
       errors.append(f"Missing category spoke file {sf_path}")
+
+  total_scars_found = 0
+  for sf in spoke_files:
+    sf_path = os.path.join(scars_dir, sf)
+    if not os.path.exists(sf_path):
+      continue
+    with open(sf_path) as f:
+      sf_text = f.read()
+    scar_blocks = re.split(r"(?m)(?=^###\s+SCAR-)", sf_text)
+    for block in scar_blocks:
+      if not block.startswith("### SCAR-"):
+        continue
+      total_scars_found += 1
+      scar_id = block.split("\n")[0].replace("###", "").split(":")[0].strip()
+      for field in ("Wound", "Trap", "Permanent Reflex", "Socratic Probe"):
+        field_match = re.search(rf"\*\*{re.escape(field)}\*\*:\s*([^\n]+)", block)
+        if not field_match or not field_match.group(1).strip():
+          errors.append(f"{sf_path} {scar_id} missing non-empty '**{field}**:'")
+
+  if total_scars_found != 28:
+    errors.append(f"Expected 28 synthetic scars across category spokes, found {total_scars_found}")
 
   testing_spoke = os.path.join(scars_dir, "testing.md")
   if os.path.exists(testing_spoke):
@@ -669,7 +697,6 @@ def validate():
     try:
       with open(history_json_path) as f:
         history_data = json.load(f)
-      import re
       local_id_regex = re.compile(r"^LOCAL-[1-9][0-9]*$")
       gh_id_regex = re.compile(r"^GH-[1-9][0-9]*$")
       for idx, item in enumerate(history_data):
