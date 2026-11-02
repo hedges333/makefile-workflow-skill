@@ -543,5 +543,26 @@
     "closes_issue": true,
     "tests_added": 31,
     "scars_earned": []
+  },
+  {
+    "id": "GH-22",
+    "issue_url": "https://github.com/hedges333/makefile-workflow-skill/issues/22",
+    "title": "Analyze and enhance Six Pillars adversarial review formulation against Randal Schwartz's specification",
+    "request": "Enhance Six Pillars adversarial review formulation in skills/makefile-workflow/references/04_six_pillars_adversarial_review.md against Randal Schwartz's specification, adopting canonical headings, Progressive Three-Tier Critic Hierarchy, TDD failure falsification in Pillar 2, and subagent execution invariants.",
+    "branch": "feat/22-enhance-six-pillars-review",
+    "subprojects": [
+      "agents",
+      "scripts",
+      "skills",
+      "adapters"
+    ],
+    "started_at": "2026-11-02T19:58:00Z",
+    "completed_at": "2026-11-02T20:26:52Z",
+    "commit_sha": "99fea89",
+    "pr_number": 46,
+    "pr_url": "https://github.com/hedges333/makefile-workflow-skill/pull/46",
+    "closes_issue": true,
+    "tests_added": 18,
+    "scars_earned": []
   }
 ]
