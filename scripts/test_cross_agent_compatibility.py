@@ -497,6 +497,23 @@ def validate():
       errors.append(f"{triage_agent} Rule 2 must reference configured quiescence duration")
     if "defect" not in tw_text.lower() or "suggestion" not in tw_text.lower():
       errors.append(f"{triage_agent} Rule 3 must interrogate whether bot comments are defects or suggestions")
+    if "send_message" not in tw_text:
+      errors.append(f"{triage_agent} Rule 4 must instruct returning results via send_message")
+    if "pre-fetched" in tw_text.lower():
+      errors.append(f"{triage_agent} must not require pre-fetched CI results from supervisor")
+
+  ref_07 = "skills/makefile-workflow/references/07_ci_and_bot_triage.md"
+  if not os.path.exists(ref_07):
+    errors.append(f"Missing {ref_07}")
+  else:
+    with open(ref_07) as f:
+      r07_text = f.read()
+    if "triage-worker" not in r07_text.lower():
+      errors.append(f"{ref_07} must document triage-worker subagent delegation")
+    if "reactive wakeup" not in r07_text.lower():
+      errors.append(f"{ref_07} must document reactive wakeup protocol for Target 70")
+    if "maxwaitseconds" not in r07_text.lower() and "single-probe" not in r07_text.lower():
+      errors.append(f"{ref_07} must document single-probe non-blocking query option")
 
   ref_04_review = "skills/makefile-workflow/references/04_six_pillars_adversarial_review.md"
   if not os.path.exists(ref_04_review):

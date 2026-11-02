@@ -210,10 +210,10 @@ Read [`references/06`](./references/06_clean_commit_and_pr.md) for landability r
 Read [`references/07`](./references/07_ci_and_bot_triage.md) for polling and triage rules.
 
 1. In Pure Git Mode, run full local repository tests (`make all`), write `.workflow/state/70_bot_triage.md` noting pure Git validation, and advance to Target 75.
-2. In PR mode, call `workflow_poll_ci` via MCP or run `gh pr view`.
-3. Wait until CI passes and the configured quiescence duration elapses with no new bot comments.
-4. If zero bot comments exist, write `.workflow/state/70_bot_triage.md` and advance directly to Target 75. If comments exist, fork `triage-worker` with `Model` set to `agyModelTiers["triage-worker"]` (default `inherit`) with pre-fetched comments for single-turn categorization.
-5. If accepted fixes need code edits, return to Target 30 and repeat Targets 40, 45, 50, 60, and 70.
+2. In multi-agent environments, fork `triage-worker` with `Model` set to `agyModelTiers["triage-worker"]` (default `inherit`) to monitor CI checks and review bots, then stop tool calls (`tool_calls: []`).
+3. Upon receiving the `triage-worker` completion message, write `.workflow/state/70_bot_triage.md`.
+4. In single-agent environments, call `workflow_poll_ci` via MCP with single-probe (`maxWaitSeconds: 1`) or timer.
+5. If accepted bot findings need code edits, return to Target 30 and repeat Targets 40, 45, 50, 60, and 70.
 6. When CI is green and zero open comments remain, advance to Target 75.
 
 ### Target 75: `ready-to-land` (Policy Table and Landing Gate)
