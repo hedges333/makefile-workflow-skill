@@ -1,12 +1,23 @@
-# Synthetic Scars Backlog (TODO)
+# TODO list
 
-This document tracks general coding guidelines and synthetic scars derived from operational post-mortems and pair-programming experience, to be codified into `skills/makefile-workflow/references/09_synthetic_scars_catalog.md` and related reference manuals.
+This document tracks general coding guidelines and synthetic scars derived from operational post-mortems and pair-programming experience, to be codified into `skills/makefile-workflow/references/09_synthetic_scars_catalog.md` and related reference manuals.  Also other tasks.
 
 Plan comprehensive tests with reasonable balance for performance and dependency burden.
 
 ---
 
+## Priority tasks
+
+- [ ] **Analysis of Randal's formulation of Six Pillars**
+  - Does our formulation in `skills/makefile-workflow/references/04_six_pillars_adversarial_review.md` seem over-simplified compared to Randal's [gist](https://gist.github.com/RandalSchwartz/598a1f2b5760a23c1d70b57e9e85393f) and [article series](https://dev.to/randalschwartz/series/44156)?  Does our formulation need some work and enhancement?
+
+---
+
 ## Batch 1: Process & Test Discipline Scars
+
+- [ ] **Adversarial critic pillars file reference**
+  - When launching the adversarial-critic agent to run six pillars review, does it give an explicit reference to `skills/makefile-workflow/references/04_six_pillars_adversarial_review.md` for the subagent to find more detail about the six pillars principles?  Does it need to do that, or is that already part of the subagent's context?  There is a suggested prompt for the supervisor to launch adversarial-critic which includes that reference, but sometimes the supervisor ignores that and formulates a brief targeted summary that omits a reference to further details.  Let's please formulate a scar that requires the supervisor to explicitly mention the file when prompting the adversarial-critic agent.
+
 
 - [x] **SCAR-PROC-104: Review Before Edit, Minimal Confident Edits, and Targeted Test Loops**
   - **Wound**: An agent makes broad, speculative edits across unreviewed files or methods, introduces silent regressions in adjacent code, and gets stuck in sprawling test failure cascades.
@@ -52,6 +63,9 @@ Plan comprehensive tests with reasonable balance for performance and dependency 
   - **Trap**: Relying on default operating system process killing without handling POSIX termination signals.
   - **Permanent Reflex**: Register explicit handlers for `SIGTERM` and `SIGINT` in long-running batch workers or daemons to complete the active atomic unit of work, flush buffers, and clean up lock files before exiting.
 
+- [ ] **SCAR-SH-??: Temporary scripts instead of shell quoting**
+  - Develop a new scar (uncertain of number) 
+
 ---
 
 ## Batch 3: Database & Ledger Scars
@@ -75,6 +89,9 @@ Plan comprehensive tests with reasonable balance for performance and dependency 
   - **Wound**: A batch pipeline spends hours computing duplicate data, only for database `INSERT IGNORE` or unique indexes to drop 99% of the output.
   - **Trap**: Relying on database unique constraints as the main filter for whether work needs to be performed.
   - **Permanent Reflex**: Maintain high-watermark cursors or dirty queues in the application layer so batch pipelines only process genuinely new or modified entities.
+
+- [ ] **SCAR-DATA-?? or SCAR-DB-?? or SCAR-SEC-??:  Prevent SQL injection**
+  - Not sure where this is appropriate, but there should be a scar to make it review code that uses SQL queries and other types of database queries for SQL injection.  The basic solution is usually to use placeholders in queries and supply values as parameters, rather than interpolating user-supplied strings directly into SQL query strings.  Or is this already covered by SCAR-SEC-01 in a more general sense?  Please analyze.
 
 ---
 
@@ -117,6 +134,13 @@ Plan comprehensive tests with reasonable balance for performance and dependency 
 
 - [ ] **TEST-SCAR-TOOL-07: Comprehensive Behavioral Test for Dart Scratch Script Priority Rules**
   - Expand `test_cross_agent_compatibility.py` to verify that `rules/AGENTS.md`, `references/10_security_and_data_isolation.md`, and adapters consistently mandate preferring installed Dart over Python, never attempting to install Dart, and writing complex shell scripts to temporary files.
+
+---
+
+## More scars?
+
+- [ ] **Analysis of Randal's scar catalog**
+  - Randal's [gist](https://gist.github.com/RandalSchwartz/598a1f2b5760a23c1d70b57e9e85393f) and [article series](https://dev.to/randalschwartz/series/44156) mention many more specific scars than we have implemented in our scar catalog.  Please thoroughly analyze the gist and all articles in the series to identify scars that we missed on our initial implementation, and open a github feature request issue for each one, if not previously identified and opened.  Our format now includes "Wound", "Trap", "Permanent Reflex", and "Socratic Probe" as elements of a scar.
 
 ---
 
@@ -164,3 +188,4 @@ Plan comprehensive tests with reasonable balance for performance and dependency 
   - Are there code documentation standards that could be applied as part of Pillar 6 to direct the agent to document code in a standardized way, which can then be assembled in a code documentation tree by some documentation utility for the project being worked on?
 
 - [ ] **YOLO mode?**
+  - Is it possible to implement a mode that bypasses human confirmation, assuming approval for all gates, but which still thorougly evaluates and re-iterates if gates do not pass automatically?
