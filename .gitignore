@@ -32,7 +32,6 @@ Thumbs.db
 # Workflow Scratch & Ephemeral State
 .tmp/
 *.tmp
-<scratch>/
 *.log
 .workflow/config.json
 !.workflow/config.json.example

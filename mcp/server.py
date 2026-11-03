@@ -110,6 +110,17 @@ GATE_EVIDENCE_KEYS = {
     ("T75", "T80"): "humanLandingApproved",
 }
 
+REQUIRED_STATE_CARDS = {
+    ("T10", "T15"): "10_ticket.md",
+    ("T15", "T20"): "15_archaeology_receipt.md",
+    ("T20", "T30"): "20_plan_approved.md",
+    ("T30", "T40"): "20_plan_approved.md",
+    ("T40", "T45"): "40_critic_review.md",
+    ("T40", "T42"): "40_critic_review.md",
+    ("T45", "T50"): "45_review_approved.md",
+    ("T70", "T75"): "70_bot_triage.md",
+}
+
 
 def resolve_workspace_dir(arguments):
   ws = (arguments or {}).get("workspaceDir")
@@ -1552,6 +1563,17 @@ def handle_tools_list(request_id):
                           " humanPlanApproved or blockersCount"
                       ),
                   },
+                  "workspaceDir": {
+                      "type": "string",
+                      "description": "Optional project root directory",
+                  },
+                  "stateDir": {
+                      "type": "string",
+                      "description": (
+                          "Path to the state directory (defaults to"
+                          " .workflow/state inside workspaceDir)"
+                      ),
+                  },
               },
               "required": ["currentTarget", "nextTarget"],
           },
@@ -1747,6 +1769,23 @@ def handle_tools_call(request_id, tool_name, arguments):
             "BLOCKED: Critic reported 0 blockers. Route to T45"
             " (approved-review) instead of T42.",
         )
+
+    if arguments.get("workspaceDir") or arguments.get("stateDir"):
+      ws = resolve_workspace_dir(arguments)
+      raw_state_dir = arguments.get("stateDir", ".workflow/state")
+      state_dir = (
+          raw_state_dir
+          if os.path.isabs(raw_state_dir)
+          else os.path.join(ws, raw_state_dir)
+      )
+      if os.path.isdir(state_dir):
+        req_card = REQUIRED_STATE_CARDS.get((current, next_t))
+        if req_card and not os.path.isfile(os.path.join(state_dir, req_card)):
+          return _error_result(
+              request_id,
+              f"BLOCKED: Required state card '{req_card}' does not exist in"
+              f" '{state_dir}' for transition {current} -> {next_t}.",
+          )
 
     return {
         "jsonrpc": "2.0",
