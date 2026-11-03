@@ -32,7 +32,7 @@ CommitPhase   ::= !DeclareCommit ?AssertCommit !DeclarePush ?AssertPR ( ?AssertQ
 
 ```makefile
 # FLAT SYSTEM V rc.d MAKEFILE DAG (T00..T90 | make finish)
-.PHONY: finish land ready-to-land bot-quiescence push commit approved-review triaged-blockers adversarial-review implementation-diff approved-plan archaeology-verified ticket-assigned read-init-d
+.PHONY: finish land codified-scars-consolidated ready-to-land bot-quiescence push commit approved-review triaged-blockers adversarial-review implementation-diff approved-plan archaeology-verified ticket-assigned read-init-d
 
 finish: land codified-scars-consolidated
 	@echo "[Target 90] Update history ledger, push origin main, and mark 99_next_action.md COMPLETE..."
@@ -40,7 +40,7 @@ codified-scars-consolidated: land
 	@echo "[Orchestrator] Record human corrections and critic blockers in scar catalog..."
 land: ready-to-land human-landing-approval
 	@echo "[Target 80] gh pr merge, close issue, update default branch, delete branch..."
-ready-to-land: bot-quiescence human-landing-approval
+ready-to-land: bot-quiescence
 	@echo "[Target 75] Present CI assertions and 7-criteria policy table, then STOP..."
 bot-quiescence: push
 	@echo "[Target 70] Fork triage-worker: poll CI and bots (quiescence window) -> 70_bot_triage.md..."

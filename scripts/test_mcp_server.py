@@ -163,6 +163,61 @@ def run_test():
       assert not adv_ok["result"].get("isError")
       print("✔ MCP workflow_advance_target enforced DAG edges and human gates.")
 
+      # 5b. Advance target: on-disk state card enforcement
+      with tempfile.TemporaryDirectory() as tmp_state_ws:
+        tmp_state_dir = os.path.join(tmp_state_ws, ".workflow", "state")
+        os.makedirs(tmp_state_dir)
+
+        # Missing state card blocks transition
+        adv_no_card = send_rpc(
+            p,
+            {
+                "jsonrpc": "2.0",
+                "id": 80,
+                "method": "tools/call",
+                "params": {
+                    "name": "workflow_advance_target",
+                    "arguments": {
+                        "currentTarget": "T20",
+                        "nextTarget": "T30",
+                        "workspaceDir": tmp_state_ws,
+                        "evidence": {"humanPlanApproved": True},
+                    },
+                },
+            },
+        )
+        assert adv_no_card["result"]["isError"] is True
+        err_msg = adv_no_card["result"]["content"][0]["text"]
+        assert "20_plan_approved.md" in err_msg
+
+        # Present state card permits transition
+        with open(
+            os.path.join(tmp_state_dir, "20_plan_approved.md"),
+            "w",
+            encoding="utf-8",
+        ) as f:
+          f.write("# Plan Approved\n")
+
+        adv_with_card = send_rpc(
+            p,
+            {
+                "jsonrpc": "2.0",
+                "id": 81,
+                "method": "tools/call",
+                "params": {
+                    "name": "workflow_advance_target",
+                    "arguments": {
+                        "currentTarget": "T20",
+                        "nextTarget": "T30",
+                        "workspaceDir": tmp_state_ws,
+                        "evidence": {"humanPlanApproved": True},
+                    },
+                },
+            },
+        )
+        assert not adv_with_card["result"].get("isError")
+        print("✔ MCP workflow_advance_target verified on-disk state cards.")
+
       # 6. Verify tree with workspaceDir when server cwd is not a git repo
       with tempfile.TemporaryDirectory() as tmp_git_ws:
         subprocess.run(
