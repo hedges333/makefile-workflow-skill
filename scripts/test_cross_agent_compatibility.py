@@ -111,6 +111,95 @@ def validate_human_declaration_authority_and_pause_gates():
   return errors
 
 
+def validate_plan_artifact_lifecycle_and_demotion():
+  """Validates plan artifact lifecycle and demotion invariants (TEST-SCAR-PROC-103).
+
+  Verifies:
+  1. rules/AGENTS.md references SCAR-PROC-103.
+  2. rules/AGENTS.md specifies single fixed <brain>/plan.md mirroring.
+  3. rules/AGENTS.md specifies artifact demotion with UserFacing: false and RequestFeedback: false.
+  4. rules/AGENTS.md explicitly prohibits shell rm commands for artifact deletion.
+  5. rules/AGENTS.md specifies built-in write_file tool demotion.
+  6. rules/AGENTS.md guards against duplicate execution using 20_plan_approved.md.
+  7. rules/AGENTS.md specifies Overwrite: true and writing an approved tombstone body inside <brain>/plan.md.
+  8. skills/makefile-workflow/references/09_synthetic_scars_catalog.md indexes SCAR-PROC-103 pointing to scars/process.md.
+  9. skills/makefile-workflow/references/scars/process.md documents SCAR-PROC-103 with complete Four-Part Anatomy
+     (**Wound**:, **Trap**:, **Permanent Reflex**:, **Socratic Probe**:) and key invariants.
+  10. skills/makefile-workflow/SKILL.md preserves platform neutrality by not containing <brain> references.
+  """
+  errors = []
+
+  # 1. Antigravity rules (rules/AGENTS.md)
+  agents_md = "rules/AGENTS.md"
+  if not os.path.exists(agents_md):
+    errors.append(f"Missing {agents_md}")
+  else:
+    with open(agents_md, "r", encoding="utf-8") as f:
+      agents_text = f.read()
+
+    if "SCAR-PROC-103" not in agents_text:
+      errors.append(f"{agents_md} must reference SCAR-PROC-103")
+    if "<brain>/plan.md" not in agents_text:
+      errors.append(f"{agents_md} must specify single fixed '<brain>/plan.md' mirroring")
+    if "UserFacing: false" not in agents_text or "RequestFeedback: false" not in agents_text:
+      errors.append(f"{agents_md} must specify artifact demotion with UserFacing: false and RequestFeedback: false")
+    if "shell `rm`" not in agents_text and "shell rm" not in agents_text:
+      errors.append(f"{agents_md} must explicitly prohibit shell rm commands for artifact deletion")
+    if "write_file" not in agents_text or "built-in" not in agents_text:
+      errors.append(f"{agents_md} must specify built-in write_file tool demotion")
+    if "20_plan_approved.md" not in agents_text:
+      errors.append(f"{agents_md} must guard against duplicate execution using 20_plan_approved.md")
+    if "Overwrite: true" not in agents_text:
+      errors.append(f"{agents_md} must specify 'Overwrite: true' for plan artifact operations")
+    if "tombstone" not in agents_text.lower():
+      errors.append(f"{agents_md} must specify writing an approved tombstone body inside <brain>/plan.md")
+
+  # 2. Synthetic Scars Catalog Index
+  catalog_path = "skills/makefile-workflow/references/09_synthetic_scars_catalog.md"
+  if not os.path.exists(catalog_path):
+    errors.append(f"Missing {catalog_path}")
+  else:
+    with open(catalog_path, "r", encoding="utf-8") as f:
+      catalog_text = f.read()
+    if "SCAR-PROC-103" not in catalog_text:
+      errors.append(f"{catalog_path} must index SCAR-PROC-103")
+    if "scars/process.md" not in catalog_text or "SCAR-PROC-103" not in catalog_text:
+      errors.append(f"{catalog_path} must route SCAR-PROC-103 to scars/process.md")
+
+  # 3. Process Spoke Four-Part Anatomy & Key Invariants
+  process_spoke = "skills/makefile-workflow/references/scars/process.md"
+  if not os.path.exists(process_spoke):
+    errors.append(f"Missing {process_spoke}")
+  else:
+    with open(process_spoke, "r", encoding="utf-8") as f:
+      proc_text = f.read()
+
+    if "SCAR-PROC-103" not in proc_text:
+      errors.append(f"{process_spoke} must document SCAR-PROC-103")
+    else:
+      scar_section = proc_text.split("### SCAR-PROC-103")[1].split("### SCAR-")[0] if "### SCAR-PROC-103" in proc_text else ""
+      for field in ("Wound", "Trap", "Permanent Reflex", "Socratic Probe"):
+        if f"**{field}**:" not in scar_section:
+          errors.append(f"{process_spoke} SCAR-PROC-103 missing '**{field}**:'")
+      for invariant in ("<brain>/plan.md", "write_file", "UserFacing: false", "RequestFeedback: false", "20_plan_approved.md"):
+        if invariant not in scar_section:
+          errors.append(f"{process_spoke} SCAR-PROC-103 missing invariant '{invariant}'")
+      if "shell `rm`" not in scar_section and "shell rm" not in scar_section:
+        errors.append(f"{process_spoke} SCAR-PROC-103 missing shell rm invariant")
+
+  # 4. Platform Neutrality in SKILL.md
+  skill_md = "skills/makefile-workflow/SKILL.md"
+  if not os.path.exists(skill_md):
+    errors.append(f"Missing {skill_md}")
+  else:
+    with open(skill_md, "r", encoding="utf-8") as f:
+      skill_text = f.read()
+    if "<brain>" in skill_text or "<brain/" in skill_text:
+      errors.append(f"{skill_md} must preserve platform neutrality by not containing '<brain>' references")
+
+  return errors
+
+
 def validate():
   errors = []
 
@@ -698,21 +787,13 @@ def validate():
     if "socratic" not in s_text.lower() or "deliberation" not in s_text.lower():
       errors.append(f"{skill_md} Target 20 must instruct supervisor to evaluate Socratic pre-planning questions")
 
-  # 13. Antigravity Plan Artifact Lifecycle & Demotion Rules (rules/AGENTS.md)
+  # 13. Antigravity Development Rules (rules/AGENTS.md)
   agents_md = "rules/AGENTS.md"
   if not os.path.exists(agents_md):
     errors.append(f"Missing {agents_md}")
   else:
     with open(agents_md) as f:
       a_text = f.read()
-    if "<brain>/plan.md" not in a_text:
-      errors.append(f"{agents_md} must reference single artifact '<brain>/plan.md'")
-    if "UserFacing: false" not in a_text or "RequestFeedback: false" not in a_text:
-      errors.append(f"{agents_md} must specify demotion with UserFacing: false and RequestFeedback: false")
-    if "20_plan_approved.md" not in a_text:
-      errors.append(f"{agents_md} must guard against duplicate execution using 20_plan_approved.md")
-    if "built-in" not in a_text or "shell `rm`" not in a_text and "shell rm" not in a_text:
-      errors.append(f"{agents_md} must specify built-in tool demotion without shell rm")
     if "prefer Dart over Python" not in a_text:
       errors.append(f"{agents_md} must specify preference for Dart over Python for scratch scripts")
     if "never attempt to install dart" not in a_text.lower():
@@ -738,7 +819,7 @@ def validate():
     if "socratic" not in a_text.lower() or "invariant audit" not in a_text.lower():
       errors.append(f"{agents_md} Section 1.1 must document Socratic pre-planning inquiry and invariant audit table")
     if not any("rules/AGENTS.md" in e for e in errors):
-      print(f"✔ Antigravity artifact lifecycle and demotion rules ({agents_md}) valid.")
+      print(f"✔ Antigravity development rules ({agents_md}) valid.")
 
   # 14. SimpleEnglish Companion Plugin Recommendation & Subagent Roles in README.md
   readme_path = "README.md"
@@ -941,6 +1022,12 @@ def validate():
   errors.extend(authority_errors)
   if not authority_errors:
     print("✔ Human declaration authority and pause gates (TEST-SCAR-PROC-102) verified across all 7 rule and adapter files.")
+
+  # Plan Artifact Lifecycle and Demotion (TEST-SCAR-PROC-103)
+  demotion_errors = validate_plan_artifact_lifecycle_and_demotion()
+  errors.extend(demotion_errors)
+  if not demotion_errors:
+    print("✔ Plan artifact lifecycle and demotion (TEST-SCAR-PROC-103) verified.")
 
   if errors:
     print(f"\n❌ Validation failed with {len(errors)} error(s):")

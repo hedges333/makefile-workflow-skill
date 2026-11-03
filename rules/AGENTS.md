@@ -6,7 +6,7 @@ These rules apply when the `makefile-workflow` plugin is active.
 
 The chat stream is the main presentation surface. The `ask_question` tool is an input prompt, not a display surface.
 
-### 1.1 Target 20 Plan Artifact Lifecycle in Antigravity
+### 1.1 Target 20 Plan Artifact Lifecycle in Antigravity (SCAR-PROC-103)
 
 Antigravity renders an interactive review panel for artifacts. Follow these rules for implementation plans:
 
