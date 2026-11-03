@@ -9,13 +9,14 @@ This repository uses the Makefile Workflow. Follow these rules for every coding 
 3. Read target files before you edit them, apply small edits, and favor object composition. If large datasets outgrow an ORM, encapsulate parameterized SQL or NoSQL queries behind repository methods.
 4. Point tests to isolated `*_test` databases, configured `database.testDatabases`, in-memory databases, or mock fixtures. If live versus test database names are unclear, ask the user first.
 5. Write failing unit tests before you write feature code, and run tests in the active subproject directory.
-6. Stop and wait for explicit user approval at all six pause gates:
+6. Stop and wait for explicit user approval at all six pause gates (`SCAR-PROC-102`):
    - Target 20: Plan approval.
    - Target 42: Blocker triage, when review finds blockers.
    - Target 45: Review sign-off.
    - Target 50: Commit approval.
    - Target 60: Push approval.
    - Target 75: Pull request merge approval.
+   Agents must never declare or approve gates themselves. Forbid agent self-approval.
 7. Run targeted subproject tests at Target 30, and run the full repository test suite at Target 50 and Target 75.
 8. Write documentation, commit messages, and pull request summaries in Simple English with short sentences and active voice.
 

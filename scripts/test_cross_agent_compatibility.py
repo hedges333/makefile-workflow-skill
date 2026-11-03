@@ -16,6 +16,101 @@ import re
 import sys
 
 
+def validate_human_declaration_authority_and_pause_gates():
+  """Validates human declaration authority and pause gates (TEST-SCAR-PROC-102).
+
+  Verifies:
+  1. All 6 human pause gates (Target 20, Target 42, Target 45, Target 50,
+     Target 60, Target 75) are present in rules/AGENTS.md,
+     skills/makefile-workflow/SKILL.md, CLAUDE.md, .cursorrules,
+     .cursor/rules/makefile-workflow.mdc, .github/copilot-instructions.md,
+     and adapters/chatgpt/instructions.md.
+  2. Agent self-declaration / self-approval is explicitly prohibited in each
+     rule and adapter file under SCAR-PROC-102.
+  3. SCAR-PROC-102 is indexed in the catalog and process spoke files.
+  """
+  errors = []
+  target_files = [
+      "rules/AGENTS.md",
+      "skills/makefile-workflow/SKILL.md",
+      "CLAUDE.md",
+      ".cursorrules",
+      ".cursor/rules/makefile-workflow.mdc",
+      ".github/copilot-instructions.md",
+      "adapters/chatgpt/instructions.md",
+  ]
+  required_gates = [
+      "Target 20",
+      "Target 42",
+      "Target 45",
+      "Target 50",
+      "Target 60",
+      "Target 75",
+  ]
+
+  for fpath in target_files:
+    if not os.path.exists(fpath):
+      errors.append(f"Missing {fpath}")
+      continue
+    with open(fpath, "r", encoding="utf-8") as f:
+      content = f.read()
+
+    # Check pause gates
+    for gate in required_gates:
+      if gate not in content:
+        errors.append(f"{fpath} missing required pause gate '{gate}'")
+
+    # Check SCAR-PROC-102 citation
+    if "SCAR-PROC-102" not in content:
+      errors.append(f"{fpath} must reference SCAR-PROC-102")
+
+    # Check explicit prohibition of self-approval / self-declaration
+    content_lower = content.lower()
+    has_prohibition = any(
+        term in content_lower
+        for term in (
+            "self-approval",
+            "self-declaration",
+            "declare or approve gates themselves",
+            "declare or approve gates yourself",
+            "approve their own",
+            "approve its own",
+        )
+    )
+    if not has_prohibition:
+      errors.append(
+          f"{fpath} must explicitly prohibit agent self-approval / self-declaration"
+      )
+
+  # Check reference catalog and category spoke
+  catalog_path = "skills/makefile-workflow/references/09_synthetic_scars_catalog.md"
+  if not os.path.exists(catalog_path):
+    errors.append(f"Missing {catalog_path}")
+  else:
+    with open(catalog_path, "r", encoding="utf-8") as f:
+      catalog_text = f.read()
+    if "SCAR-PROC-102" not in catalog_text:
+      errors.append(f"{catalog_path} must document SCAR-PROC-102")
+    if "Human Declaration Authority" not in catalog_text:
+      errors.append(f"{catalog_path} must index SCAR-PROC-102 Human Declaration Authority")
+
+  process_spoke = "skills/makefile-workflow/references/scars/process.md"
+  if not os.path.exists(process_spoke):
+    errors.append(f"Missing {process_spoke}")
+  else:
+    with open(process_spoke, "r", encoding="utf-8") as f:
+      proc_text = f.read()
+    if "SCAR-PROC-102" not in proc_text:
+      errors.append(f"{process_spoke} must document SCAR-PROC-102")
+    if "Human Declaration Authority" not in proc_text:
+      errors.append(f"{process_spoke} must document SCAR-PROC-102 Human Declaration Authority")
+    for field in ("Wound", "Trap", "Permanent Reflex", "Socratic Probe"):
+      if f"**{field}**:" not in proc_text:
+        errors.append(f"{process_spoke} SCAR-PROC-102 missing '**{field}**:'")
+
+  return errors
+
+
 def validate():
   errors = []
 
@@ -840,6 +935,12 @@ def validate():
       for token in expected_tokens:
         if token not in content:
           errors.append(f"{path} missing expected token '{token}' for local ticket disambiguation")
+
+  # Human Declaration Authority and Pause Gates (TEST-SCAR-PROC-102)
+  authority_errors = validate_human_declaration_authority_and_pause_gates()
+  errors.extend(authority_errors)
+  if not authority_errors:
+    print("✔ Human declaration authority and pause gates (TEST-SCAR-PROC-102) verified across all 7 rule and adapter files.")
 
   if errors:
     print(f"\n❌ Validation failed with {len(errors)} error(s):")
