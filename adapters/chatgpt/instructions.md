@@ -36,4 +36,8 @@ Move through these targets in dependency order:
 
 4. SIMPLE ENGLISH
 - Write documentation, plans, and commit messages in Simple English: short sentences, active voice, terms defined at first use, and no filler words.
+
+5. HUMAN PAUSE GATES AND DECLARATION AUTHORITY (SCAR-PROC-102)
+- Stop and wait for explicit user approval at all six pause gates: Target 20, Target 42, Target 45, Target 50, Target 60, and Target 75.
+- Agents must never declare or approve gates themselves under SCAR-PROC-102. Forbid agent self-approval.
 ```

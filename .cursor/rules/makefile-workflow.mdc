@@ -14,7 +14,7 @@ Follow these steps in order for every coding task:
 4. Write failing unit tests first. Point tests to isolated test databases, configured `database.testDatabases`, or mocks, never production data.
 5. Audit your diff against the Six Pillars: Intent, Verification (TDD, failure falsification, boundary limits), Architecture (including Gang of Four, Game Programming Patterns, and ORM versus parameterized query balance), Blast Radius (mandatory canary), Reviewer Defense (intentional non-changes, Simple English), and Immune Defenses & Crash Antibodies.
 6. Run formatters, linters, and the full test suite across all subprojects before you ask to commit.
-7. Never commit, push, or merge without explicit user approval in chat. Forbid `closes #` on local session commits.
+7. Stop and wait for explicit human approval at all six pause gates: Target 20 (plan), Target 42 (blocker triage), Target 45 (review), Target 50 (commit), Target 60 (push), and Target 75 (landing). Never declare or approve gates yourself under SCAR-PROC-102. Forbid agent self-approval. Forbid `closes #` on local session commits.
 8. Write documentation and pull request summaries in Simple English with short sentences and active voice.
 9. If `.workflow/config.json` or `~/.gemini/config/makefile-workflow.json` exists, read it to load user configuration.
 

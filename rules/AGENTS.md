@@ -25,12 +25,14 @@ Antigravity renders an interactive review panel for artifacts. Follow these rule
 13. Include Testing Strategy and Burden-Balance Analysis (`SCAR-TEST-11`): In Target 20 plans, disclose testing depth against speed and dependency constraints. Prohibit surface-only testing when hermetic boundary testing is feasible.
 14. Socratic Pre-Planning Inquiry and Invariant Audit: Before writing `.workflow/state/20_plan.md`, interrogate the solution with Socratic pre-planning inquiries. Include the mandatory Socratic Invariant Audit table in every plan artifact.
 
-### 1.2 Pause Gates and Question Prompts
+### 1.2 Pause Gates, Question Prompts, and Declaration Authority (SCAR-PROC-102)
 
-1. If the user must choose between two or more alternatives ($N \ge 2$), call `ask_question`.
-2. If a gate has one approval action ($N = 1$), do not call `ask_question`. Print the full proposal in chat with `file://` links and stop tool calls. This rule covers Review Approval (Target 45), Commit Approval (Target 50), Push Approval (Target 60), and Landing Approval (Target 75).
-3. Before you ask for a decision, print the full facts in the chat message.
-4. Add a `file://` markdown link for every file, diff, plan, or review card that you name.
+1. Enforce human declaration authority (`SCAR-PROC-102`): Stop and wait for explicit human approval at all six pause gates: Target 20 (plan), Target 42 (blocker triage), Target 45 (review), Target 50 (commit), Target 60 (push), and Target 75 (landing).
+2. Explicitly prohibit agent self-approval: Agents must never self-approve, self-declare, or bypass any pause gate.
+3. If the user must choose between two or more alternatives ($N \ge 2$), call `ask_question`.
+4. If a gate has one approval action ($N = 1$), do not call `ask_question`. Print the full proposal in chat with `file://` links and stop tool calls. This rule covers Blocker Triage (Target 42), Review Approval (Target 45), Commit Approval (Target 50), Push Approval (Target 60), and Landing Approval (Target 75).
+5. Before you ask for a decision, print the full facts in the chat message.
+6. Add a `file://` markdown link for every file, diff, plan, or review card that you name.
 
 ### 1.3 Ticket Disambiguation and Commit Protocol
 
