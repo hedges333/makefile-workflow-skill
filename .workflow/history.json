@@ -625,5 +625,24 @@
     "closes_issue": true,
     "tests_added": 30,
     "scars_earned": []
+  },
+  {
+    "id": "GH-35",
+    "issue_url": "https://github.com/hedges333/makefile-workflow-skill/issues/35",
+    "title": "Add TEST-SCAR-PROC-103: Comprehensive test for plan artifact demotion and lifecycle invariants",
+    "request": "Add comprehensive test TEST-SCAR-PROC-103 for plan artifact demotion and lifecycle invariants in test_cross_agent_compatibility.py, asserting single fixed plan file mirroring, built-in tool demotion, shell rm prohibition, and reliance on 20_plan_approved.md.",
+    "branch": "feat/35-test-plan-artifact-demotion",
+    "subprojects": [
+      "rules",
+      "scripts"
+    ],
+    "started_at": "2026-11-03T20:12:37Z",
+    "completed_at": "2026-11-03T21:21:58Z",
+    "commit_sha": "2592692",
+    "pr_number": 61,
+    "pr_url": "https://github.com/hedges333/makefile-workflow-skill/pull/61",
+    "closes_issue": true,
+    "tests_added": 10,
+    "scars_earned": []
   }
 ]
