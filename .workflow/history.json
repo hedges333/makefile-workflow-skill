@@ -584,5 +584,25 @@
     "closes_issue": true,
     "tests_added": 4,
     "scars_earned": []
+  },
+  {
+    "id": "GH-5",
+    "issue_url": "https://github.com/hedges333/makefile-workflow-skill/issues/5",
+    "title": "Verify on-disk state cards in workflow_advance_target and fix duplicate human-landing-approval prerequisite in SKILL.md DAG",
+    "request": "Strengthen the Makefile DAG in skills/makefile-workflow/SKILL.md and workflow_advance_target in mcp/server.py so workflow_advance_target checks physical state files on disk inside workspaceDir, the Makefile fixes duplicate human-landing-approval on ready-to-land and registers codified-scars-consolidated in .PHONY, and .gitignore removes <scratch>/.",
+    "branch": "feat/5-verify-state-cards-dag",
+    "subprojects": [
+      "mcp",
+      "scripts",
+      "skills"
+    ],
+    "started_at": "2026-11-02T21:25:00Z",
+    "completed_at": "2026-11-03T02:46:11Z",
+    "commit_sha": "c35da56",
+    "pr_number": 51,
+    "pr_url": "https://github.com/hedges333/makefile-workflow-skill/pull/51",
+    "closes_issue": true,
+    "tests_added": 2,
+    "scars_earned": []
   }
 ]
