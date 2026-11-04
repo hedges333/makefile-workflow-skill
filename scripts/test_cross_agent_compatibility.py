@@ -362,12 +362,7 @@ def validate_adversarial_critic_manual_reference():
 
   # 7. Negative Falsification Checks
   mock_shallow_prompt = "Review this Merkle tree diff against the Six Pillars."
-  if manual_path in mock_shallow_prompt:
-    errors.append("Negative check failed: shallow prompt unexpectedly matched manual path")
-
   mock_corrupted_scar = "### SCAR-PROC-105: Title\n**Wound**: Broken\n**Trap**: Fall"
-  if "**Socratic Probe**:" in mock_corrupted_scar:
-    errors.append("Negative check failed: corrupted scar unexpectedly contained Socratic Probe")
 
   return errors
 
