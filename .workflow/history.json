@@ -698,5 +698,27 @@
     "closes_issue": true,
     "tests_added": 1,
     "scars_earned": []
+  },
+  {
+    "id": "GH-23",
+    "issue_url": "https://github.com/hedges333/makefile-workflow-skill/issues/23",
+    "title": "Codify scar requiring supervisor to explicitly reference six pillars review manual when prompting adversarial-critic",
+    "request": "Formulate synthetic scar SCAR-PROC-105 requiring orchestrators/supervisors to explicitly include the reference path skills/makefile-workflow/references/04_six_pillars_adversarial_review.md when launching the adversarial-critic subagent",
+    "branch": "feat/23-explicit-six-pillars-critic-reference",
+    "subprojects": [
+      "rules",
+      "skills",
+      "scripts"
+    ],
+    "started_at": "2026-11-04T19:49:00Z",
+    "completed_at": "2026-11-04T20:28:00Z",
+    "commit_sha": "2296a85",
+    "pr_number": 68,
+    "pr_url": "https://github.com/hedges333/makefile-workflow-skill/pull/68",
+    "closes_issue": true,
+    "tests_added": 1,
+    "scars_earned": [
+      "SCAR-PROC-105: Explicit Six Pillars Review Manual Path in Adversarial Critic Dispatch"
+    ]
   }
 ]
