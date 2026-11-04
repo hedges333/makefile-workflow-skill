@@ -33,7 +33,7 @@ When running in an orchestrator that supports subagents, launch `adversarial-cri
 - **Tool Restrictions**: `enable_mcp_tools: false`, `enable_subagent_tools: false`.
 - **Cognitive Tiering**: Always assign high-capacity reasoning compute (`Model: "pro"`) so the critic catches subtle concurrency and logic defects.
 
-#### The Five Subagent Invariants:
+#### The Six Subagent Invariants:
 1. **Sequential Read-Before-Define Barrier (`SCAR-PROC-114`)**:
    Never invoke or define the critic in the same turn that reads this manual. Wait for the file read tool to return in Turn $t$ before calling `invoke_subagent` in Turn $t+1$. Calling both in parallel causes prompt hallucination.
 2. **Canonical Six-Pillar Headings & Blast Radius Canary**:
@@ -51,6 +51,8 @@ When running in an orchestrator that supports subagents, launch `adversarial-cri
    Finding an initial blocker does not excuse relaxing scrutiny on remaining paths. The critic must evaluate all added or modified state flags across all enclosing control structures. Never excuse a new defect because older code has similar defects.
 5. **Post-Compaction Rubric Anchoring in `00_governance.md` (`SCAR-PROC-121`)**:
    Context compaction can evict earlier instructions. Pin the six canonical headings verbatim inside `.workflow/state/00_governance.md` at Target 00. Re-read this manual if context compaction occurs before a subsequent review round.
+6. **Explicit Manual Reference in Dispatch Prompt (`SCAR-PROC-105`)**:
+   When launching `adversarial-critic`, the supervisor must explicitly pass `skills/makefile-workflow/references/04_six_pillars_adversarial_review.md` in the dispatch prompt. Omitting this explicit path leads to shallow prompts and superficial reviews.
 
 ### Tier 2: Ephemeral Generic Subagent (Baseline Multi-Agent Runtimes)
 If the runtime supports subagents but lacks specialized agent definitions, launch a generic read-only worker (`Role: "Adversarial Code Reviewer"`, `TypeName: "research"`, `Model: "pro"`). Package the full Six Pillars rubric and the `$APPROVED_TREE` hash directly inside the task prompt.

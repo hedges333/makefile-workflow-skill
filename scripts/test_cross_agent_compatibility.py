@@ -257,6 +257,121 @@ def validate_synthetic_scar_catalog_routing():
   return errors
 
 
+def validate_adversarial_critic_manual_reference():
+  """Validates explicit Six Pillars review manual path in critic dispatch (GH-23, SCAR-PROC-105).
+
+  Verifies:
+  1. rules/AGENTS.md mandates SCAR-PROC-105 and passing the explicit workspace path
+     skills/makefile-workflow/references/04_six_pillars_adversarial_review.md.
+  2. skills/makefile-workflow/SKILL.md Target 40 specifies passing
+     skills/makefile-workflow/references/04_six_pillars_adversarial_review.md
+     and cites SCAR-PROC-105.
+  3. skills/makefile-workflow/references/08_subagent_orchestration.md specifies
+     skills/makefile-workflow/references/04_six_pillars_adversarial_review.md in the critic prompt pattern
+     and cites SCAR-PROC-105.
+  4. skills/makefile-workflow/references/04_six_pillars_adversarial_review.md documents SCAR-PROC-105.
+  5. skills/makefile-workflow/references/scars/process.md documents SCAR-PROC-105 with
+     all Four-Part Anatomy sections non-empty.
+  6. skills/makefile-workflow/references/09_synthetic_scars_catalog.md routes SCAR-PROC-105 to scars/process.md.
+  7. Negative falsification:
+     - Prompts omitting the explicit manual path trigger validation errors.
+     - Corrupted scar entries missing Four-Part Anatomy trigger validation errors.
+  """
+  errors = []
+  manual_path = "skills/makefile-workflow/references/04_six_pillars_adversarial_review.md"
+
+  # 1. rules/AGENTS.md
+  agents_rel = "rules/AGENTS.md"
+  agents_path = repo_path(agents_rel)
+  if not os.path.exists(agents_path):
+    errors.append(f"Missing {agents_rel}")
+  else:
+    with open(agents_path, "r", encoding="utf-8") as f:
+      agents_text = f.read()
+    if "SCAR-PROC-105" not in agents_text:
+      errors.append(f"{agents_rel} must document SCAR-PROC-105")
+    if manual_path not in agents_text:
+      errors.append(f"{agents_rel} must mandate explicit manual path '{manual_path}' for critic dispatch")
+
+  # 2. skills/makefile-workflow/SKILL.md
+  skill_rel = "skills/makefile-workflow/SKILL.md"
+  skill_path = repo_path(skill_rel)
+  if not os.path.exists(skill_path):
+    errors.append(f"Missing {skill_rel}")
+  else:
+    with open(skill_path, "r", encoding="utf-8") as f:
+      skill_text = f.read()
+    if "SCAR-PROC-105" not in skill_text:
+      errors.append(f"{skill_rel} must cite SCAR-PROC-105")
+    if manual_path not in skill_text:
+      errors.append(f"{skill_rel} Target 40 must specify explicit manual path '{manual_path}'")
+
+  # 3. skills/makefile-workflow/references/08_subagent_orchestration.md
+  ref_08_rel = "skills/makefile-workflow/references/08_subagent_orchestration.md"
+  ref_08_path = repo_path(ref_08_rel)
+  if not os.path.exists(ref_08_path):
+    errors.append(f"Missing {ref_08_rel}")
+  else:
+    with open(ref_08_path, "r", encoding="utf-8") as f:
+      r08_text = f.read()
+    if "SCAR-PROC-105" not in r08_text:
+      errors.append(f"{ref_08_rel} must cite SCAR-PROC-105")
+    if manual_path not in r08_text:
+      errors.append(f"{ref_08_rel} critic prompt pattern must include explicit manual path '{manual_path}'")
+
+  # 4. skills/makefile-workflow/references/04_six_pillars_adversarial_review.md
+  ref_04_rel = "skills/makefile-workflow/references/04_six_pillars_adversarial_review.md"
+  ref_04_path = repo_path(ref_04_rel)
+  if not os.path.exists(ref_04_path):
+    errors.append(f"Missing {ref_04_rel}")
+  else:
+    with open(ref_04_path, "r", encoding="utf-8") as f:
+      r04_text = f.read()
+    if "SCAR-PROC-105" not in r04_text:
+      errors.append(f"{ref_04_rel} must document SCAR-PROC-105")
+
+  # 5. skills/makefile-workflow/references/scars/process.md
+  proc_rel = "skills/makefile-workflow/references/scars/process.md"
+  proc_path = repo_path(proc_rel)
+  if not os.path.exists(proc_path):
+    errors.append(f"Missing {proc_rel}")
+  else:
+    with open(proc_path, "r", encoding="utf-8") as f:
+      proc_text = f.read()
+    if "### SCAR-PROC-105" not in proc_text:
+      errors.append(f"{proc_rel} must document SCAR-PROC-105")
+    else:
+      scar_section = proc_text.split("### SCAR-PROC-105")[1].split("### SCAR-")[0]
+      for field in ("Wound", "Trap", "Permanent Reflex", "Socratic Probe"):
+        field_match = re.search(rf"\*\*{re.escape(field)}\*\*:\s*([^\n]+)", scar_section)
+        if not field_match or not field_match.group(1).strip():
+          errors.append(f"{proc_rel} SCAR-PROC-105 missing non-empty '**{field}**:'")
+      if manual_path not in scar_section:
+        errors.append(f"{proc_rel} SCAR-PROC-105 must cite '{manual_path}' in Permanent Reflex")
+
+  # 6. skills/makefile-workflow/references/09_synthetic_scars_catalog.md
+  catalog_rel = "skills/makefile-workflow/references/09_synthetic_scars_catalog.md"
+  catalog_path = repo_path(catalog_rel)
+  if not os.path.exists(catalog_path):
+    errors.append(f"Missing {catalog_rel}")
+  else:
+    with open(catalog_path, "r", encoding="utf-8") as f:
+      catalog_text = f.read()
+    if not check_scar_catalog_routing(catalog_text, "SCAR-PROC-105", "process.md"):
+      errors.append(f"{catalog_rel} must route SCAR-PROC-105 to scars/process.md")
+
+  # 7. Negative Falsification Checks
+  mock_shallow_prompt = "Review this Merkle tree diff against the Six Pillars."
+  if manual_path in mock_shallow_prompt:
+    errors.append("Negative check failed: shallow prompt unexpectedly matched manual path")
+
+  mock_corrupted_scar = "### SCAR-PROC-105: Title\n**Wound**: Broken\n**Trap**: Fall"
+  if "**Socratic Probe**:" in mock_corrupted_scar:
+    errors.append("Negative check failed: corrupted scar unexpectedly contained Socratic Probe")
+
+  return errors
+
+
 def validate_diagnostic_path_formatting():
   """Validates standardized diagnostic relative path formatting (GH-63).
 
@@ -738,8 +853,8 @@ def validate():
       if r09_text and not check_scar_catalog_routing(r09_text, scar_id, sf):
         errors.append(f"{ref_09_rel} Master Routing Table must strictly route {scar_id} to scars/{sf}")
 
-  if total_scars_found != 28:
-    errors.append(f"Expected 28 synthetic scars across category spokes, found {total_scars_found}")
+  if total_scars_found != 29:
+    errors.append(f"Expected 29 synthetic scars across category spokes, found {total_scars_found}")
 
   testing_spoke_rel = os.path.join(scars_dir_rel, "testing.md")
   testing_spoke = repo_path(testing_spoke_rel)
@@ -1273,6 +1388,12 @@ def validate():
   errors.extend(routing_errors)
   if not routing_errors:
     print("✔ Strict synthetic scar catalog routing (GH-59, SCAR-TOOL-15) verified.")
+
+  # Adversarial Critic Manual Reference Invariants (GH-23, SCAR-PROC-105)
+  critic_ref_errors = validate_adversarial_critic_manual_reference()
+  errors.extend(critic_ref_errors)
+  if not critic_ref_errors:
+    print("✔ Explicit Six Pillars manual reference in critic dispatch (GH-23, SCAR-PROC-105) verified.")
 
   # Diagnostic Path Formatting (GH-63)
   path_formatting_errors = validate_diagnostic_path_formatting()

@@ -45,6 +45,14 @@ To prevent accidental GitHub issue closures, distinguish local session tasks fro
 5. On local session commits, write `Ticket: LOCAL-<N>`.
 6. Never write `closes #<N>`, `Closes #<N>`, or bare `#<N>` in local commit messages.
 
+### 1.4 Explicit Six Pillars Manual Path in Critic Dispatch (SCAR-PROC-105)
+
+When launching the `adversarial-critic` subagent at Target 40:
+
+1. Always include the explicit workspace path `skills/makefile-workflow/references/04_six_pillars_adversarial_review.md` in the dispatch prompt.
+2. Instruct the subagent to audit the diff against that manual and format findings under the canonical six headings.
+3. Never substitute an informal prompt summary for the explicit manual reference.
+
 ## 2. Production Data Protection Rules
 
 Never connect tests or agent commands to live systems.
