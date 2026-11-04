@@ -644,5 +644,23 @@
     "closes_issue": true,
     "tests_added": 10,
     "scars_earned": []
+  },
+  {
+    "id": "GH-60",
+    "issue_url": "https://github.com/hedges333/makefile-workflow-skill/issues/60",
+    "title": "Resolve target file paths relative to REPO_ROOT in test_cross_agent_compatibility.py",
+    "request": "Define canonical REPO_ROOT and resolve target file paths relative to REPO_ROOT in test_cross_agent_compatibility.py to permit execution from arbitrary working directories",
+    "branch": "feat/60-repo-root-path-resolution",
+    "subprojects": [
+      "scripts"
+    ],
+    "started_at": "2026-11-04T16:33:46Z",
+    "completed_at": "2026-11-04T18:20:07Z",
+    "commit_sha": "0028e99",
+    "pr_number": 64,
+    "pr_url": "https://github.com/hedges333/makefile-workflow-skill/pull/64",
+    "closes_issue": true,
+    "tests_added": 1,
+    "scars_earned": []
   }
 ]
