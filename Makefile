@@ -4,7 +4,7 @@ PLUGIN_NAME = makefile-workflow
 INSTALL_DIR = $(HOME)/.gemini/config/plugins/$(PLUGIN_NAME)
 PYTHON ?= python3
 
-.PHONY: all validate install uninstall test test-static test-safe-copy test-env-preflight test-mcp test-compat test-hooks help
+.PHONY: all validate install uninstall test test-static test-safe-copy test-env-preflight test-signal-trap test-mcp test-compat test-hooks help
 
 all: validate test
 
@@ -15,6 +15,7 @@ help:
 	@echo "  make test-static - Run pre-flight structural static analysis"
 	@echo "  make test-safe-copy - Test safe cross-user file promotion (SCAR-SYS-05)"
 	@echo "  make test-env-preflight - Test native runtime environment path pre-flight (SCAR-SYS-06)"
+	@echo "  make test-signal-trap - Test POSIX signal trapping and worker cleanup (SCAR-SYS-07)"
 	@echo "  make test-mcp    - Test Model Context Protocol (MCP) server over stdio"
 	@echo "  make test-compat - Check Claude, Cursor, Copilot, and ChatGPT adapters"
 	@echo "  make test-hooks  - Test SessionStart and PreToolUse hook scripts"
@@ -42,6 +43,10 @@ test-env-preflight:
 	@echo "Testing native runtime environment path pre-flight..."
 	@$(PYTHON) scripts/test_env_preflight.py -v
 
+test-signal-trap:
+	@echo "Testing POSIX signal trapping and worker cleanup..."
+	@$(PYTHON) scripts/test_signal_trap.py -v
+
 test-mcp:
 	@echo "Testing MCP server JSON-RPC protocol..."
 	@$(PYTHON) scripts/test_mcp_server.py
@@ -54,7 +59,7 @@ test-hooks:
 	@echo "Testing SessionStart and PreToolUse hooks..."
 	@$(PYTHON) scripts/test_hooks.py
 
-test: test-static test-safe-copy test-env-preflight test-compat test-mcp test-hooks
+test: test-static test-safe-copy test-env-preflight test-signal-trap test-compat test-mcp test-hooks
 	@echo "Testing file structure..."
 	@test -f plugin.json || (echo "Missing plugin.json" && exit 1)
 	@test -f hooks.json || (echo "Missing hooks.json" && exit 1)

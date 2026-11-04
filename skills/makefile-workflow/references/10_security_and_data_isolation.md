@@ -66,3 +66,13 @@ Native compiled extensions call C `getenv()` directly and fail catastrophically 
 2. Verify that each directory exists and possesses write permissions before process startup.
 3. Use `scripts/env_preflight.py` to validate paths and sanitize environment variables.
 4. If a directory is missing, replace it with a verified fallback path such as `tempfile.gettempdir()`.
+
+## 7. POSIX Signal Trapping for Long-Running Workers (`SCAR-SYS-07`)
+
+Long-running workers and daemons must catch termination signals to release lockfiles and system resources:
+
+1. When running background workers or daemons, trap POSIX termination signals: `SIGTERM` and `SIGINT`.
+2. Do not rely solely on standard `try ... finally` or `atexit` handlers, as POSIX signals bypass them unless explicitly trapped.
+3. Use `scripts/signal_trap.py` with `SignalTrap` to register signal handlers and cleanup callbacks.
+4. Execute cleanup callbacks in reverse registration order (LIFO), and isolate exceptions so one failing callback does not halt remaining cleanups.
+5. Register lockfile paths with `register_lockfile` to ensure automatic file removal upon termination signal or context exit.

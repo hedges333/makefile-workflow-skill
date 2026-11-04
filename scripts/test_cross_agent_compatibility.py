@@ -367,6 +367,142 @@ def validate_adversarial_critic_manual_reference():
   return errors
 
 
+def validate_posix_signal_trapping():
+  """Validates POSIX signal trapping invariants (GH-24, SCAR-SYS-07).
+
+  Verifies:
+  1. skills/makefile-workflow/references/scars/system_and_os.md documents
+     SCAR-SYS-07 with complete Four-Part Anatomy and invariants (SIGTERM, SIGINT,
+     SignalTrap, LIFO, lockfile).
+  2. skills/makefile-workflow/references/09_synthetic_scars_catalog.md routes
+     SCAR-SYS-07 strictly to scars/system_and_os.md.
+  3. skills/makefile-workflow/references/10_security_and_data_isolation.md
+     Section 7 documents SCAR-SYS-07 and POSIX signal trapping.
+  4. rules/AGENTS.md Section 2 documents SCAR-SYS-07 and SignalTrap.
+  5. All 5 adapters (CLAUDE.md, .cursorrules, .cursor/rules/makefile-workflow.mdc,
+     .github/copilot-instructions.md, adapters/chatgpt/instructions.md) document
+     SCAR-SYS-07.
+  6. Makefile defines test-signal-trap target and includes it in test prerequisites.
+  7. scripts/signal_trap.py and scripts/test_signal_trap.py exist.
+  8. Negative falsification:
+     - Missing Four-Part Anatomy fields or corrupted text triggers errors.
+     - Misrouted catalog table rows trigger errors.
+  """
+  errors = []
+
+  sys_spoke_rel = "skills/makefile-workflow/references/scars/system_and_os.md"
+  sys_spoke = repo_path(sys_spoke_rel)
+  if not os.path.exists(sys_spoke):
+    errors.append(f"Missing {sys_spoke_rel}")
+  else:
+    with open(sys_spoke, "r", encoding="utf-8") as f:
+      sys_text = f.read()
+    if "SCAR-SYS-07" not in sys_text:
+      errors.append(f"{sys_spoke_rel} must document SCAR-SYS-07")
+    else:
+      scar_section = (
+          sys_text.split("### SCAR-SYS-07")[1].split("### SCAR-")[0]
+          if "### SCAR-SYS-07" in sys_text
+          else ""
+      )
+      for field in ("Wound", "Trap", "Permanent Reflex", "Socratic Probe"):
+        if f"**{field}**:" not in scar_section:
+          errors.append(f"{sys_spoke_rel} SCAR-SYS-07 missing '**{field}**:'")
+      for invariant in ("SIGTERM", "SIGINT", "SignalTrap", "LIFO", "lockfile"):
+        if invariant.lower() not in scar_section.lower():
+          errors.append(
+              f"{sys_spoke_rel} SCAR-SYS-07 missing invariant '{invariant}'"
+          )
+
+  cat_rel = "skills/makefile-workflow/references/09_synthetic_scars_catalog.md"
+  cat_path = repo_path(cat_rel)
+  if not os.path.exists(cat_path):
+    errors.append(f"Missing {cat_rel}")
+  else:
+    with open(cat_path, "r", encoding="utf-8") as f:
+      cat_text = f.read()
+    if "SCAR-SYS-07" not in cat_text:
+      errors.append(f"{cat_rel} must index SCAR-SYS-07")
+    if not check_scar_catalog_routing(cat_text, "SCAR-SYS-07", "system_and_os.md"):
+      errors.append(
+          f"{cat_rel} must route SCAR-SYS-07 to scars/system_and_os.md"
+      )
+
+  sec_rel = (
+      "skills/makefile-workflow/references/10_security_and_data_isolation.md"
+  )
+  sec_path = repo_path(sec_rel)
+  if not os.path.exists(sec_path):
+    errors.append(f"Missing {sec_rel}")
+  else:
+    with open(sec_path, "r", encoding="utf-8") as f:
+      sec_text = f.read()
+    if "SCAR-SYS-07" not in sec_text:
+      errors.append(f"{sec_rel} must document SCAR-SYS-07")
+    if "POSIX Signal Trapping" not in sec_text:
+      errors.append(f"{sec_rel} must include section on POSIX Signal Trapping")
+
+  agents_rel = "rules/AGENTS.md"
+  agents_path = repo_path(agents_rel)
+  if not os.path.exists(agents_path):
+    errors.append(f"Missing {agents_rel}")
+  else:
+    with open(agents_path, "r", encoding="utf-8") as f:
+      agents_text = f.read()
+    if "SCAR-SYS-07" not in agents_text:
+      errors.append(f"{agents_rel} must reference SCAR-SYS-07")
+    if "SignalTrap" not in agents_text:
+      errors.append(f"{agents_rel} must mention SignalTrap under SCAR-SYS-07")
+
+  for adapter_rel in [
+      "CLAUDE.md",
+      ".cursorrules",
+      ".cursor/rules/makefile-workflow.mdc",
+      ".github/copilot-instructions.md",
+      "adapters/chatgpt/instructions.md",
+  ]:
+    adapter_path = repo_path(adapter_rel)
+    if not os.path.exists(adapter_path):
+      errors.append(f"Missing {adapter_rel}")
+    else:
+      with open(adapter_path, "r", encoding="utf-8") as f:
+        adapter_text = f.read()
+      if "SCAR-SYS-07" not in adapter_text:
+        errors.append(f"{adapter_rel} must document SCAR-SYS-07")
+
+  mk_rel = "Makefile"
+  mk_path = repo_path(mk_rel)
+  if not os.path.exists(mk_path):
+    errors.append(f"Missing {mk_rel}")
+  else:
+    with open(mk_path, "r", encoding="utf-8") as f:
+      mk_text = f.read()
+    if "test-signal-trap:" not in mk_text:
+      errors.append(f"{mk_rel} must define 'test-signal-trap:' target")
+    if "test-signal-trap" not in mk_text.split("test:")[1].split("\n")[0]:
+      errors.append(
+          f"{mk_rel} 'test:' target must list 'test-signal-trap' prerequisite"
+      )
+
+  for script_rel in ["scripts/signal_trap.py", "scripts/test_signal_trap.py"]:
+    script_path = repo_path(script_rel)
+    if not os.path.exists(script_path):
+      errors.append(f"Missing {script_rel}")
+
+  # 8. Negative Falsification Checks
+  mock_corrupted_spoke = "### SCAR-SYS-07: Broken\n**Wound**: Foo"
+  if "**Trap**:" in mock_corrupted_spoke:
+    errors.append("Falsification failed: corrupted spoke should not have Trap")
+  mock_misrouted = (
+      "| `SCAR-SYS-07` | Signal | System & OS |"
+      " [`scars/process.md`](./scars/process.md) |"
+  )
+  if check_scar_catalog_routing(mock_misrouted, "SCAR-SYS-07", "system_and_os.md"):
+    errors.append("Falsification failed: misrouted catalog line was accepted")
+
+  return errors
+
+
 def validate_diagnostic_path_formatting():
   """Validates standardized diagnostic relative path formatting (GH-63).
 
@@ -797,6 +933,8 @@ def validate():
       errors.append(f"{ref_09_rel} must document SCAR-SYS-05")
     if "SCAR-SYS-06" not in r09_text:
       errors.append(f"{ref_09_rel} must document SCAR-SYS-06")
+    if "SCAR-SYS-07" not in r09_text:
+      errors.append(f"{ref_09_rel} must document SCAR-SYS-07")
     if "SCAR-TEST-11" not in r09_text:
       errors.append(f"{ref_09_rel} must document SCAR-TEST-11")
     if "Hub-and-Spoke" not in r09_text and "Master Routing" not in r09_text and "Master Index" not in r09_text:
@@ -848,8 +986,8 @@ def validate():
       if r09_text and not check_scar_catalog_routing(r09_text, scar_id, sf):
         errors.append(f"{ref_09_rel} Master Routing Table must strictly route {scar_id} to scars/{sf}")
 
-  if total_scars_found != 29:
-    errors.append(f"Expected 29 synthetic scars across category spokes, found {total_scars_found}")
+  if total_scars_found != 30:
+    errors.append(f"Expected 30 synthetic scars across category spokes, found {total_scars_found}")
 
   testing_spoke_rel = os.path.join(scars_dir_rel, "testing.md")
   testing_spoke = repo_path(testing_spoke_rel)
@@ -876,6 +1014,10 @@ def validate():
       errors.append(f"{system_spoke_rel} must document SCAR-SYS-06")
     if "TMPDIR" not in sys_text or "validate_runtime_path" not in sys_text:
       errors.append(f"{system_spoke_rel} must document TMPDIR and validate_runtime_path for SCAR-SYS-06")
+    if "SCAR-SYS-07" not in sys_text:
+      errors.append(f"{system_spoke_rel} must document SCAR-SYS-07")
+    if "SIGTERM" not in sys_text or "SignalTrap" not in sys_text:
+      errors.append(f"{system_spoke_rel} must document SIGTERM and SignalTrap for SCAR-SYS-07")
 
   # 11c. Full Language Name Polyglot Scars (dart_flutter.md)
   dart_guide_rel = "skills/makefile-workflow/references/polyglot/dart_flutter.md"
@@ -1083,6 +1225,8 @@ def validate():
       errors.append(f"{ref_10_rel} Section 5 must document SCAR-SYS-05 and cross-user file promotion")
     if "SCAR-SYS-06" not in r10_text or "TMPDIR" not in r10_text:
       errors.append(f"{ref_10_rel} Section 6 must document SCAR-SYS-06 and native runtime environment path pre-flight")
+    if "SCAR-SYS-07" not in r10_text or "SignalTrap" not in r10_text:
+      errors.append(f"{ref_10_rel} Section 7 must document SCAR-SYS-07 and POSIX signal trapping")
 
   # 12. SKILL.md Single-Page Size Ceiling (SCAR-PROC-99)
   skill_rel = "skills/makefile-workflow/SKILL.md"
@@ -1146,6 +1290,8 @@ def validate():
       errors.append(f"{agents_rel} Section 2 must document SCAR-SYS-05 cross-user file promotion")
     if "SCAR-SYS-06" not in a_text or "validate_runtime_path" not in a_text and "TMPDIR" not in a_text:
       errors.append(f"{agents_rel} Section 2 must document SCAR-SYS-06 native runtime environment path pre-flight")
+    if "SCAR-SYS-07" not in a_text or "SignalTrap" not in a_text:
+      errors.append(f"{agents_rel} Section 2 must document SCAR-SYS-07 POSIX signal trapping")
     if "SCAR-TEST-11" not in a_text or "burden-balance" not in a_text.lower() and "burden balance" not in a_text.lower():
       errors.append(f"{agents_rel} Section 1.1 must document SCAR-TEST-11 testing strategy and burden-balance analysis")
     if "socratic" not in a_text.lower() or "invariant audit" not in a_text.lower():
@@ -1389,6 +1535,12 @@ def validate():
   errors.extend(critic_ref_errors)
   if not critic_ref_errors:
     print("✔ Explicit Six Pillars manual reference in critic dispatch (GH-23, SCAR-PROC-105) verified.")
+
+  # POSIX Signal Trapping Invariants (GH-24, SCAR-SYS-07)
+  signal_trap_errors = validate_posix_signal_trapping()
+  errors.extend(signal_trap_errors)
+  if not signal_trap_errors:
+    print("✔ POSIX signal trapping invariants (GH-24, SCAR-SYS-07) verified.")
 
   # Diagnostic Path Formatting (GH-63)
   path_formatting_errors = validate_diagnostic_path_formatting()

@@ -33,6 +33,7 @@ Move through these targets in dependency order:
 - Read target files before you edit them.
 - Apply small edits that solve the active ticket.
 - Do not fix unrelated issues during a ticket. Note them for a separate task.
+- Intercept POSIX signals (SIGTERM / SIGINT) in long-running workers and clean up lockfiles under SCAR-SYS-07.
 
 4. SIMPLE ENGLISH
 - Write documentation, plans, and commit messages in Simple English: short sentences, active voice, terms defined at first use, and no filler words.
