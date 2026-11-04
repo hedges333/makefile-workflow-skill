@@ -680,5 +680,23 @@
     "closes_issue": true,
     "tests_added": 1,
     "scars_earned": []
+  },
+  {
+    "id": "GH-59",
+    "issue_url": "https://github.com/hedges333/makefile-workflow-skill/issues/59",
+    "title": "Strict table row regex matching for synthetic scar catalog routing in compatibility tests",
+    "request": "Implement line-anchored Markdown table row regex matching in test_cross_agent_compatibility.py to verify that all 28 universal synthetic scars strictly route to their designated domain spoke files in 09_synthetic_scars_catalog.md, eliminating loose unanchored substring checks",
+    "branch": "feat/59-strict-scar-catalog-routing",
+    "subprojects": [
+      "scripts"
+    ],
+    "started_at": "2026-11-04T19:07:00Z",
+    "completed_at": "2026-11-04T19:40:01Z",
+    "commit_sha": "282a5c8",
+    "pr_number": 67,
+    "pr_url": "https://github.com/hedges333/makefile-workflow-skill/pull/67",
+    "closes_issue": true,
+    "tests_added": 1,
+    "scars_earned": []
   }
 ]
