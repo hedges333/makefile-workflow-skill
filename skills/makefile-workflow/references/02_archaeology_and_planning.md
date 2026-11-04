@@ -44,6 +44,7 @@ Include this audit table in every `.workflow/state/20_plan.md`:
 | **Fail-Fast Targeted Loops** | Which exact subproject test command runs in tight iteration with fail-fast flags (`-v -x`) before full sweeps? | List the exact command with `-v -x` flags. |
 | **Hermetic Test Isolation** | Can every test run in memory or against mock fixtures without live socket or database calls? | State the fixture strategy and temporary directory path. |
 | **Existing Test Modification** | If any existing test is altered, why does this modification not mask a regression? | State the semantic reason, or note that zero existing tests change. |
+| **Comprehensive Coverage** | Do new tests model the desired behavior of the new feature or bug fix? | State the ways that new tests will comprehensively cover the requested change. |
 | **Minimal Scoped Edits** | What files will remain untouched, and how are unrelated defects quarantined? | List untouched modules and verify ticket scope boundaries. |
 
 ### 2.3 Required Plan Disclosures
