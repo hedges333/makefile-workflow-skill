@@ -720,5 +720,27 @@
     "scars_earned": [
       "SCAR-PROC-105: Explicit Six Pillars Review Manual Path in Adversarial Critic Dispatch"
     ]
+  },
+  {
+    "id": "GH-24",
+    "issue_url": "https://github.com/hedges333/makefile-workflow-skill/issues/24",
+    "title": "Codify SCAR-SYS-07: POSIX Signal Trapping for Long-Running Workers (SIGTERM / SIGINT)",
+    "request": "Codify SCAR-SYS-07 in synthetic scars catalog, reference manuals, agent rules, and adapters. Implement reusable SignalTrap utility, unit tests, and Makefile integration.",
+    "branch": "feat/24-posix-signal-trapping-workers",
+    "subprojects": [
+      "rules",
+      "skills",
+      "scripts"
+    ],
+    "started_at": "2026-11-04T20:47:00Z",
+    "completed_at": "2026-11-04T21:31:00Z",
+    "commit_sha": "4989f6b",
+    "pr_number": 71,
+    "pr_url": "https://github.com/hedges333/makefile-workflow-skill/pull/71",
+    "closes_issue": true,
+    "tests_added": 12,
+    "scars_earned": [
+      "SCAR-SYS-07: POSIX Signal Trapping for Long-Running Workers (SIGTERM / SIGINT)"
+    ]
   }
 ]
