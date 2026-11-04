@@ -13,7 +13,16 @@ Verifies the configuration files, manifests, and rules for:
 import json
 import os
 import re
+import subprocess
 import sys
+import tempfile
+
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def repo_path(*parts):
+  """Resolves path relative to REPO_ROOT."""
+  return os.path.normpath(os.path.join(REPO_ROOT, *parts))
 
 
 def validate_human_declaration_authority_and_pause_gates():
@@ -49,10 +58,11 @@ def validate_human_declaration_authority_and_pause_gates():
   ]
 
   for fpath in target_files:
-    if not os.path.exists(fpath):
+    full_fpath = repo_path(fpath)
+    if not os.path.exists(full_fpath):
       errors.append(f"Missing {fpath}")
       continue
-    with open(fpath, "r", encoding="utf-8") as f:
+    with open(full_fpath, "r", encoding="utf-8") as f:
       content = f.read()
 
     # Check pause gates
@@ -83,30 +93,32 @@ def validate_human_declaration_authority_and_pause_gates():
       )
 
   # Check reference catalog and category spoke
-  catalog_path = "skills/makefile-workflow/references/09_synthetic_scars_catalog.md"
+  catalog_rel = "skills/makefile-workflow/references/09_synthetic_scars_catalog.md"
+  catalog_path = repo_path(catalog_rel)
   if not os.path.exists(catalog_path):
-    errors.append(f"Missing {catalog_path}")
+    errors.append(f"Missing {catalog_rel}")
   else:
     with open(catalog_path, "r", encoding="utf-8") as f:
       catalog_text = f.read()
     if "SCAR-PROC-102" not in catalog_text:
-      errors.append(f"{catalog_path} must document SCAR-PROC-102")
+      errors.append(f"{catalog_rel} must document SCAR-PROC-102")
     if "Human Declaration Authority" not in catalog_text:
-      errors.append(f"{catalog_path} must index SCAR-PROC-102 Human Declaration Authority")
+      errors.append(f"{catalog_rel} must index SCAR-PROC-102 Human Declaration Authority")
 
-  process_spoke = "skills/makefile-workflow/references/scars/process.md"
+  process_spoke_rel = "skills/makefile-workflow/references/scars/process.md"
+  process_spoke = repo_path(process_spoke_rel)
   if not os.path.exists(process_spoke):
-    errors.append(f"Missing {process_spoke}")
+    errors.append(f"Missing {process_spoke_rel}")
   else:
     with open(process_spoke, "r", encoding="utf-8") as f:
       proc_text = f.read()
     if "SCAR-PROC-102" not in proc_text:
-      errors.append(f"{process_spoke} must document SCAR-PROC-102")
+      errors.append(f"{process_spoke_rel} must document SCAR-PROC-102")
     if "Human Declaration Authority" not in proc_text:
-      errors.append(f"{process_spoke} must document SCAR-PROC-102 Human Declaration Authority")
+      errors.append(f"{process_spoke_rel} must document SCAR-PROC-102 Human Declaration Authority")
     for field in ("Wound", "Trap", "Permanent Reflex", "Socratic Probe"):
       if f"**{field}**:" not in proc_text:
-        errors.append(f"{process_spoke} SCAR-PROC-102 missing '**{field}**:'")
+        errors.append(f"{process_spoke_rel} SCAR-PROC-102 missing '**{field}**:'")
 
   return errors
 
@@ -130,81 +142,110 @@ def validate_plan_artifact_lifecycle_and_demotion():
   errors = []
 
   # 1. Antigravity rules (rules/AGENTS.md)
-  agents_md = "rules/AGENTS.md"
+  agents_rel = "rules/AGENTS.md"
+  agents_md = repo_path(agents_rel)
   if not os.path.exists(agents_md):
-    errors.append(f"Missing {agents_md}")
+    errors.append(f"Missing {agents_rel}")
   else:
     with open(agents_md, "r", encoding="utf-8") as f:
       agents_text = f.read()
 
     if "SCAR-PROC-103" not in agents_text:
-      errors.append(f"{agents_md} must reference SCAR-PROC-103")
+      errors.append(f"{agents_rel} must reference SCAR-PROC-103")
     if "<brain>/plan.md" not in agents_text:
-      errors.append(f"{agents_md} must specify single fixed '<brain>/plan.md' mirroring")
+      errors.append(f"{agents_rel} must specify single fixed '<brain>/plan.md' mirroring")
     if "UserFacing: false" not in agents_text or "RequestFeedback: false" not in agents_text:
-      errors.append(f"{agents_md} must specify artifact demotion with UserFacing: false and RequestFeedback: false")
+      errors.append(f"{agents_rel} must specify artifact demotion with UserFacing: false and RequestFeedback: false")
     if "shell `rm`" not in agents_text and "shell rm" not in agents_text:
-      errors.append(f"{agents_md} must explicitly prohibit shell rm commands for artifact deletion")
+      errors.append(f"{agents_rel} must explicitly prohibit shell rm commands for artifact deletion")
     if "write_file" not in agents_text or "built-in" not in agents_text:
-      errors.append(f"{agents_md} must specify built-in write_file tool demotion")
+      errors.append(f"{agents_rel} must specify built-in write_file tool demotion")
     if "20_plan_approved.md" not in agents_text:
-      errors.append(f"{agents_md} must guard against duplicate execution using 20_plan_approved.md")
+      errors.append(f"{agents_rel} must guard against duplicate execution using 20_plan_approved.md")
     if "Overwrite: true" not in agents_text:
-      errors.append(f"{agents_md} must specify 'Overwrite: true' for plan artifact operations")
+      errors.append(f"{agents_rel} must specify 'Overwrite: true' for plan artifact operations")
     if "tombstone" not in agents_text.lower():
-      errors.append(f"{agents_md} must specify writing an approved tombstone body inside <brain>/plan.md")
+      errors.append(f"{agents_rel} must specify writing an approved tombstone body inside <brain>/plan.md")
 
   # 2. Synthetic Scars Catalog Index
-  catalog_path = "skills/makefile-workflow/references/09_synthetic_scars_catalog.md"
+  catalog_rel = "skills/makefile-workflow/references/09_synthetic_scars_catalog.md"
+  catalog_path = repo_path(catalog_rel)
   if not os.path.exists(catalog_path):
-    errors.append(f"Missing {catalog_path}")
+    errors.append(f"Missing {catalog_rel}")
   else:
     with open(catalog_path, "r", encoding="utf-8") as f:
       catalog_text = f.read()
     if "SCAR-PROC-103" not in catalog_text:
-      errors.append(f"{catalog_path} must index SCAR-PROC-103")
+      errors.append(f"{catalog_rel} must index SCAR-PROC-103")
     if "scars/process.md" not in catalog_text or "SCAR-PROC-103" not in catalog_text:
-      errors.append(f"{catalog_path} must route SCAR-PROC-103 to scars/process.md")
+      errors.append(f"{catalog_rel} must route SCAR-PROC-103 to scars/process.md")
 
   # 3. Process Spoke Four-Part Anatomy & Key Invariants
-  process_spoke = "skills/makefile-workflow/references/scars/process.md"
+  process_spoke_rel = "skills/makefile-workflow/references/scars/process.md"
+  process_spoke = repo_path(process_spoke_rel)
   if not os.path.exists(process_spoke):
-    errors.append(f"Missing {process_spoke}")
+    errors.append(f"Missing {process_spoke_rel}")
   else:
     with open(process_spoke, "r", encoding="utf-8") as f:
       proc_text = f.read()
 
     if "SCAR-PROC-103" not in proc_text:
-      errors.append(f"{process_spoke} must document SCAR-PROC-103")
+      errors.append(f"{process_spoke_rel} must document SCAR-PROC-103")
     else:
       scar_section = proc_text.split("### SCAR-PROC-103")[1].split("### SCAR-")[0] if "### SCAR-PROC-103" in proc_text else ""
       for field in ("Wound", "Trap", "Permanent Reflex", "Socratic Probe"):
         if f"**{field}**:" not in scar_section:
-          errors.append(f"{process_spoke} SCAR-PROC-103 missing '**{field}**:'")
+          errors.append(f"{process_spoke_rel} SCAR-PROC-103 missing '**{field}**:'")
       for invariant in ("<brain>/plan.md", "write_file", "UserFacing: false", "RequestFeedback: false", "20_plan_approved.md"):
         if invariant not in scar_section:
-          errors.append(f"{process_spoke} SCAR-PROC-103 missing invariant '{invariant}'")
+          errors.append(f"{process_spoke_rel} SCAR-PROC-103 missing invariant '{invariant}'")
       if "shell `rm`" not in scar_section and "shell rm" not in scar_section:
-        errors.append(f"{process_spoke} SCAR-PROC-103 missing shell rm invariant")
+        errors.append(f"{process_spoke_rel} SCAR-PROC-103 missing shell rm invariant")
 
   # 4. Platform Neutrality in SKILL.md
-  skill_md = "skills/makefile-workflow/SKILL.md"
+  skill_rel = "skills/makefile-workflow/SKILL.md"
+  skill_md = repo_path(skill_rel)
   if not os.path.exists(skill_md):
-    errors.append(f"Missing {skill_md}")
+    errors.append(f"Missing {skill_rel}")
   else:
     with open(skill_md, "r", encoding="utf-8") as f:
       skill_text = f.read()
     if "<brain>" in skill_text or "<brain/" in skill_text:
-      errors.append(f"{skill_md} must preserve platform neutrality by not containing '<brain>' references")
+      errors.append(f"{skill_rel} must preserve platform neutrality by not containing '<brain>' references")
 
   return errors
+
+
+def validate_arbitrary_cwd_execution():
+  """Validates arbitrary cwd execution without breaking relative path lookups."""
+  if os.environ.get("_COMPAT_CHILD") == "1":
+    return []
+
+  child_env = os.environ.copy()
+  child_env["_COMPAT_CHILD"] = "1"
+  proc = subprocess.run(
+      [sys.executable, os.path.abspath(__file__)],
+      cwd=tempfile.gettempdir(),
+      capture_output=True,
+      text=True,
+      env=child_env,
+  )
+  if proc.returncode != 0:
+    return [
+        f"Arbitrary CWD validation failed (exit code {proc.returncode}):\n{proc.stderr or proc.stdout}"
+    ]
+  if "All cross-agent configuration files validated successfully!" not in proc.stdout:
+    return [
+        "Arbitrary CWD validation did not produce expected success banner in stdout."
+    ]
+  return []
 
 
 def validate():
   errors = []
 
   # 1. Claude Plugin Manifest
-  claude_path = ".claude-plugin/plugin.json"
+  claude_path = repo_path(".claude-plugin/plugin.json")
   if not os.path.exists(claude_path):
     errors.append(f"Missing {claude_path}")
   else:
@@ -218,7 +259,7 @@ def validate():
       errors.append(f"Invalid {claude_path}: {e}")
 
   # 2. Codex Plugin Manifest
-  codex_path = ".codex-plugin/plugin.json"
+  codex_path = repo_path(".codex-plugin/plugin.json")
   if not os.path.exists(codex_path):
     errors.append(f"Missing {codex_path}")
   else:
@@ -231,7 +272,7 @@ def validate():
       errors.append(f"Invalid {codex_path}: {e}")
 
   # 3. CLAUDE.md
-  claude_md = "CLAUDE.md"
+  claude_md = repo_path("CLAUDE.md")
   if not os.path.exists(claude_md):
     errors.append(f"Missing {claude_md}")
   else:
@@ -247,8 +288,8 @@ def validate():
     print("✔ Claude Code root instructions (CLAUDE.md) valid.")
 
   # 4. Cursor Rules
-  cursorrules = ".cursorrules"
-  cursor_mdc = ".cursor/rules/makefile-workflow.mdc"
+  cursorrules = repo_path(".cursorrules")
+  cursor_mdc = repo_path(".cursor/rules/makefile-workflow.mdc")
   if not os.path.exists(cursorrules):
     errors.append(f"Missing {cursorrules}")
   else:
@@ -270,7 +311,7 @@ def validate():
     print("✔ Cursor MDC rule file (.cursor/rules/makefile-workflow.mdc) valid.")
 
   # 5. GitHub Copilot Instructions
-  copilot_path = ".github/copilot-instructions.md"
+  copilot_path = repo_path(".github/copilot-instructions.md")
   if not os.path.exists(copilot_path):
     errors.append(f"Missing {copilot_path}")
   else:
@@ -282,7 +323,7 @@ def validate():
     print("✔ GitHub Copilot instructions (.github/copilot-instructions.md) valid.")
 
   # 6. ChatGPT System Prompt
-  chatgpt_path = "adapters/chatgpt/instructions.md"
+  chatgpt_path = repo_path("adapters/chatgpt/instructions.md")
   if not os.path.exists(chatgpt_path):
     errors.append(f"Missing {chatgpt_path}")
   else:
@@ -293,7 +334,7 @@ def validate():
     print("✔ ChatGPT system instructions (adapters/chatgpt/instructions.md) valid.")
 
   # 7. Hooks Configuration
-  hooks_path = "hooks.json"
+  hooks_path = repo_path("hooks.json")
   if not os.path.exists(hooks_path):
     errors.append(f"Missing {hooks_path}")
   else:
@@ -308,7 +349,7 @@ def validate():
       errors.append(f"Invalid {hooks_path}: {e}")
 
   # 8. MCP Server Configuration
-  mcp_path = "mcp_config.json"
+  mcp_path = repo_path("mcp_config.json")
   if not os.path.exists(mcp_path):
     errors.append(f"Missing {mcp_path}")
   else:
@@ -318,13 +359,18 @@ def validate():
       servers = mcp_data.get("mcpServers", {})
       assert "makefile-workflow" in servers
       server_script = servers["makefile-workflow"]["args"][0]
-      assert os.path.exists(server_script)
+      full_server_script = (
+          repo_path(server_script)
+          if not os.path.isabs(server_script)
+          else server_script
+      )
+      assert os.path.exists(full_server_script)
       print("✔ MCP configuration (mcp_config.json) valid.")
     except Exception as e:
       errors.append(f"Invalid {mcp_path}: {e}")
 
   # 9. Configuration Template & Reference Manual
-  cfg_template = ".workflow/config.json.example"
+  cfg_template = repo_path(".workflow/config.json.example")
   if not os.path.exists(cfg_template):
     errors.append(f"Missing {cfg_template}")
   else:
@@ -358,24 +404,25 @@ def validate():
       errors.append(f"Invalid {cfg_template}: {e}")
 
   # 9b. Canonical Default Configuration (default_config.json)
-  default_cfg_path = "default_config.json"
+  default_cfg_rel = "default_config.json"
+  default_cfg_path = repo_path(default_cfg_rel)
   if not os.path.exists(default_cfg_path):
-    errors.append(f"Missing canonical {default_cfg_path}")
+    errors.append(f"Missing canonical {default_cfg_rel}")
   else:
     try:
       with open(default_cfg_path) as f:
         d_cfg = json.load(f)
-      assert "models" in d_cfg, f"{default_cfg_path} must declare 'models'"
-      assert "review" in d_cfg, f"{default_cfg_path} must declare 'review'"
-      assert "ci" in d_cfg, f"{default_cfg_path} must declare 'ci'"
-      assert "database" in d_cfg, f"{default_cfg_path} must declare 'database'"
+      assert "models" in d_cfg, f"{default_cfg_rel} must declare 'models'"
+      assert "review" in d_cfg, f"{default_cfg_rel} must declare 'review'"
+      assert "ci" in d_cfg, f"{default_cfg_rel} must declare 'ci'"
+      assert "database" in d_cfg, f"{default_cfg_rel} must declare 'database'"
       assert d_cfg["ci"]["pollIntervalSeconds"] > 0
       assert d_cfg["ci"]["quiescenceSeconds"] > 0
-      print(f"✔ Canonical default configuration ({default_cfg_path}) valid.")
+      print(f"✔ Canonical default configuration ({default_cfg_rel}) valid.")
     except Exception as e:
-      errors.append(f"Invalid {default_cfg_path}: {e}")
+      errors.append(f"Invalid {default_cfg_rel}: {e}")
 
-  ref_13 = "skills/makefile-workflow/references/13_configuration_and_user_preferences.md"
+  ref_13 = repo_path("skills/makefile-workflow/references/13_configuration_and_user_preferences.md")
   if not os.path.exists(ref_13):
     errors.append(f"Missing {ref_13}")
   else:
@@ -396,7 +443,7 @@ def validate():
     if not any("references/13_" in e for e in errors):
       print("✔ Configuration reference manual (references/13_configuration_and_user_preferences.md) valid.")
 
-  ref_08 = "skills/makefile-workflow/references/08_subagent_orchestration.md"
+  ref_08 = repo_path("skills/makefile-workflow/references/08_subagent_orchestration.md")
   if not os.path.exists(ref_08):
     errors.append(f"Missing {ref_08}")
   else:
@@ -411,7 +458,7 @@ def validate():
         errors.append(f"{ref_08} must document Socratic prompt pattern for {role_name}")
 
   # 10. Design Patterns Reference Manual
-  ref_14 = "skills/makefile-workflow/references/14_design_patterns_and_architecture.md"
+  ref_14 = repo_path("skills/makefile-workflow/references/14_design_patterns_and_architecture.md")
   if not os.path.exists(ref_14):
     errors.append(f"Missing {ref_14}")
   else:
@@ -430,24 +477,28 @@ def validate():
       "odin.md",
       "dlang.md",
   ):
-    guide_path = os.path.join(
+    guide_rel = os.path.join(
         "skills", "makefile-workflow", "references", "polyglot", guide_name
     )
+    guide_path = repo_path(guide_rel)
     if not os.path.exists(guide_path):
-      errors.append(f"Missing polyglot guide {guide_path}")
+      errors.append(f"Missing polyglot guide {guide_rel}")
   if not any("polyglot guide" in e for e in errors):
-    with open("skills/makefile-workflow/references/polyglot/dlang.md") as f:
+    with open(
+        repo_path("skills/makefile-workflow/references/polyglot/dlang.md")
+    ) as f:
       dlang_text = f.read()
     if "dfmt --check" in dlang_text:
       errors.append("dlang.md must not use nonexistent 'dfmt --check' flag")
     else:
       print("✔ All 5 new polyglot guides (GDScript, Nim, Haxe, Odin, D) present.")
 
-  for manifest_path in (
+  for manifest_rel in (
       "plugin.json",
       ".claude-plugin/plugin.json",
       ".codex-plugin/plugin.json",
   ):
+    manifest_path = repo_path(manifest_rel)
     if os.path.exists(manifest_path):
       with open(manifest_path) as f:
         m_data = json.load(f)
@@ -455,50 +506,52 @@ def validate():
           "description", ""
       ):
         errors.append(
-            f"Manifest {manifest_path} must declare version 1.4.1 and 27-language support"
+            f"Manifest {manifest_rel} must declare version 1.4.1 and"
+            " 27-language support"
         )
 
-  ref_09 = "skills/makefile-workflow/references/09_synthetic_scars_catalog.md"
+  ref_09_rel = "skills/makefile-workflow/references/09_synthetic_scars_catalog.md"
+  ref_09 = repo_path(ref_09_rel)
   if not os.path.exists(ref_09):
-    errors.append(f"Missing {ref_09}")
+    errors.append(f"Missing {ref_09_rel}")
   else:
     with open(ref_09) as f:
       r09_text = f.read()
     if "SCAR-GIT-25" not in r09_text:
-      errors.append(f"{ref_09} must document SCAR-GIT-25")
+      errors.append(f"{ref_09_rel} must document SCAR-GIT-25")
     if "SCAR-PROC-103" not in r09_text:
-      errors.append(f"{ref_09} must document SCAR-PROC-103")
+      errors.append(f"{ref_09_rel} must document SCAR-PROC-103")
     if "SCAR-PROC-104" not in r09_text:
-      errors.append(f"{ref_09} must document SCAR-PROC-104")
+      errors.append(f"{ref_09_rel} must document SCAR-PROC-104")
     if "SCAR-GIT-30" not in r09_text:
-      errors.append(f"{ref_09} must document SCAR-GIT-30")
+      errors.append(f"{ref_09_rel} must document SCAR-GIT-30")
     if "SCAR-TEST-08" not in r09_text:
-      errors.append(f"{ref_09} must document SCAR-TEST-08")
+      errors.append(f"{ref_09_rel} must document SCAR-TEST-08")
     if "SCAR-TEST-09" not in r09_text:
-      errors.append(f"{ref_09} must document SCAR-TEST-09")
+      errors.append(f"{ref_09_rel} must document SCAR-TEST-09")
     if "SCAR-TOOL-07" not in r09_text:
-      errors.append(f"{ref_09} must document SCAR-TOOL-07")
+      errors.append(f"{ref_09_rel} must document SCAR-TOOL-07")
     if "SCAR-TEST-10" not in r09_text:
-      errors.append(f"{ref_09} must document SCAR-TEST-10")
+      errors.append(f"{ref_09_rel} must document SCAR-TEST-10")
     if "SCAR-SYS-05" not in r09_text:
-      errors.append(f"{ref_09} must document SCAR-SYS-05")
+      errors.append(f"{ref_09_rel} must document SCAR-SYS-05")
     if "SCAR-SYS-06" not in r09_text:
-      errors.append(f"{ref_09} must document SCAR-SYS-06")
+      errors.append(f"{ref_09_rel} must document SCAR-SYS-06")
     if "SCAR-TEST-11" not in r09_text:
-      errors.append(f"{ref_09} must document SCAR-TEST-11")
+      errors.append(f"{ref_09_rel} must document SCAR-TEST-11")
     if "Hub-and-Spoke" not in r09_text and "Master Routing" not in r09_text and "Master Index" not in r09_text:
-      errors.append(f"{ref_09} must document Hub-and-Spoke architecture and Master Index")
+      errors.append(f"{ref_09_rel} must document Hub-and-Spoke architecture and Master Index")
     if "scars/process.md" not in r09_text or "scars/testing.md" not in r09_text:
-      errors.append(f"{ref_09} must link to domain spoke category files")
+      errors.append(f"{ref_09_rel} must link to domain spoke category files")
     if "Four-Part Anatomy" not in r09_text:
-      errors.append(f"{ref_09} must define Four-Part Anatomy")
+      errors.append(f"{ref_09_rel} must define Four-Part Anatomy")
     if "Socratic Probe" not in r09_text:
-      errors.append(f"{ref_09} must reference Socratic Probe")
+      errors.append(f"{ref_09_rel} must reference Socratic Probe")
     if "Socratic Reflex Protocol" not in r09_text:
-      errors.append(f"{ref_09} must document Socratic Reflex Protocol")
+      errors.append(f"{ref_09_rel} must document Socratic Reflex Protocol")
 
   # 11b. Hub-and-Spoke Category Files (references/scars/)
-  scars_dir = "skills/makefile-workflow/references/scars"
+  scars_dir_rel = "skills/makefile-workflow/references/scars"
   spoke_files = (
       "process.md",
       "testing.md",
@@ -509,13 +562,15 @@ def validate():
       "tooling_and_hci.md",
   )
   for sf in spoke_files:
-    sf_path = os.path.join(scars_dir, sf)
+    sf_rel = os.path.join(scars_dir_rel, sf)
+    sf_path = repo_path(sf_rel)
     if not os.path.exists(sf_path):
-      errors.append(f"Missing category spoke file {sf_path}")
+      errors.append(f"Missing category spoke file {sf_rel}")
 
   total_scars_found = 0
   for sf in spoke_files:
-    sf_path = os.path.join(scars_dir, sf)
+    sf_rel = os.path.join(scars_dir_rel, sf)
+    sf_path = repo_path(sf_rel)
     if not os.path.exists(sf_path):
       continue
     with open(sf_path) as f:
@@ -529,118 +584,127 @@ def validate():
       for field in ("Wound", "Trap", "Permanent Reflex", "Socratic Probe"):
         field_match = re.search(rf"\*\*{re.escape(field)}\*\*:\s*([^\n]+)", block)
         if not field_match or not field_match.group(1).strip():
-          errors.append(f"{sf_path} {scar_id} missing non-empty '**{field}**:'")
+          errors.append(f"{sf_rel} {scar_id} missing non-empty '**{field}**:'")
 
   if total_scars_found != 28:
     errors.append(f"Expected 28 synthetic scars across category spokes, found {total_scars_found}")
 
-  testing_spoke = os.path.join(scars_dir, "testing.md")
+  testing_spoke_rel = os.path.join(scars_dir_rel, "testing.md")
+  testing_spoke = repo_path(testing_spoke_rel)
   if os.path.exists(testing_spoke):
     with open(testing_spoke) as f:
       t_text = f.read()
     if "SCAR-TEST-10" not in t_text:
-      errors.append(f"{testing_spoke} must document SCAR-TEST-10")
+      errors.append(f"{testing_spoke_rel} must document SCAR-TEST-10")
     if "SCAR-TEST-11" not in t_text:
-      errors.append(f"{testing_spoke} must document SCAR-TEST-11")
+      errors.append(f"{testing_spoke_rel} must document SCAR-TEST-11")
     if "burden" not in t_text.lower() or "shift-left" not in t_text.lower():
-      errors.append(f"{testing_spoke} must document shift-left testing burden balance for SCAR-TEST-11")
+      errors.append(f"{testing_spoke_rel} must document shift-left testing burden balance for SCAR-TEST-11")
 
-  system_spoke = os.path.join(scars_dir, "system_and_os.md")
+  system_spoke_rel = os.path.join(scars_dir_rel, "system_and_os.md")
+  system_spoke = repo_path(system_spoke_rel)
   if os.path.exists(system_spoke):
     with open(system_spoke) as f:
       sys_text = f.read()
     if "SCAR-SYS-05" not in sys_text:
-      errors.append(f"{system_spoke} must document SCAR-SYS-05")
+      errors.append(f"{system_spoke_rel} must document SCAR-SYS-05")
     if "shutil.copyfile" not in sys_text or "copystat" not in sys_text:
-      errors.append(f"{system_spoke} must document shutil.copyfile and copystat for SCAR-SYS-05")
+      errors.append(f"{system_spoke_rel} must document shutil.copyfile and copystat for SCAR-SYS-05")
     if "SCAR-SYS-06" not in sys_text:
-      errors.append(f"{system_spoke} must document SCAR-SYS-06")
+      errors.append(f"{system_spoke_rel} must document SCAR-SYS-06")
     if "TMPDIR" not in sys_text or "validate_runtime_path" not in sys_text:
-      errors.append(f"{system_spoke} must document TMPDIR and validate_runtime_path for SCAR-SYS-06")
+      errors.append(f"{system_spoke_rel} must document TMPDIR and validate_runtime_path for SCAR-SYS-06")
 
   # 11c. Full Language Name Polyglot Scars (dart_flutter.md)
-  dart_guide = "skills/makefile-workflow/references/polyglot/dart_flutter.md"
+  dart_guide_rel = "skills/makefile-workflow/references/polyglot/dart_flutter.md"
+  dart_guide = repo_path(dart_guide_rel)
   if not os.path.exists(dart_guide):
-    errors.append(f"Missing {dart_guide}")
+    errors.append(f"Missing {dart_guide_rel}")
   else:
     with open(dart_guide) as f:
       dg_text = f.read()
     for d_scar in ("SCAR-LANG-DART-01", "SCAR-LANG-DART-02", "SCAR-LANG-DART-03", "SCAR-LANG-DART-04"):
       if d_scar not in dg_text:
-        errors.append(f"{dart_guide} must document full language name {d_scar}")
+        errors.append(f"{dart_guide_rel} must document full language name {d_scar}")
 
-  ref_03 = "skills/makefile-workflow/references/03_tdd_and_code_quality.md"
+  ref_03_rel = "skills/makefile-workflow/references/03_tdd_and_code_quality.md"
+  ref_03 = repo_path(ref_03_rel)
   if not os.path.exists(ref_03):
-    errors.append(f"Missing {ref_03}")
+    errors.append(f"Missing {ref_03_rel}")
   else:
     with open(ref_03) as f:
       r03_text = f.read()
     if "SCAR-PROC-104" not in r03_text:
-      errors.append(f"{ref_03} must document SCAR-PROC-104")
+      errors.append(f"{ref_03_rel} must document SCAR-PROC-104")
     if "SCAR-TEST-09" not in r03_text:
-      errors.append(f"{ref_03} must document SCAR-TEST-09")
+      errors.append(f"{ref_03_rel} must document SCAR-TEST-09")
     if "SCAR-TEST-10" not in r03_text:
-      errors.append(f"{ref_03} must document SCAR-TEST-10")
+      errors.append(f"{ref_03_rel} must document SCAR-TEST-10")
 
-  ref_04 = "skills/makefile-workflow/references/04_testing_isolation.md"
+  ref_04_rel = "skills/makefile-workflow/references/04_testing_isolation.md"
+  ref_04 = repo_path(ref_04_rel)
   if not os.path.exists(ref_04):
-    errors.append(f"Missing {ref_04}")
+    errors.append(f"Missing {ref_04_rel}")
   else:
     with open(ref_04) as f:
       r04_text = f.read()
     if "SCAR-TEST-08" not in r04_text or "two-tier" not in r04_text.lower():
-      errors.append(f"{ref_04} must document SCAR-TEST-08 and two-tier test isolation")
+      errors.append(f"{ref_04_rel} must document SCAR-TEST-08 and two-tier test isolation")
     if "ephemeral loopback socket" not in r04_text.lower() and "127.0.0.1:0" not in r04_text:
-      errors.append(f"{ref_04} must document self-contained ephemeral loopback sockets (127.0.0.1:0)")
+      errors.append(f"{ref_04_rel} must document self-contained ephemeral loopback sockets (127.0.0.1:0)")
 
   # Archaeology worker and planning manual shift-left checks (SCAR-TEST-11)
-  arch_worker = "agents/archaeology-worker.md"
+  arch_worker_rel = "agents/archaeology-worker.md"
+  arch_worker = repo_path(arch_worker_rel)
   if not os.path.exists(arch_worker):
-    errors.append(f"Missing {arch_worker}")
+    errors.append(f"Missing {arch_worker_rel}")
   else:
     with open(arch_worker) as f:
       aw_text = f.read()
     if "failure mechanism" not in aw_text.lower() or "burden" not in aw_text.lower():
-      errors.append(f"{arch_worker} must instruct worker to classify failure mechanisms and evaluate testing burden balance")
+      errors.append(f"{arch_worker_rel} must instruct worker to classify failure mechanisms and evaluate testing burden balance")
     if "evidence" not in aw_text.lower() or "guess" not in aw_text.lower():
-      errors.append(f"{arch_worker} Rule 5 must instruct worker to question verification evidence for Belnap claims")
+      errors.append(f"{arch_worker_rel} Rule 5 must instruct worker to question verification evidence for Belnap claims")
 
-  ref_02 = "skills/makefile-workflow/references/02_archaeology_and_planning.md"
+  ref_02_rel = "skills/makefile-workflow/references/02_archaeology_and_planning.md"
+  ref_02 = repo_path(ref_02_rel)
   if not os.path.exists(ref_02):
-    errors.append(f"Missing {ref_02}")
+    errors.append(f"Missing {ref_02_rel}")
   else:
     with open(ref_02) as f:
       r02_text = f.read()
     if "burden" not in r02_text.lower() or "Testing Strategy and Burden-Balance" not in r02_text:
-      errors.append(f"{ref_02} must mandate Testing Strategy and Burden-Balance Analysis in Target 20 plan disclosures")
+      errors.append(f"{ref_02_rel} must mandate Testing Strategy and Burden-Balance Analysis in Target 20 plan disclosures")
     if "socratic" not in r02_text.lower() or "deliberation" not in r02_text.lower():
-      errors.append(f"{ref_02} must mandate Socratic Pre-Planning Deliberation protocol")
+      errors.append(f"{ref_02_rel} must mandate Socratic Pre-Planning Deliberation protocol")
     if "invariant audit" not in r02_text.lower():
-      errors.append(f"{ref_02} must mandate Socratic Invariant Audit table in plan template")
+      errors.append(f"{ref_02_rel} must mandate Socratic Invariant Audit table in plan template")
 
   # TDD implementation worker definition
-  tdd_worker = "agents/tdd-worker.md"
+  tdd_worker_rel = "agents/tdd-worker.md"
+  tdd_worker = repo_path(tdd_worker_rel)
   if not os.path.exists(tdd_worker):
-    errors.append(f"Missing {tdd_worker}")
+    errors.append(f"Missing {tdd_worker_rel}")
   else:
     with open(tdd_worker) as f:
       tdd_text = f.read()
     if "did the test fail" not in tdd_text.lower():
-      errors.append(f"{tdd_worker} Rule 1 must question test failure before code edits")
+      errors.append(f"{tdd_worker_rel} Rule 1 must question test failure before code edits")
     if "unnecessary abstraction" not in tdd_text.lower() and "abstraction" not in tdd_text.lower():
-      errors.append(f"{tdd_worker} Rule 3 must question unnecessary code abstractions")
+      errors.append(f"{tdd_worker_rel} Rule 3 must question unnecessary code abstractions")
 
   # Critic agent and Six Pillars review definitions
-  critic_agent = "agents/adversarial-critic.md"
+  critic_agent_rel = "agents/adversarial-critic.md"
+  critic_agent = repo_path(critic_agent_rel)
   if not os.path.exists(critic_agent):
-    errors.append(f"Missing {critic_agent}")
+    errors.append(f"Missing {critic_agent_rel}")
   else:
     with open(critic_agent) as f:
       critic_text = f.read()
     if "approved_tree" not in critic_text:
-      errors.append(f"{critic_agent} Rule 2 must reference approved_tree.txt")
+      errors.append(f"{critic_agent_rel} Rule 2 must reference approved_tree.txt")
     if "git diff $(git merge-base HEAD origin/main) HEAD" in critic_text:
-      errors.append(f"{critic_agent} Rule 2 must not diff against HEAD")
+      errors.append(f"{critic_agent_rel} Rule 2 must not diff against HEAD")
     canonical_pillars = [
         "1. Intent",
         "2. Verification",
@@ -671,170 +735,177 @@ def validate():
     if "20 words" not in critic_text:
       errors.append(f"{critic_agent} Pillar 5 must document sentence length caps (20 words)")
 
-  triage_agent = "agents/triage-worker.md"
+  triage_agent_rel = "agents/triage-worker.md"
+  triage_agent = repo_path(triage_agent_rel)
   if not os.path.exists(triage_agent):
-    errors.append(f"Missing {triage_agent}")
+    errors.append(f"Missing {triage_agent_rel}")
   else:
     with open(triage_agent) as f:
       tw_text = f.read()
     if "configured quiescence" not in tw_text.lower():
-      errors.append(f"{triage_agent} Rule 2 must reference configured quiescence duration")
+      errors.append(f"{triage_agent_rel} Rule 2 must reference configured quiescence duration")
     if "defect" not in tw_text.lower() or "suggestion" not in tw_text.lower():
-      errors.append(f"{triage_agent} Rule 3 must interrogate whether bot comments are defects or suggestions")
+      errors.append(f"{triage_agent_rel} Rule 3 must interrogate whether bot comments are defects or suggestions")
     if "send_message" not in tw_text:
-      errors.append(f"{triage_agent} Rule 4 must instruct returning results via send_message")
+      errors.append(f"{triage_agent_rel} Rule 4 must instruct returning results via send_message")
     if "pre-fetched" in tw_text.lower():
-      errors.append(f"{triage_agent} must not require pre-fetched CI results from supervisor")
+      errors.append(f"{triage_agent_rel} must not require pre-fetched CI results from supervisor")
 
-  ref_07 = "skills/makefile-workflow/references/07_ci_and_bot_triage.md"
+  ref_07_rel = "skills/makefile-workflow/references/07_ci_and_bot_triage.md"
+  ref_07 = repo_path(ref_07_rel)
   if not os.path.exists(ref_07):
-    errors.append(f"Missing {ref_07}")
+    errors.append(f"Missing {ref_07_rel}")
   else:
     with open(ref_07) as f:
       r07_text = f.read()
     if "triage-worker" not in r07_text.lower():
-      errors.append(f"{ref_07} must document triage-worker subagent delegation")
+      errors.append(f"{ref_07_rel} must document triage-worker subagent delegation")
     if "reactive wakeup" not in r07_text.lower():
-      errors.append(f"{ref_07} must document reactive wakeup protocol for Target 70")
+      errors.append(f"{ref_07_rel} must document reactive wakeup protocol for Target 70")
     if "maxwaitseconds" not in r07_text.lower() and "single-probe" not in r07_text.lower():
-      errors.append(f"{ref_07} must document single-probe non-blocking query option")
+      errors.append(f"{ref_07_rel} must document single-probe non-blocking query option")
 
-  ref_04_review = "skills/makefile-workflow/references/04_six_pillars_adversarial_review.md"
+  ref_04_review_rel = "skills/makefile-workflow/references/04_six_pillars_adversarial_review.md"
+  ref_04_review = repo_path(ref_04_review_rel)
   if not os.path.exists(ref_04_review):
-    errors.append(f"Missing {ref_04_review}")
+    errors.append(f"Missing {ref_04_review_rel}")
   else:
     with open(ref_04_review) as f:
       r04_rev_text = f.read()
     for pillar in canonical_pillars:
       if f"### {pillar}" not in r04_rev_text:
-        errors.append(f"{ref_04_review} must contain canonical heading '### {pillar}'")
+        errors.append(f"{ref_04_review_rel} must contain canonical heading '### {pillar}'")
     if "three-tier critic hierarchy" not in r04_rev_text.lower():
-      errors.append(f"{ref_04_review} must document the Progressive Three-Tier Critic Hierarchy")
+      errors.append(f"{ref_04_review_rel} must document the Progressive Three-Tier Critic Hierarchy")
     if "tier 3" not in r04_rev_text.lower() or "tier 2" not in r04_rev_text.lower() or "tier 1" not in r04_rev_text.lower():
-      errors.append(f"{ref_04_review} must document Tier 1, Tier 2, and Tier 3 execution mechanisms")
+      errors.append(f"{ref_04_review_rel} must document Tier 1, Tier 2, and Tier 3 execution mechanisms")
     if "scar-proc-51" not in r04_rev_text.lower() and "degradation" not in r04_rev_text.lower():
-      errors.append(f"{ref_04_review} must document Dynamic Degradation Fallback (SCAR-PROC-51)")
+      errors.append(f"{ref_04_review_rel} must document Dynamic Degradation Fallback (SCAR-PROC-51)")
     if "scar-proc-114" not in r04_rev_text.lower() and "read-before-define" not in r04_rev_text.lower():
-      errors.append(f"{ref_04_review} must document Sequential Read-Before-Define Barrier (SCAR-PROC-114)")
+      errors.append(f"{ref_04_review_rel} must document Sequential Read-Before-Define Barrier (SCAR-PROC-114)")
     if "scar-proc-115" not in r04_rev_text.lower() and "anti-single-blocker" not in r04_rev_text.lower():
-      errors.append(f"{ref_04_review} must document Anti-Single-Blocker Satisficing (SCAR-PROC-115)")
+      errors.append(f"{ref_04_review_rel} must document Anti-Single-Blocker Satisficing (SCAR-PROC-115)")
     if "scar-proc-121" not in r04_rev_text.lower() and "rubric anchoring" not in r04_rev_text.lower():
-      errors.append(f"{ref_04_review} must document Post-Compaction Rubric Anchoring (SCAR-PROC-121)")
+      errors.append(f"{ref_04_review_rel} must document Post-Compaction Rubric Anchoring (SCAR-PROC-121)")
     if "comprehensiveness" not in r04_rev_text.lower() and "comprehensive" not in r04_rev_text.lower():
-      errors.append(f"{ref_04_review} Pillar 2 must evaluate test comprehensiveness")
+      errors.append(f"{ref_04_review_rel} Pillar 2 must evaluate test comprehensiveness")
     if "tdd" not in r04_rev_text.lower() and "test-driven" not in r04_rev_text.lower():
-      errors.append(f"{ref_04_review} Pillar 2 must mandate TDD methodology")
+      errors.append(f"{ref_04_review_rel} Pillar 2 must mandate TDD methodology")
     if "failure falsification" not in r04_rev_text.lower():
-      errors.append(f"{ref_04_review} Pillar 2 must mandate failure falsification")
+      errors.append(f"{ref_04_review_rel} Pillar 2 must mandate failure falsification")
     if "boundary" not in r04_rev_text.lower():
-      errors.append(f"{ref_04_review} Pillar 2 must evaluate boundary limits testing")
+      errors.append(f"{ref_04_review_rel} Pillar 2 must evaluate boundary limits testing")
     if "counterfeit" not in r04_rev_text.lower():
-      errors.append(f"{ref_04_review} Pillar 2 must prohibit counterfeit mock-only passes")
+      errors.append(f"{ref_04_review_rel} Pillar 2 must prohibit counterfeit mock-only passes")
     if "burden" not in r04_rev_text.lower():
-      errors.append(f"{ref_04_review} Pillar 2 must evaluate test burden balance")
+      errors.append(f"{ref_04_review_rel} Pillar 2 must evaluate test burden balance")
     if "ephemeral" not in r04_rev_text.lower():
-      errors.append(f"{ref_04_review} Pillar 2 must clarify ephemeral loopback socket permissions")
+      errors.append(f"{ref_04_review_rel} Pillar 2 must clarify ephemeral loopback socket permissions")
     if "simple english" not in r04_rev_text.lower():
-      errors.append(f"{ref_04_review} Pillar 5 must evaluate Simple English compliance")
+      errors.append(f"{ref_04_review_rel} Pillar 5 must evaluate Simple English compliance")
     if "20 words" not in r04_rev_text:
-      errors.append(f"{ref_04_review} Pillar 5 must document sentence length caps (20 words)")
+      errors.append(f"{ref_04_review_rel} Pillar 5 must document sentence length caps (20 words)")
 
-  ref_10 = "skills/makefile-workflow/references/10_security_and_data_isolation.md"
+  ref_10_rel = "skills/makefile-workflow/references/10_security_and_data_isolation.md"
+  ref_10 = repo_path(ref_10_rel)
   if not os.path.exists(ref_10):
-    errors.append(f"Missing {ref_10}")
+    errors.append(f"Missing {ref_10_rel}")
   else:
     with open(ref_10) as f:
       r10_text = f.read()
     if "git reset --hard" not in r10_text or "git rebase" not in r10_text:
-      errors.append(f"{ref_10} must document destructive Git command protections")
+      errors.append(f"{ref_10_rel} must document destructive Git command protections")
     if "SCAR-TOOL-07" not in r10_text or "prefer dart" not in r10_text.lower():
-      errors.append(f"{ref_10} must document Dart scratch script and temporary directory rules")
+      errors.append(f"{ref_10_rel} must document Dart scratch script and temporary directory rules")
     if "SCAR-SYS-05" not in r10_text or "copyfile" not in r10_text.lower():
-      errors.append(f"{ref_10} Section 5 must document SCAR-SYS-05 and cross-user file promotion")
+      errors.append(f"{ref_10_rel} Section 5 must document SCAR-SYS-05 and cross-user file promotion")
     if "SCAR-SYS-06" not in r10_text or "TMPDIR" not in r10_text:
-      errors.append(f"{ref_10} Section 6 must document SCAR-SYS-06 and native runtime environment path pre-flight")
+      errors.append(f"{ref_10_rel} Section 6 must document SCAR-SYS-06 and native runtime environment path pre-flight")
 
   # 12. SKILL.md Single-Page Size Ceiling (SCAR-PROC-99)
-  skill_md = "skills/makefile-workflow/SKILL.md"
+  skill_rel = "skills/makefile-workflow/SKILL.md"
+  skill_md = repo_path(skill_rel)
   if not os.path.exists(skill_md):
-    errors.append(f"Missing {skill_md}")
+    errors.append(f"Missing {skill_rel}")
   else:
     skill_bytes = os.path.getsize(skill_md)
     if skill_bytes > 24576:
       errors.append(
-          f"{skill_md} is {skill_bytes} bytes, exceeding SCAR-PROC-99 24576-byte limit"
+          f"{skill_rel} is {skill_bytes} bytes, exceeding SCAR-PROC-99 24576-byte limit"
       )
     else:
-      print(f"✔ {skill_md} size ({skill_bytes} bytes) is within 24 KB limit.")
+      print(f"✔ {skill_rel} size ({skill_bytes} bytes) is within 24 KB limit.")
     with open(skill_md) as f:
       s_text = f.read()
     if "<brain>" in s_text or "<brain/" in s_text:
       errors.append(
-          f"{skill_md} must remain platform-neutral and not reference '<brain>'"
+          f"{skill_rel} must remain platform-neutral and not reference '<brain>'"
       )
     else:
-      print(f"✔ {skill_md} is platform-neutral (no <brain> references).")
+      print(f"✔ {skill_rel} is platform-neutral (no <brain> references).")
     if "`agyModelTiers[\"archaeology-worker\"]` (default `inherit`)" not in s_text:
-      errors.append(f"{skill_md} Target 15 must document 'archaeology-worker' default inherit")
+      errors.append(f"{skill_rel} Target 15 must document 'archaeology-worker' default inherit")
     if "`agyModelTiers[\"tdd-worker\"]` (default `inherit`)" not in s_text:
-      errors.append(f"{skill_md} Target 30 must document 'tdd-worker' default inherit")
+      errors.append(f"{skill_rel} Target 30 must document 'tdd-worker' default inherit")
     if "`agyModelTiers[\"adversarial-critic\"]` (default `inherit`)" not in s_text:
-      errors.append(f"{skill_md} Target 40 must document 'adversarial-critic' default inherit")
+      errors.append(f"{skill_rel} Target 40 must document 'adversarial-critic' default inherit")
     if "`agyModelTiers[\"triage-worker\"]` (default `inherit`)" not in s_text:
-      errors.append(f"{skill_md} Target 70 must document 'triage-worker' default inherit")
+      errors.append(f"{skill_rel} Target 70 must document 'triage-worker' default inherit")
     if "burden" not in s_text.lower() and "feasibility" not in s_text.lower():
-      errors.append(f"{skill_md} must document testing burden balance in Target 15 / Target 20")
+      errors.append(f"{skill_rel} must document testing burden balance in Target 15 / Target 20")
     if "socratic" not in s_text.lower() or "deliberation" not in s_text.lower():
-      errors.append(f"{skill_md} Target 20 must instruct supervisor to evaluate Socratic pre-planning questions")
+      errors.append(f"{skill_rel} Target 20 must instruct supervisor to evaluate Socratic pre-planning questions")
 
   # 13. Antigravity Development Rules (rules/AGENTS.md)
-  agents_md = "rules/AGENTS.md"
+  agents_rel = "rules/AGENTS.md"
+  agents_md = repo_path(agents_rel)
   if not os.path.exists(agents_md):
-    errors.append(f"Missing {agents_md}")
+    errors.append(f"Missing {agents_rel}")
   else:
     with open(agents_md) as f:
       a_text = f.read()
     if "prefer Dart over Python" not in a_text:
-      errors.append(f"{agents_md} must specify preference for Dart over Python for scratch scripts")
+      errors.append(f"{agents_rel} must specify preference for Dart over Python for scratch scripts")
     if "never attempt to install dart" not in a_text.lower():
-      errors.append(f"{agents_md} must forbid attempting to install Dart")
+      errors.append(f"{agents_rel} must forbid attempting to install Dart")
     if "temporary directory" not in a_text:
-      errors.append(f"{agents_md} must specify writing temporary scripts to temporary directories")
+      errors.append(f"{agents_rel} must specify writing temporary scripts to temporary directories")
     if "SCAR-PROC-104" not in a_text or "targeted test loops" not in a_text.lower():
-      errors.append(f"{agents_md} Section 3 must document SCAR-PROC-104 and targeted test loops")
+      errors.append(f"{agents_rel} Section 3 must document SCAR-PROC-104 and targeted test loops")
     if "SCAR-TEST-09" not in a_text or "fail-fast" not in a_text.lower():
-      errors.append(f"{agents_md} Section 3 must document SCAR-TEST-09 and fail-fast targeted test loops")
+      errors.append(f"{agents_rel} Section 3 must document SCAR-TEST-09 and fail-fast targeted test loops")
     if "SCAR-TEST-10" not in a_text or "static analysis" not in a_text.lower():
-      errors.append(f"{agents_md} Section 3 must document SCAR-TEST-10 and pre-flight structural static analysis")
+      errors.append(f"{agents_rel} Section 3 must document SCAR-TEST-10 and pre-flight structural static analysis")
     if "SCAR-TEST-08" not in a_text or "two tiers" not in a_text.lower():
-      errors.append(f"{agents_md} Section 2 must document SCAR-TEST-08 and two-tier test isolation")
+      errors.append(f"{agents_rel} Section 2 must document SCAR-TEST-08 and two-tier test isolation")
     if "ephemeral loopback socket" not in a_text.lower() and "127.0.0.1:0" not in a_text:
-      errors.append(f"{agents_md} Section 2 must clarify ephemeral loopback socket permissions")
+      errors.append(f"{agents_rel} Section 2 must clarify ephemeral loopback socket permissions")
     if "SCAR-SYS-05" not in a_text or "shutil.copyfile" not in a_text:
-      errors.append(f"{agents_md} Section 2 must document SCAR-SYS-05 cross-user file promotion")
+      errors.append(f"{agents_rel} Section 2 must document SCAR-SYS-05 cross-user file promotion")
     if "SCAR-SYS-06" not in a_text or "validate_runtime_path" not in a_text and "TMPDIR" not in a_text:
-      errors.append(f"{agents_md} Section 2 must document SCAR-SYS-06 native runtime environment path pre-flight")
+      errors.append(f"{agents_rel} Section 2 must document SCAR-SYS-06 native runtime environment path pre-flight")
     if "SCAR-TEST-11" not in a_text or "burden-balance" not in a_text.lower() and "burden balance" not in a_text.lower():
-      errors.append(f"{agents_md} Section 1.1 must document SCAR-TEST-11 testing strategy and burden-balance analysis")
+      errors.append(f"{agents_rel} Section 1.1 must document SCAR-TEST-11 testing strategy and burden-balance analysis")
     if "socratic" not in a_text.lower() or "invariant audit" not in a_text.lower():
-      errors.append(f"{agents_md} Section 1.1 must document Socratic pre-planning inquiry and invariant audit table")
+      errors.append(f"{agents_rel} Section 1.1 must document Socratic pre-planning inquiry and invariant audit table")
     if not any("rules/AGENTS.md" in e for e in errors):
-      print(f"✔ Antigravity development rules ({agents_md}) valid.")
+      print(f"✔ Antigravity development rules ({agents_rel}) valid.")
 
   # 14. SimpleEnglish Companion Plugin Recommendation & Subagent Roles in README.md
-  readme_path = "README.md"
+  readme_rel = "README.md"
+  readme_path = repo_path(readme_rel)
   if not os.path.exists(readme_path):
-    errors.append(f"Missing {readme_path}")
+    errors.append(f"Missing {readme_rel}")
   else:
     with open(readme_path) as f:
       rm_text = f.read()
     if "Recommended Companion: SimpleEnglish Plugin" not in rm_text or "https://github.com/AminBlg/SimpleEnglish" not in rm_text:
-      errors.append(f"{readme_path} must recommend SimpleEnglish companion plugin under Installation with repository URL")
+      errors.append(f"{readme_rel} must recommend SimpleEnglish companion plugin under Installation with repository URL")
     else:
       print("✔ SimpleEnglish companion plugin recommended in README.md.")
 
     if "socratic" not in rm_text.lower() or "invariant" not in rm_text.lower():
-      errors.append(f"{readme_path} must provide Socratic ticket intake guidance")
+      errors.append(f"{readme_rel} must provide Socratic ticket intake guidance")
 
     for role in (
         "adversarial-critic",
@@ -843,89 +914,99 @@ def validate():
         "triage-worker",
     ):
       if f'"{role}": "inherit"' not in rm_text:
-        errors.append(f"{readme_path} config snippet must show '{role}': 'inherit'")
+        errors.append(f"{readme_rel} config snippet must show '{role}': 'inherit'")
       if role not in rm_text:
-        errors.append(f"{readme_path} must document worker role '{role}'")
+        errors.append(f"{readme_rel} must document worker role '{role}'")
 
     if "triage-worker" not in rm_text or "quiescence" not in rm_text.lower() or "triage table" not in rm_text.lower():
-      errors.append(f"{readme_path} must explain triage-worker purpose (CI polling, quiescence, triage table)")
+      errors.append(f"{readme_rel} must explain triage-worker purpose (CI polling, quiescence, triage table)")
     if "archaeology-worker" not in rm_text or "polyglot" not in rm_text.lower():
-      errors.append(f"{readme_path} must explain archaeology-worker purpose (discovery, polyglot scan)")
+      errors.append(f"{readme_rel} must explain archaeology-worker purpose (discovery, polyglot scan)")
     if "adversarial-critic" not in rm_text or "six pillars" not in rm_text.lower():
-      errors.append(f"{readme_path} must explain adversarial-critic purpose (independent review, Six Pillars)")
+      errors.append(f"{readme_rel} must explain adversarial-critic purpose (independent review, Six Pillars)")
     if "tdd-worker" not in rm_text or "red-green-refactor" not in rm_text.lower():
-      errors.append(f"{readme_path} must explain tdd-worker purpose (TDD, red-green-refactor)")
+      errors.append(f"{readme_rel} must explain tdd-worker purpose (TDD, red-green-refactor)")
     if "reasoning effort" not in rm_text.lower() and "/effort" not in rm_text:
-      errors.append(f"{readme_path} must document reasoning effort inheritance for 'inherit'")
+      errors.append(f"{readme_rel} must document reasoning effort inheritance for 'inherit'")
     if "flash_lite" not in rm_text or "flash" not in rm_text or "pro" not in rm_text:
-      errors.append(f"{readme_path} must document Antigravity valid enum tiers (inherit, flash_lite, flash, pro)")
+      errors.append(f"{readme_rel} must document Antigravity valid enum tiers (inherit, flash_lite, flash, pro)")
 
   # 15. Pre-flight Static Check Integration in Makefile and scripts (SCAR-TEST-10)
-  makefile_path = "Makefile"
+  makefile_rel = "Makefile"
+  makefile_path = repo_path(makefile_rel)
   if not os.path.exists(makefile_path):
-    errors.append(f"Missing {makefile_path}")
+    errors.append(f"Missing {makefile_rel}")
   else:
     with open(makefile_path) as f:
       mk_text = f.read()
     if "test-static:" not in mk_text:
-      errors.append(f"{makefile_path} must define 'test-static:' target")
+      errors.append(f"{makefile_rel} must define 'test-static:' target")
     if "test: test-static" not in mk_text:
-      errors.append(f"{makefile_path} 'test:' target must list 'test-static' as first prerequisite")
+      errors.append(f"{makefile_rel} 'test:' target must list 'test-static' as first prerequisite")
     if "test-safe-copy:" not in mk_text:
-      errors.append(f"{makefile_path} must define 'test-safe-copy:' target")
+      errors.append(f"{makefile_rel} must define 'test-safe-copy:' target")
     if "test-safe-copy" not in mk_text.split("test:")[1].split("\n")[0]:
-      errors.append(f"{makefile_path} 'test:' target must list 'test-safe-copy' prerequisite")
+      errors.append(f"{makefile_rel} 'test:' target must list 'test-safe-copy' prerequisite")
     if "test-env-preflight:" not in mk_text:
-      errors.append(f"{makefile_path} must define 'test-env-preflight:' target")
+      errors.append(f"{makefile_rel} must define 'test-env-preflight:' target")
     if "test-env-preflight" not in mk_text.split("test:")[1].split("\n")[0]:
-      errors.append(f"{makefile_path} 'test:' target must list 'test-env-preflight' prerequisite")
+      errors.append(f"{makefile_rel} 'test:' target must list 'test-env-preflight' prerequisite")
     if "PYTHON ?= python3" not in mk_text and "PYTHON ?=" not in mk_text:
-      errors.append(f"{makefile_path} must declare 'PYTHON ?= python3' configurable interpreter macro")
+      errors.append(f"{makefile_rel} must declare 'PYTHON ?= python3' configurable interpreter macro")
     if "@python3 " in mk_text:
-      errors.append(f"{makefile_path} test recipes must use $(PYTHON) instead of hardcoded python3")
+      errors.append(f"{makefile_rel} test recipes must use $(PYTHON) instead of hardcoded python3")
 
-  static_check_script = "scripts/static_check.py"
+  static_check_rel = "scripts/static_check.py"
+  static_check_script = repo_path(static_check_rel)
   if not os.path.exists(static_check_script):
-    errors.append(f"Missing {static_check_script}")
-  static_test_script = "scripts/test_static_analysis.py"
+    errors.append(f"Missing {static_check_rel}")
+  static_test_rel = "scripts/test_static_analysis.py"
+  static_test_script = repo_path(static_test_rel)
   if not os.path.exists(static_test_script):
-    errors.append(f"Missing {static_test_script}")
-  safe_copy_script = "scripts/safe_copy.py"
+    errors.append(f"Missing {static_test_rel}")
+  safe_copy_rel = "scripts/safe_copy.py"
+  safe_copy_script = repo_path(safe_copy_rel)
   if not os.path.exists(safe_copy_script):
-    errors.append(f"Missing {safe_copy_script}")
-  safe_copy_test_script = "scripts/test_safe_copy.py"
+    errors.append(f"Missing {safe_copy_rel}")
+  safe_copy_test_rel = "scripts/test_safe_copy.py"
+  safe_copy_test_script = repo_path(safe_copy_test_rel)
   if not os.path.exists(safe_copy_test_script):
-    errors.append(f"Missing {safe_copy_test_script}")
-  env_preflight_script = "scripts/env_preflight.py"
+    errors.append(f"Missing {safe_copy_test_rel}")
+  env_preflight_rel = "scripts/env_preflight.py"
+  env_preflight_script = repo_path(env_preflight_rel)
   if not os.path.exists(env_preflight_script):
-    errors.append(f"Missing {env_preflight_script}")
-  env_preflight_test_script = "scripts/test_env_preflight.py"
+    errors.append(f"Missing {env_preflight_rel}")
+  env_preflight_test_rel = "scripts/test_env_preflight.py"
+  env_preflight_test_script = repo_path(env_preflight_test_rel)
   if not os.path.exists(env_preflight_test_script):
-    errors.append(f"Missing {env_preflight_test_script}")
+    errors.append(f"Missing {env_preflight_test_rel}")
 
   # 16. Python Interpreter Inheritance (sys.executable in test subprocesses)
-  hooks_test_script = "scripts/test_hooks.py"
+  hooks_test_rel = "scripts/test_hooks.py"
+  hooks_test_script = repo_path(hooks_test_rel)
   if os.path.exists(hooks_test_script):
     with open(hooks_test_script) as f:
       ht_text = f.read()
     if "sys.executable" not in ht_text:
-      errors.append(f"{hooks_test_script} must use sys.executable for child subprocesses")
+      errors.append(f"{hooks_test_rel} must use sys.executable for child subprocesses")
     if '["python3"' in ht_text or "['python3'" in ht_text:
-      errors.append(f"{hooks_test_script} must not hardcode 'python3' in subprocess calls")
+      errors.append(f"{hooks_test_rel} must not hardcode 'python3' in subprocess calls")
 
-  mcp_test_script = "scripts/test_mcp_server.py"
+  mcp_test_rel = "scripts/test_mcp_server.py"
+  mcp_test_script = repo_path(mcp_test_rel)
   if os.path.exists(mcp_test_script):
     with open(mcp_test_script) as f:
       mt_text = f.read()
     if "sys.executable" not in mt_text:
-      errors.append(f"{mcp_test_script} must use sys.executable for child subprocesses")
+      errors.append(f"{mcp_test_rel} must use sys.executable for child subprocesses")
     if '["python3"' in mt_text or "['python3'" in mt_text:
-      errors.append(f"{mcp_test_script} must not hardcode 'python3' in subprocess calls")
+      errors.append(f"{mcp_test_rel} must not hardcode 'python3' in subprocess calls")
 
   # 17. Ticket Disambiguation, Branch Naming, and Ledger Schema
-  history_json_path = ".workflow/history.json"
+  history_json_rel = ".workflow/history.json"
+  history_json_path = repo_path(history_json_rel)
   if not os.path.exists(history_json_path):
-    errors.append(f"Missing {history_json_path}")
+    errors.append(f"Missing {history_json_rel}")
   else:
     try:
       with open(history_json_path) as f:
@@ -936,70 +1017,75 @@ def validate():
         item_id = item.get("id")
         issue_url = item.get("issue_url")
         if not item_id:
-          errors.append(f"{history_json_path} entry {idx} is missing 'id'")
+          errors.append(f"{history_json_rel} entry {idx} is missing 'id'")
           continue
         if local_id_regex.match(item_id):
           if issue_url is not None:
-            errors.append(f"{history_json_path} entry {idx} ({item_id}) is a local ticket but has non-null issue_url: {issue_url}")
+            errors.append(f"{history_json_rel} entry {idx} ({item_id}) is a local ticket but has non-null issue_url: {issue_url}")
         elif gh_id_regex.match(item_id):
           if not issue_url or not issue_url.startswith("https://github.com/"):
-            errors.append(f"{history_json_path} entry {idx} ({item_id}) is a GitHub ticket but lacks valid GitHub issue_url")
+            errors.append(f"{history_json_rel} entry {idx} ({item_id}) is a GitHub ticket but lacks valid GitHub issue_url")
         else:
-          errors.append(f"{history_json_path} entry {idx} has invalid id '{item_id}' - must match LOCAL-<N> or GH-<N>")
+          errors.append(f"{history_json_rel} entry {idx} has invalid id '{item_id}' - must match LOCAL-<N> or GH-<N>")
     except Exception as e:
-      errors.append(f"Error parsing {history_json_path}: {e}")
+      errors.append(f"Error parsing {history_json_rel}: {e}")
 
-  history_md_path = ".workflow/history.md"
+  history_md_rel = ".workflow/history.md"
+  history_md_path = repo_path(history_md_rel)
   if not os.path.exists(history_md_path):
-    errors.append(f"Missing {history_md_path}")
+    errors.append(f"Missing {history_md_rel}")
   else:
     with open(history_md_path) as f:
       hmd_text = f.read()
     if "(Local)" in hmd_text:
-      errors.append(f"{history_md_path} must use LOCAL-<N> instead of '#<N> (Local)'")
+      errors.append(f"{history_md_rel} must use LOCAL-<N> instead of '#<N> (Local)'")
     if "GH-1" not in hmd_text:
-      errors.append(f"{history_md_path} must use GH-<N> for GitHub issue links")
+      errors.append(f"{history_md_rel} must use GH-<N> for GitHub issue links")
 
   # Request History Ledger Git lifecycle documentation check
-  ledger_ref = "skills/makefile-workflow/references/12_request_history_ledger.md"
+  ledger_ref_rel = "skills/makefile-workflow/references/12_request_history_ledger.md"
+  ledger_ref = repo_path(ledger_ref_rel)
   if os.path.exists(ledger_ref):
     with open(ledger_ref) as f:
       ledger_text = f.read()
     if "git push origin main" not in ledger_text:
       errors.append(
-          f"{ledger_ref} must document 'git push origin main' for Target 90"
+          f"{ledger_ref_rel} must document 'git push origin main' for Target 90"
           " history commit push"
       )
     if "branch protection" not in ledger_text.lower():
       errors.append(
-          f"{ledger_ref} must document branch protection lifecycle for request"
+          f"{ledger_ref_rel} must document branch protection lifecycle for request"
           " history ledger"
       )
 
-  intake_ref = "skills/makefile-workflow/references/01_intake_and_branching.md"
+  intake_ref_rel = "skills/makefile-workflow/references/01_intake_and_branching.md"
+  intake_ref = repo_path(intake_ref_rel)
   if os.path.exists(intake_ref):
     with open(intake_ref) as f:
       intake_text = f.read()
     if "feat/local-" not in intake_text and "feat/local-<N>" not in intake_text:
-      errors.append(f"{intake_ref} must mandate 'feat/local-<N>-<slug>' or 'fix/local-<N>-<slug>' for ad-hoc / local tasks")
+      errors.append(f"{intake_ref_rel} must mandate 'feat/local-<N>-<slug>' or 'fix/local-<N>-<slug>' for ad-hoc / local tasks")
 
-  hygiene_ref = "skills/makefile-workflow/references/05_pre_commit_hygiene.md"
+  hygiene_ref_rel = "skills/makefile-workflow/references/05_pre_commit_hygiene.md"
+  hygiene_ref = repo_path(hygiene_ref_rel)
   if os.path.exists(hygiene_ref):
     with open(hygiene_ref) as f:
       hygiene_text = f.read()
     if "Ticket: LOCAL-" not in hygiene_text:
-      errors.append(f"{hygiene_ref} must document 'Ticket: LOCAL-<N>' for local session commits")
+      errors.append(f"{hygiene_ref_rel} must document 'Ticket: LOCAL-<N>' for local session commits")
     if "closes #" in hygiene_text.lower() and "never" not in hygiene_text.lower() and "prohibit" not in hygiene_text.lower() and "forbid" not in hygiene_text.lower():
-      errors.append(f"{hygiene_ref} must explicitly forbid 'closes #' on local session commits")
+      errors.append(f"{hygiene_ref_rel} must explicitly forbid 'closes #' on local session commits")
 
-  agents_rule = "rules/AGENTS.md"
+  agents_rule_rel = "rules/AGENTS.md"
+  agents_rule = repo_path(agents_rule_rel)
   if os.path.exists(agents_rule):
     with open(agents_rule) as f:
       agents_text = f.read()
     if "LOCAL-" not in agents_text:
-      errors.append(f"{agents_rule} must codify LOCAL-<N> ticket disambiguation")
+      errors.append(f"{agents_rule_rel} must codify LOCAL-<N> ticket disambiguation")
     if "closes #" not in agents_text and "Closes #" not in agents_text:
-      errors.append(f"{agents_rule} must forbid 'closes #' syntax on local session commits")
+      errors.append(f"{agents_rule_rel} must forbid 'closes #' syntax on local session commits")
 
   # Adapter and Platform Guidance Alignment for Local Tickets
   for path, expected_tokens in [
@@ -1010,8 +1096,9 @@ def validate():
       ("adapters/chatgpt/instructions.md", ["feat/local-", "closes #"]),
       ("skills/makefile-workflow/SKILL.md", ["feat/local-", "closes #", "LOCAL-", "GH-"]),
   ]:
-    if os.path.exists(path):
-      with open(path) as f:
+    full_path = repo_path(path)
+    if os.path.exists(full_path):
+      with open(full_path) as f:
         content = f.read()
       for token in expected_tokens:
         if token not in content:
@@ -1028,6 +1115,12 @@ def validate():
   errors.extend(demotion_errors)
   if not demotion_errors:
     print("✔ Plan artifact lifecycle and demotion (TEST-SCAR-PROC-103) verified.")
+
+  # Arbitrary CWD Execution Validation (GH-60)
+  cwd_errors = validate_arbitrary_cwd_execution()
+  errors.extend(cwd_errors)
+  if not cwd_errors and os.environ.get("_COMPAT_CHILD") != "1":
+    print("✔ Arbitrary CWD execution verified from temporary directory.")
 
   if errors:
     print(f"\n❌ Validation failed with {len(errors)} error(s):")
