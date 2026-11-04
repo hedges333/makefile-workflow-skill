@@ -25,6 +25,12 @@ def repo_path(*parts):
   return os.path.normpath(os.path.join(REPO_ROOT, *parts))
 
 
+def check_scar_catalog_routing(catalog_text, scar_id, spoke_filename):
+  """Verifies strict table row routing for a synthetic scar entry (SCAR-TOOL-15)."""
+  pattern = rf"(?m)^\|\s*`{re.escape(scar_id)}`\s*\|.*\|\s*\[`scars/{re.escape(spoke_filename)}`\]"
+  return bool(re.search(pattern, catalog_text))
+
+
 def validate_human_declaration_authority_and_pause_gates():
   """Validates human declaration authority and pause gates (TEST-SCAR-PROC-102).
 
@@ -102,6 +108,8 @@ def validate_human_declaration_authority_and_pause_gates():
       catalog_text = f.read()
     if "SCAR-PROC-102" not in catalog_text:
       errors.append(f"{catalog_rel} must document SCAR-PROC-102")
+    if not check_scar_catalog_routing(catalog_text, "SCAR-PROC-102", "process.md"):
+      errors.append(f"{catalog_rel} must route SCAR-PROC-102 to scars/process.md")
     if "Human Declaration Authority" not in catalog_text:
       errors.append(f"{catalog_rel} must index SCAR-PROC-102 Human Declaration Authority")
 
@@ -177,7 +185,7 @@ def validate_plan_artifact_lifecycle_and_demotion():
       catalog_text = f.read()
     if "SCAR-PROC-103" not in catalog_text:
       errors.append(f"{catalog_rel} must index SCAR-PROC-103")
-    if "scars/process.md" not in catalog_text or "SCAR-PROC-103" not in catalog_text:
+    if not check_scar_catalog_routing(catalog_text, "SCAR-PROC-103", "process.md"):
       errors.append(f"{catalog_rel} must route SCAR-PROC-103 to scars/process.md")
 
   # 3. Process Spoke Four-Part Anatomy & Key Invariants
@@ -212,6 +220,39 @@ def validate_plan_artifact_lifecycle_and_demotion():
       skill_text = f.read()
     if "<brain>" in skill_text or "<brain/" in skill_text:
       errors.append(f"{skill_rel} must preserve platform neutrality by not containing '<brain>' references")
+
+  return errors
+
+
+def validate_synthetic_scar_catalog_routing():
+  """Validates strict table row regex matching for scar catalog routing (GH-59, SCAR-TOOL-15).
+
+  Verifies:
+  1. Negative falsification: check_scar_catalog_routing correctly rejects:
+     - Misrouted spoke destination (e.g., SCAR-PROC-103 pointing to scars/testing.md)
+     - Loose unanchored prose citations (not in a Markdown table row)
+     - Multi-line separated citations
+  2. Positive validation: check_scar_catalog_routing confirms valid table row formatting.
+  """
+  errors = []
+
+  # 1. Negative Falsification Checks
+  mock_misrouted = "| `SCAR-PROC-103` | Lifecycle | Process | [`scars/testing.md`](./scars/testing.md) |"
+  if check_scar_catalog_routing(mock_misrouted, "SCAR-PROC-103", "process.md"):
+    errors.append("check_scar_catalog_routing failed to reject misrouted spoke filename")
+
+  mock_unanchored_prose = "See SCAR-PROC-103 in scars/process.md for details."
+  if check_scar_catalog_routing(mock_unanchored_prose, "SCAR-PROC-103", "process.md"):
+    errors.append("check_scar_catalog_routing failed to reject unanchored prose citation")
+
+  mock_multiline = "| `SCAR-PROC-103` |\n| scars/process.md |"
+  if check_scar_catalog_routing(mock_multiline, "SCAR-PROC-103", "process.md"):
+    errors.append("check_scar_catalog_routing failed to reject multiline separated citation")
+
+  # 2. Positive Verification
+  mock_valid = "| `SCAR-PROC-103` | Lifecycle | Process | [`scars/process.md`](./scars/process.md) |"
+  if not check_scar_catalog_routing(mock_valid, "SCAR-PROC-103", "process.md"):
+    errors.append("check_scar_catalog_routing failed to match valid table row")
 
   return errors
 
@@ -620,6 +661,7 @@ def validate():
 
   ref_09_rel = "skills/makefile-workflow/references/09_synthetic_scars_catalog.md"
   ref_09 = repo_path(ref_09_rel)
+  r09_text = ""
   if not os.path.exists(ref_09):
     errors.append(f"Missing {ref_09_rel}")
   else:
@@ -693,6 +735,8 @@ def validate():
         field_match = re.search(rf"\*\*{re.escape(field)}\*\*:\s*([^\n]+)", block)
         if not field_match or not field_match.group(1).strip():
           errors.append(f"{sf_rel} {scar_id} missing non-empty '**{field}**:'")
+      if r09_text and not check_scar_catalog_routing(r09_text, scar_id, sf):
+        errors.append(f"{ref_09_rel} Master Routing Table must strictly route {scar_id} to scars/{sf}")
 
   if total_scars_found != 28:
     errors.append(f"Expected 28 synthetic scars across category spokes, found {total_scars_found}")
@@ -1223,6 +1267,12 @@ def validate():
   errors.extend(demotion_errors)
   if not demotion_errors:
     print("✔ Plan artifact lifecycle and demotion (TEST-SCAR-PROC-103) verified.")
+
+  # Synthetic Scar Catalog Routing Invariants (GH-59, SCAR-TOOL-15)
+  routing_errors = validate_synthetic_scar_catalog_routing()
+  errors.extend(routing_errors)
+  if not routing_errors:
+    print("✔ Strict synthetic scar catalog routing (GH-59, SCAR-TOOL-15) verified.")
 
   # Diagnostic Path Formatting (GH-63)
   path_formatting_errors = validate_diagnostic_path_formatting()
