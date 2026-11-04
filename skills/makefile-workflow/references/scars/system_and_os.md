@@ -9,6 +9,7 @@ This reference manual documents operating system, filesystem, and runtime enviro
 | `SCAR-ENV-04` | Shared Workspace Umask Permissions | Multi-User Collaboration & File Modes |
 | `SCAR-SYS-05` | Cross-User File Promotion | Multi-User File System Operations |
 | `SCAR-SYS-06` | Native Runtime Environment Path Pre-Flight | Native Compiled Extensions & Temp Directories |
+| `SCAR-SYS-07` | POSIX Signal Trapping for Long-Running Workers | Signal Handling, Worker Cleanup & Lockfiles |
 
 ---
 
@@ -36,3 +37,12 @@ This reference manual documents operating system, filesystem, and runtime enviro
 - **Trap**: Developers assume native compiled extensions validate paths in environment variables like `TMPDIR` or `CACHE_DIR` and raise clean exceptions.
 - **Permanent Reflex**: If you launch native runtimes, verify that target cache and temporary directories exist and are writable using `validate_runtime_path`. If an environment path is missing or unwritable, sanitize environment variables using `sanitize_runtime_env` with verified fallback directories.
 - **Socratic Probe**: If a native compiled library encounters an invalid or missing temporary directory, could it crash with a silent segmentation fault? Have you verified that environment paths exist and are writable before spawning native processes?
+
+---
+
+### SCAR-SYS-07: POSIX Signal Trapping for Long-Running Workers (SIGTERM / SIGINT)
+
+- **Wound**: Background worker processes, daemons, and test harnesses leave orphaned lockfiles, unclosed sockets, corrupt database connections, and zombie child processes when killed by SIGTERM or SIGINT.
+- **Trap**: Assuming processes always terminate through normal language exit handlers (`atexit` or `finally` blocks). Operating system signals (`SIGTERM`, `SIGINT`) terminate processes immediately without executing `finally` blocks unless explicitly intercepted.
+- **Permanent Reflex**: Intercept POSIX termination signals (`SIGTERM`, `SIGINT`) in long-running workers using `SignalTrap`. Register cleanup callbacks in reverse order (LIFO), unlink lockfiles, and ensure exception isolation across cleanup handlers before exiting.
+- **Socratic Probe**: If this worker receives an asynchronous SIGTERM or SIGINT from the OS or orchestrator, will it leave orphaned lockfiles or dangling resources on disk? Have you trapped POSIX signals and registered LIFO cleanup routines to ensure clean termination?

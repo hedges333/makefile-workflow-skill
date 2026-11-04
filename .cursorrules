@@ -11,6 +11,7 @@ Follow these rules for every coding task in Cursor:
 7. In multi-language repositories, run subproject tests during development and run the full test suite before commit.
 8. Write documentation and commit messages in Simple English: short sentences, active voice, and terms defined at first use.
 9. If `.workflow/config.json` or `~/.gemini/config/makefile-workflow.json` exists, read it to load user configuration.
+10. Intercept POSIX signals (`SIGTERM` and `SIGINT`) in long-running workers and clean up lockfiles under `SCAR-SYS-07`.
 
 ## Interactive Model Switch Reminder
 
