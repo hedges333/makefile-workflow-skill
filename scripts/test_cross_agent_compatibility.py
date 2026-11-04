@@ -216,6 +216,101 @@ def validate_plan_artifact_lifecycle_and_demotion():
   return errors
 
 
+def validate_diagnostic_path_formatting():
+  """Validates standardized diagnostic relative path formatting (GH-63).
+
+  Verifies:
+  1. No diagnostic error string in scripts/test_cross_agent_compatibility.py formats
+     absolute repo_path variables into 'Missing ...' or 'Invalid ...' messages.
+  2. All 13 canonical relative path variables are present and used in diagnostics:
+     claude_rel, codex_rel, claude_md_rel, cursorrules_rel, cursor_mdc_rel,
+     copilot_rel, chatgpt_rel, hooks_rel, mcp_rel, cfg_template_rel,
+     ref_13_rel, ref_08_rel, ref_14_rel.
+  3. Critic agent invariant errors format critic_agent_rel instead of absolute critic_agent.
+  """
+  errors = []
+  compat_script_rel = "scripts/test_cross_agent_compatibility.py"
+  compat_script = repo_path(compat_script_rel)
+  if not os.path.exists(compat_script):
+    errors.append(f"Missing {compat_script_rel}")
+    return errors
+
+  with open(compat_script, "r", encoding="utf-8") as f:
+    source_text = f.read()
+
+  if "\ndef validate():\n" not in source_text:
+    errors.append(f"{compat_script_rel} missing 'def validate():'")
+    return errors
+
+  validate_body = source_text.split("\ndef validate():\n")[1]
+
+  # Check unstandardized legacy variable names in Missing/Invalid diagnostics
+  legacy_defect_patterns = [
+      ("Missing {claude_path}", "claude_rel"),
+      ("Invalid {claude_path}", "claude_rel"),
+      ("Missing {codex_path}", "codex_rel"),
+      ("Invalid {codex_path}", "codex_rel"),
+      ("Missing {claude_md}", "claude_md_rel"),
+      ("Missing {cursorrules}", "cursorrules_rel"),
+      ("Missing {cursor_mdc}", "cursor_mdc_rel"),
+      ("Missing {copilot_path}", "copilot_rel"),
+      ("Missing {chatgpt_path}", "chatgpt_rel"),
+      ("Missing {hooks_path}", "hooks_rel"),
+      ("Invalid {hooks_path}", "hooks_rel"),
+      ("Missing {mcp_path}", "mcp_rel"),
+      ("Invalid {mcp_path}", "mcp_rel"),
+      ("Missing {cfg_template}", "cfg_template_rel"),
+      ("Invalid {cfg_template}", "cfg_template_rel"),
+      ("{cfg_template} must declare 'models'", "cfg_template_rel"),
+      ("Missing {ref_13}", "ref_13_rel"),
+      ("Missing {ref_08}", "ref_08_rel"),
+      ("Missing {ref_14}", "ref_14_rel"),
+      ("Incomplete pattern coverage in {ref_14}", "ref_14_rel"),
+  ]
+
+  for legacy_pattern, expected_rel in legacy_defect_patterns:
+    if legacy_pattern in validate_body:
+      errors.append(
+          f"{compat_script_rel} contains unstandardized diagnostic '{legacy_pattern}' (expected '{expected_rel}')"
+      )
+
+  # Check critic agent check formatting in lines 718-736
+  if "{critic_agent} must contain canonical heading" in validate_body:
+    errors.append(
+        f"{compat_script_rel} formats absolute '{{critic_agent}}' instead of '{{critic_agent_rel}}' in heading checks"
+    )
+  if "{critic_agent} must inspect blast radius" in validate_body:
+    errors.append(
+        f"{compat_script_rel} formats absolute '{{critic_agent}}' instead of '{{critic_agent_rel}}' in blast radius check"
+    )
+  if "{critic_agent} Pillar 2" in validate_body or "{critic_agent} Pillar 5" in validate_body:
+    errors.append(
+        f"{compat_script_rel} formats absolute '{{critic_agent}}' instead of '{{critic_agent_rel}}' in Pillar checks"
+    )
+
+  # Check that all canonical relative path variables are declared
+  canonical_rel_vars = [
+      "claude_rel",
+      "codex_rel",
+      "claude_md_rel",
+      "cursorrules_rel",
+      "cursor_mdc_rel",
+      "copilot_rel",
+      "chatgpt_rel",
+      "hooks_rel",
+      "mcp_rel",
+      "cfg_template_rel",
+      "ref_13_rel",
+      "ref_08_rel",
+      "ref_14_rel",
+  ]
+  for rel_var in canonical_rel_vars:
+    if f"{rel_var} = " not in validate_body:
+      errors.append(f"{compat_script_rel} must declare canonical relative variable '{rel_var}'")
+
+  return errors
+
+
 def validate_arbitrary_cwd_execution():
   """Validates arbitrary cwd execution without breaking relative path lookups."""
   if os.environ.get("_COMPAT_CHILD") == "1":
@@ -245,36 +340,39 @@ def validate():
   errors = []
 
   # 1. Claude Plugin Manifest
-  claude_path = repo_path(".claude-plugin/plugin.json")
+  claude_rel = ".claude-plugin/plugin.json"
+  claude_path = repo_path(claude_rel)
   if not os.path.exists(claude_path):
-    errors.append(f"Missing {claude_path}")
+    errors.append(f"Missing {claude_rel}")
   else:
     try:
       with open(claude_path) as f:
         data = json.load(f)
       assert data.get("name") == "makefile-workflow"
       assert "skills" in data
-      print("✔ Claude Code plugin manifest (.claude-plugin/plugin.json) valid.")
+      print(f"✔ Claude Code plugin manifest ({claude_rel}) valid.")
     except Exception as e:
-      errors.append(f"Invalid {claude_path}: {e}")
+      errors.append(f"Invalid {claude_rel}: {e}")
 
   # 2. Codex Plugin Manifest
-  codex_path = repo_path(".codex-plugin/plugin.json")
+  codex_rel = ".codex-plugin/plugin.json"
+  codex_path = repo_path(codex_rel)
   if not os.path.exists(codex_path):
-    errors.append(f"Missing {codex_path}")
+    errors.append(f"Missing {codex_rel}")
   else:
     try:
       with open(codex_path) as f:
         data = json.load(f)
       assert data.get("name") == "makefile-workflow"
-      print("✔ OpenAI Codex plugin manifest (.codex-plugin/plugin.json) valid.")
+      print(f"✔ OpenAI Codex plugin manifest ({codex_rel}) valid.")
     except Exception as e:
-      errors.append(f"Invalid {codex_path}: {e}")
+      errors.append(f"Invalid {codex_rel}: {e}")
 
   # 3. CLAUDE.md
-  claude_md = repo_path("CLAUDE.md")
+  claude_md_rel = "CLAUDE.md"
+  claude_md = repo_path(claude_md_rel)
   if not os.path.exists(claude_md):
-    errors.append(f"Missing {claude_md}")
+    errors.append(f"Missing {claude_md_rel}")
   else:
     with open(claude_md) as f:
       content = f.read()
@@ -285,21 +383,23 @@ def validate():
       errors.append("CLAUDE.md Target 40 command must reference .workflow/state/approved_tree.txt")
     if "..HEAD" in content:
       errors.append("CLAUDE.md Target 40 command must not diff against ..HEAD (use locked approved_tree)")
-    print("✔ Claude Code root instructions (CLAUDE.md) valid.")
+    print(f"✔ Claude Code root instructions ({claude_md_rel}) valid.")
 
   # 4. Cursor Rules
-  cursorrules = repo_path(".cursorrules")
-  cursor_mdc = repo_path(".cursor/rules/makefile-workflow.mdc")
+  cursorrules_rel = ".cursorrules"
+  cursorrules = repo_path(cursorrules_rel)
+  cursor_mdc_rel = ".cursor/rules/makefile-workflow.mdc"
+  cursor_mdc = repo_path(cursor_mdc_rel)
   if not os.path.exists(cursorrules):
-    errors.append(f"Missing {cursorrules}")
+    errors.append(f"Missing {cursorrules_rel}")
   else:
     with open(cursorrules) as f:
       cr_text = f.read()
     assert "Target 40" in cr_text or "deep-reasoning" in cr_text
-    print("✔ Cursor rules (.cursorrules) valid with model reminder.")
+    print(f"✔ Cursor rules ({cursorrules_rel}) valid with model reminder.")
 
   if not os.path.exists(cursor_mdc):
-    errors.append(f"Missing {cursor_mdc}")
+    errors.append(f"Missing {cursor_mdc_rel}")
   else:
     with open(cursor_mdc) as f:
       mdc_content = f.read()
@@ -308,35 +408,38 @@ def validate():
     assert "globs:" in mdc_content
     assert "alwaysApply:" in mdc_content
     assert "Model Switch Reminder" in mdc_content
-    print("✔ Cursor MDC rule file (.cursor/rules/makefile-workflow.mdc) valid.")
+    print(f"✔ Cursor MDC rule file ({cursor_mdc_rel}) valid.")
 
   # 5. GitHub Copilot Instructions
-  copilot_path = repo_path(".github/copilot-instructions.md")
+  copilot_rel = ".github/copilot-instructions.md"
+  copilot_path = repo_path(copilot_rel)
   if not os.path.exists(copilot_path):
-    errors.append(f"Missing {copilot_path}")
+    errors.append(f"Missing {copilot_rel}")
   else:
     with open(copilot_path) as f:
       c_content = f.read()
     assert "Makefile Workflow" in c_content
     assert "Six Pillars" in c_content
     assert "Interactive Model Switch Reminder" in c_content
-    print("✔ GitHub Copilot instructions (.github/copilot-instructions.md) valid.")
+    print(f"✔ GitHub Copilot instructions ({copilot_rel}) valid.")
 
   # 6. ChatGPT System Prompt
-  chatgpt_path = repo_path("adapters/chatgpt/instructions.md")
+  chatgpt_rel = "adapters/chatgpt/instructions.md"
+  chatgpt_path = repo_path(chatgpt_rel)
   if not os.path.exists(chatgpt_path):
-    errors.append(f"Missing {chatgpt_path}")
+    errors.append(f"Missing {chatgpt_rel}")
   else:
     with open(chatgpt_path) as f:
       cg_content = f.read()
     assert "Target 00" in cg_content
     assert "Target 90" in cg_content
-    print("✔ ChatGPT system instructions (adapters/chatgpt/instructions.md) valid.")
+    print(f"✔ ChatGPT system instructions ({chatgpt_rel}) valid.")
 
   # 7. Hooks Configuration
-  hooks_path = repo_path("hooks.json")
+  hooks_rel = "hooks.json"
+  hooks_path = repo_path(hooks_rel)
   if not os.path.exists(hooks_path):
-    errors.append(f"Missing {hooks_path}")
+    errors.append(f"Missing {hooks_rel}")
   else:
     try:
       with open(hooks_path) as f:
@@ -344,14 +447,15 @@ def validate():
       guard = hooks_data.get("makefile-workflow-guard", {})
       assert "PreToolUse" in guard
       assert "SessionStart" in guard
-      print("✔ Antigravity hooks manifest (hooks.json) valid.")
+      print(f"✔ Antigravity hooks manifest ({hooks_rel}) valid.")
     except Exception as e:
-      errors.append(f"Invalid {hooks_path}: {e}")
+      errors.append(f"Invalid {hooks_rel}: {e}")
 
   # 8. MCP Server Configuration
-  mcp_path = repo_path("mcp_config.json")
+  mcp_rel = "mcp_config.json"
+  mcp_path = repo_path(mcp_rel)
   if not os.path.exists(mcp_path):
-    errors.append(f"Missing {mcp_path}")
+    errors.append(f"Missing {mcp_rel}")
   else:
     try:
       with open(mcp_path) as f:
@@ -365,14 +469,15 @@ def validate():
           else server_script
       )
       assert os.path.exists(full_server_script)
-      print("✔ MCP configuration (mcp_config.json) valid.")
+      print(f"✔ MCP configuration ({mcp_rel}) valid.")
     except Exception as e:
-      errors.append(f"Invalid {mcp_path}: {e}")
+      errors.append(f"Invalid {mcp_rel}: {e}")
 
   # 9. Configuration Template & Reference Manual
-  cfg_template = repo_path(".workflow/config.json.example")
+  cfg_template_rel = ".workflow/config.json.example"
+  cfg_template = repo_path(cfg_template_rel)
   if not os.path.exists(cfg_template):
-    errors.append(f"Missing {cfg_template}")
+    errors.append(f"Missing {cfg_template_rel}")
   else:
     try:
       with open(cfg_template) as f:
@@ -381,7 +486,7 @@ def validate():
       assert "prodDatabases" in cfg_data["database"]
       assert "testDatabases" in cfg_data["database"]
       assert "prodHosts" in cfg_data["database"]
-      assert "models" in cfg_data, f"{cfg_template} must declare 'models' section"
+      assert "models" in cfg_data, f"{cfg_template_rel} must declare 'models' section"
       for role in (
           "adversarial-critic",
           "archaeology-worker",
@@ -390,18 +495,18 @@ def validate():
       ):
         assert (
             cfg_data["models"].get(role) == "inherit"
-        ), f"{cfg_template} role '{role}' must default to 'inherit', got '{cfg_data['models'].get(role)}'"
+        ), f"{cfg_template_rel} role '{role}' must default to 'inherit', got '{cfg_data['models'].get(role)}'"
       with open(cfg_template) as f:
         cfg_raw = f.read()
       if "Antigravity" not in cfg_raw or "inherit" not in cfg_raw:
-        errors.append(f"{cfg_template} must document Antigravity specificity and inherit defaults")
+        errors.append(f"{cfg_template_rel} must document Antigravity specificity and inherit defaults")
       if "flash_lite" not in cfg_raw or "pro" not in cfg_raw:
-        errors.append(f"{cfg_template} must document valid Antigravity model tiers (inherit, flash_lite, flash, pro)")
+        errors.append(f"{cfg_template_rel} must document valid Antigravity model tiers (inherit, flash_lite, flash, pro)")
       if "effort" not in cfg_raw.lower():
-        errors.append(f"{cfg_template} must document session reasoning effort inheritance")
-      print("✔ Workflow configuration template (.workflow/config.json.example) valid.")
+        errors.append(f"{cfg_template_rel} must document session reasoning effort inheritance")
+      print(f"✔ Workflow configuration template ({cfg_template_rel}) valid.")
     except Exception as e:
-      errors.append(f"Invalid {cfg_template}: {e}")
+      errors.append(f"Invalid {cfg_template_rel}: {e}")
 
   # 9b. Canonical Default Configuration (default_config.json)
   default_cfg_rel = "default_config.json"
@@ -422,9 +527,10 @@ def validate():
     except Exception as e:
       errors.append(f"Invalid {default_cfg_rel}: {e}")
 
-  ref_13 = repo_path("skills/makefile-workflow/references/13_configuration_and_user_preferences.md")
+  ref_13_rel = "skills/makefile-workflow/references/13_configuration_and_user_preferences.md"
+  ref_13 = repo_path(ref_13_rel)
   if not os.path.exists(ref_13):
-    errors.append(f"Missing {ref_13}")
+    errors.append(f"Missing {ref_13_rel}")
   else:
     with open(ref_13) as f:
       r13_text = f.read()
@@ -435,39 +541,41 @@ def validate():
         "triage-worker",
     ):
       if f"`{role}`: `inherit`" not in r13_text and f'"{role}": "inherit"' not in r13_text:
-        errors.append(f"{ref_13} must document 'inherit' default for {role}")
+        errors.append(f"{ref_13_rel} must document 'inherit' default for {role}")
     if "flash_lite" not in r13_text or "flash" not in r13_text or "pro" not in r13_text:
-      errors.append(f"{ref_13} must document all four Antigravity tier enums")
+      errors.append(f"{ref_13_rel} must document all four Antigravity tier enums")
     if "reasoning effort" not in r13_text.lower() and "/effort" not in r13_text:
-      errors.append(f"{ref_13} must document reasoning effort (/effort) inheritance")
+      errors.append(f"{ref_13_rel} must document reasoning effort (/effort) inheritance")
     if not any("references/13_" in e for e in errors):
-      print("✔ Configuration reference manual (references/13_configuration_and_user_preferences.md) valid.")
+      print(f"✔ Configuration reference manual ({ref_13_rel}) valid.")
 
-  ref_08 = repo_path("skills/makefile-workflow/references/08_subagent_orchestration.md")
+  ref_08_rel = "skills/makefile-workflow/references/08_subagent_orchestration.md"
+  ref_08 = repo_path(ref_08_rel)
   if not os.path.exists(ref_08):
-    errors.append(f"Missing {ref_08}")
+    errors.append(f"Missing {ref_08_rel}")
   else:
     with open(ref_08) as f:
       r08_text = f.read()
     if "Default tier: flash" in r08_text or "Default tier: pro" in r08_text:
-      errors.append(f"{ref_08} must default all subagents to inherit")
+      errors.append(f"{ref_08_rel} must default all subagents to inherit")
     if "socratic" not in r08_text.lower() or "delegation protocol" not in r08_text.lower():
-      errors.append(f"{ref_08} must document Socratic Subagent Delegation Protocol")
+      errors.append(f"{ref_08_rel} must document Socratic Subagent Delegation Protocol")
     for role_name in ("archaeology-worker", "tdd-worker", "adversarial-critic", "triage-worker"):
       if role_name not in r08_text:
-        errors.append(f"{ref_08} must document Socratic prompt pattern for {role_name}")
+        errors.append(f"{ref_08_rel} must document Socratic prompt pattern for {role_name}")
 
   # 10. Design Patterns Reference Manual
-  ref_14 = repo_path("skills/makefile-workflow/references/14_design_patterns_and_architecture.md")
+  ref_14_rel = "skills/makefile-workflow/references/14_design_patterns_and_architecture.md"
+  ref_14 = repo_path(ref_14_rel)
   if not os.path.exists(ref_14):
-    errors.append(f"Missing {ref_14}")
+    errors.append(f"Missing {ref_14_rel}")
   else:
     with open(ref_14) as f:
       r14_text = f.read()
     if "Factory Method" not in r14_text or "Game Loop" not in r14_text or "ORM" not in r14_text:
-      errors.append(f"Incomplete pattern coverage in {ref_14}")
+      errors.append(f"Incomplete pattern coverage in {ref_14_rel}")
     else:
-      print("✔ Design patterns reference manual (references/14_design_patterns_and_architecture.md) valid.")
+      print(f"✔ Design patterns reference manual ({ref_14_rel}) valid.")
 
   # 11. Polyglot 27-Language Guides and Manifests
   for guide_name in (
@@ -715,25 +823,25 @@ def validate():
     ]
     for pillar in canonical_pillars:
       if f"### {pillar}" not in critic_text:
-        errors.append(f"{critic_agent} must contain canonical heading '### {pillar}'")
+        errors.append(f"{critic_agent_rel} must contain canonical heading '### {pillar}'")
     if "blast radius" not in critic_text.lower():
-      errors.append(f"{critic_agent} must inspect blast radius as mandatory canary")
+      errors.append(f"{critic_agent_rel} must inspect blast radius as mandatory canary")
     if "compressed" not in critic_text.lower() and "table" not in critic_text.lower():
-      errors.append(f"{critic_agent} must prohibit compressed summary tables")
+      errors.append(f"{critic_agent_rel} must prohibit compressed summary tables")
     if "comprehensiveness" not in critic_text.lower() and "comprehensive" not in critic_text.lower():
-      errors.append(f"{critic_agent} Pillar 2 must assess test comprehensiveness")
+      errors.append(f"{critic_agent_rel} Pillar 2 must assess test comprehensiveness")
     if "tdd" not in critic_text.lower() and "test-driven" not in critic_text.lower():
-      errors.append(f"{critic_agent} Pillar 2 must mandate TDD methodology")
+      errors.append(f"{critic_agent_rel} Pillar 2 must mandate TDD methodology")
     if "failure falsification" not in critic_text.lower():
-      errors.append(f"{critic_agent} Pillar 2 must mandate failure falsification")
+      errors.append(f"{critic_agent_rel} Pillar 2 must mandate failure falsification")
     if "burden" not in critic_text.lower() and "balance" not in critic_text.lower():
-      errors.append(f"{critic_agent} Pillar 2 must assess test execution burden balance")
+      errors.append(f"{critic_agent_rel} Pillar 2 must assess test execution burden balance")
     if "ephemeral" not in critic_text.lower():
-      errors.append(f"{critic_agent} Pillar 2 must clarify ephemeral loopback socket permissions")
+      errors.append(f"{critic_agent_rel} Pillar 2 must clarify ephemeral loopback socket permissions")
     if "simple english" not in critic_text.lower():
-      errors.append(f"{critic_agent} Pillar 5 must enforce Simple English standards")
+      errors.append(f"{critic_agent_rel} Pillar 5 must enforce Simple English standards")
     if "20 words" not in critic_text:
-      errors.append(f"{critic_agent} Pillar 5 must document sentence length caps (20 words)")
+      errors.append(f"{critic_agent_rel} Pillar 5 must document sentence length caps (20 words)")
 
   triage_agent_rel = "agents/triage-worker.md"
   triage_agent = repo_path(triage_agent_rel)
@@ -1115,6 +1223,12 @@ def validate():
   errors.extend(demotion_errors)
   if not demotion_errors:
     print("✔ Plan artifact lifecycle and demotion (TEST-SCAR-PROC-103) verified.")
+
+  # Diagnostic Path Formatting (GH-63)
+  path_formatting_errors = validate_diagnostic_path_formatting()
+  errors.extend(path_formatting_errors)
+  if not path_formatting_errors:
+    print("✔ Diagnostic missing path formatting (GH-63) verified.")
 
   # Arbitrary CWD Execution Validation (GH-60)
   cwd_errors = validate_arbitrary_cwd_execution()
