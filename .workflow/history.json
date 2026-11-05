@@ -765,5 +765,28 @@
     "scars_earned": [
       "SCAR-SH-01: Prefer Temporary Script Files Over Complex Shell Quoting"
     ]
+  },
+  {
+    "id": "GH-31",
+    "issue_url": "https://github.com/hedges333/makeflow-skill/issues/31",
+    "title": "Codify SCAR-ARCH-05: Testable Object-Oriented Script Template (BaseScript Pattern)",
+    "request": "Codify SCAR-ARCH-05 in synthetic scars catalog, reference manuals, agent rules, and adapters. Provide standard BaseScript template and assert 32 synthetic scars.",
+    "branch": "feat/31-basescript-pattern",
+    "subprojects": [
+      "rules",
+      "skills",
+      "scripts",
+      "adapters"
+    ],
+    "started_at": "2026-11-05T19:46:00Z",
+    "completed_at": "2026-11-05T20:40:48Z",
+    "commit_sha": "edcbec4",
+    "pr_number": 77,
+    "pr_url": "https://github.com/hedges333/makeflow-skill/pull/77",
+    "closes_issue": true,
+    "tests_added": 11,
+    "scars_earned": [
+      "SCAR-ARCH-05: Testable Object-Oriented Script Template (BaseScript Pattern)"
+    ]
   }
 ]
