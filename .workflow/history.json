@@ -788,5 +788,24 @@
     "scars_earned": [
       "SCAR-ARCH-05: Testable Object-Oriented Script Template (BaseScript Pattern)"
     ]
+  },
+  {
+    "id": "GH-75",
+    "issue_url": "https://github.com/hedges333/makeflow-skill/issues/75",
+    "title": "Restrict mutable state cards exclusively to project workspace .workflow directory and eliminate plugin-directory leaks",
+    "request": "Restrict mutable session state cards and workflow configuration lookups strictly to explicit workspace paths, eliminating ambient fallbacks to plugin installation directories in hooks and MCP tools.",
+    "branch": "fix/75-restrict-state-cards-workspace",
+    "subprojects": [
+      "scripts",
+      "mcp"
+    ],
+    "started_at": "2026-11-05T20:43:00Z",
+    "completed_at": "2026-11-05T21:22:52Z",
+    "commit_sha": "ef95e59",
+    "pr_number": 79,
+    "pr_url": "https://github.com/hedges333/makeflow-skill/pull/79",
+    "closes_issue": true,
+    "tests_added": 2,
+    "scars_earned": []
   }
 ]
