@@ -5,10 +5,10 @@ set -euo pipefail
 # Usage:
 #   ./install.sh                # Install locally
 #   ./install.sh --dry-run      # Check files without installing
-#   curl -fsSL https://raw.githubusercontent.com/hedges333/makefile-workflow-skill/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/hedges333/makeflow-skill/main/install.sh | bash
 
-PLUGIN_NAME="makefile-workflow"
-REPO_URL="https://github.com/hedges333/makefile-workflow-skill.git"
+PLUGIN_NAME="makeflow"
+REPO_URL="https://github.com/hedges333/makeflow-skill.git"
 TARGET_DIR="${HOME}/.gemini/config/plugins/${PLUGIN_NAME}"
 
 DRY_RUN=false
@@ -38,7 +38,7 @@ echo "=== Installing Makefile Workflow Plugin ==="
 if command -v agy >/dev/null 2>&1; then
   echo "Found Antigravity CLI (agy)."
 
-  if [ -f "plugin.json" ] && [ -d "skills/makefile-workflow" ]; then
+  if [ -f "plugin.json" ] && [ -d "skills/makeflow" ]; then
     echo "Running plugin check from current directory..."
     agy plugin validate . --strict
     if [ "$DRY_RUN" = true ]; then
@@ -61,7 +61,7 @@ else
     echo "Dry run: will copy files to ${TARGET_DIR}."
     exit 0
   fi
-  if [ -f "plugin.json" ] && [ -d "skills/makefile-workflow" ]; then
+  if [ -f "plugin.json" ] && [ -d "skills/makeflow" ]; then
     copy_plugin_tree "." "${TARGET_DIR}"
   else
     TEMP_DIR=$(mktemp -d)

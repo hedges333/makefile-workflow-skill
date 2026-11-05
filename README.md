@@ -6,9 +6,9 @@
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
-  <a href="https://github.com/hedges333/makefile-workflow-skill"><img src="https://img.shields.io/badge/plugin-antigravity-38bdf8.svg" alt="Antigravity Plugin"></a>
-  <a href="https://github.com/hedges333/makefile-workflow-skill"><img src="https://img.shields.io/badge/protocols-MCP%20%7C%20Hooks%20%7C%20Rules-818cf8.svg" alt="Protocols"></a>
-  <a href="https://github.com/hedges333/makefile-workflow-skill"><img src="https://img.shields.io/badge/polyglot-27%20languages-10b981.svg" alt="27 Languages"></a>
+  <a href="https://github.com/hedges333/makeflow-skill"><img src="https://img.shields.io/badge/plugin-antigravity-38bdf8.svg" alt="Antigravity Plugin"></a>
+  <a href="https://github.com/hedges333/makeflow-skill"><img src="https://img.shields.io/badge/protocols-MCP%20%7C%20Hooks%20%7C%20Rules-818cf8.svg" alt="Protocols"></a>
+  <a href="https://github.com/hedges333/makeflow-skill"><img src="https://img.shields.io/badge/polyglot-27%20languages-10b981.svg" alt="27 Languages"></a>
 </p>
 
 <p align="center">
@@ -65,7 +65,7 @@ This project builds on Randal L. Schwartz's [*Synthetic Scars* series on DEV.to]
 Install directly from GitHub in your terminal:
 
 ```bash
-agy plugin install https://github.com/hedges333/makefile-workflow-skill
+agy plugin install https://github.com/hedges333/makeflow-skill
 ```
 
 If you cloned this repository locally, run this command inside the repository directory:
@@ -79,7 +79,7 @@ agy plugin install .
 Run the installer script with `curl` and `bash`:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/hedges333/makefile-workflow-skill/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/hedges333/makeflow-skill/main/install.sh | bash
 ```
 
 ### Method 3: GNU Make
@@ -227,7 +227,7 @@ In Google Antigravity, four specialized subagents isolate heavy operations from 
 
 ### 1. Workspace or Global Configuration File
 
-Copy [`.workflow/config.json.example`](./.workflow/config.json.example) to `<workspace>/.workflow/config.json` (per project) or `~/.gemini/config/makefile-workflow.json` (global):
+Copy [`.workflow/config.json.example`](./.workflow/config.json.example) to `<workspace>/.workflow/config.json` (per project) or `~/.gemini/config/makeflow.json` (global):
 
 ```json
 {
@@ -275,7 +275,7 @@ export MAKEFILE_WORKFLOW_PROD_HOSTS="db.company.internal"
 
 ### 3. Interactive IDE Model Switch Reminders
 
-Interactive IDE tools (Cursor, GitHub Copilot, ChatGPT) cannot switch models automatically through subagent calls. At Target 40, the agent prompts you to select your deep-reasoning model in the UI picker. At Target 45, the agent tells you that you can switch back. Read [13. Configuration and User Preferences](./skills/makefile-workflow/references/13_configuration_and_user_preferences.md) for full details.
+Interactive IDE tools (Cursor, GitHub Copilot, ChatGPT) cannot switch models automatically through subagent calls. At Target 40, the agent prompts you to select your deep-reasoning model in the UI picker. At Target 45, the agent tells you that you can switch back. Read [13. Configuration and User Preferences](./skills/makeflow/references/13_configuration_and_user_preferences.md) for full details.
 
 ---
 
@@ -285,9 +285,9 @@ Each AI platform enforces the workflow with its native extension hooks and rule 
 
 | Platform | Enforcement Mechanism | Setup Instructions |
 | :--- | :--- | :--- |
-| Google Antigravity | Lifecycle hooks (`hooks.json`), MCP server, and `rules/AGENTS.md` | Run `agy plugin install https://github.com/hedges333/makefile-workflow-skill`. |
-| Claude Code | Root [`CLAUDE.md`](./CLAUDE.md) instructions and MCP server | Register MCP with `claude mcp add makefile-workflow -- python3 /path/to/mcp/server.py`. |
-| Cursor | [`.cursorrules`](./.cursorrules), [`.cursor/rules/makefile-workflow.mdc`](./.cursor/rules/makefile-workflow.mdc), and MCP | Enable the MCP server in Cursor Settings under Features and MCP. |
+| Google Antigravity | Lifecycle hooks (`hooks.json`), MCP server, and `rules/AGENTS.md` | Run `agy plugin install https://github.com/hedges333/makeflow-skill`. |
+| Claude Code | Root [`CLAUDE.md`](./CLAUDE.md) instructions and MCP server | Register MCP with `claude mcp add makeflow -- python3 /path/to/mcp/server.py`. |
+| Cursor | [`.cursorrules`](./.cursorrules), [`.cursor/rules/makeflow.mdc`](./.cursor/rules/makeflow.mdc), and MCP | Enable the MCP server in Cursor Settings under Features and MCP. |
 | GitHub Copilot | [`.github/copilot-instructions.md`](./.github/copilot-instructions.md) | Automatic in VS Code and GitHub Copilot Chat when present in the repository. |
 | ChatGPT | [`adapters/chatgpt/instructions.md`](./adapters/chatgpt/instructions.md) | Paste the prompt into Custom GPT instructions or project instructions. |
 
@@ -299,27 +299,27 @@ At Target 15, `archaeology-worker` detects every language and subproject in the 
 
 | Language | Test Runner | Smoke Test File | Lint and Format | Guide |
 | :--- | :--- | :--- | :--- | :--- |
-| Python | `pytest` | `tests/test_smoke.py` | `ruff`, `black` | [Python Guide](./skills/makefile-workflow/references/polyglot/python.md) |
-| TypeScript and JS | `vitest` / `node --test` | `tests/smoke.test.ts` | `eslint`, `prettier` | [TypeScript Guide](./skills/makefile-workflow/references/polyglot/typescript_javascript.md) |
-| Rust | `cargo test` | `tests/smoke_test.rs` | `clippy`, `rustfmt` | [Rust Guide](./skills/makefile-workflow/references/polyglot/rust.md) |
-| Go | `go test` | `smoke_test.go` | `golangci-lint`, `gofmt` | [Go Guide](./skills/makefile-workflow/references/polyglot/go.md) |
-| Dart and Flutter | `flutter test` | `test/smoke_test.dart` | `dart analyze`, `dart format` | [Dart Guide](./skills/makefile-workflow/references/polyglot/dart_flutter.md) |
-| PHP | `phpunit` | `tests/SmokeTest.php` | `phpstan`, `php-cs-fixer` | [PHP Guide](./skills/makefile-workflow/references/polyglot/php.md) |
-| C and C++ | `ctest` | `tests/smoke_test.c` | `clang-tidy`, `clang-format` | [C/C++ Guide](./skills/makefile-workflow/references/polyglot/c_cpp.md) |
-| Elixir | `mix test` | `test/smoke_test.exs` | `credo`, `mix format` | [Elixir Guide](./skills/makefile-workflow/references/polyglot/elixir.md) |
-| Perl | `prove` | `t/00-smoke.t` | `perlcritic`, `perltidy` | [Perl Guide](./skills/makefile-workflow/references/polyglot/perl.md) |
-| Java, Kotlin, Scala | `mvn` / `gradle` / `sbt` | `SmokeTest.java` / `kt` / `scala` | Spotless, `ktlint`, `scalafmt` | [JVM Guide](./skills/makefile-workflow/references/polyglot/java_kotlin_scala.md) |
-| C# (.NET) | `dotnet test` | `tests/SmokeTests.cs` | `dotnet format` | [C# Guide](./skills/makefile-workflow/references/polyglot/csharp_dotnet.md) |
-| PowerShell | `Invoke-Pester` | `tests/Smoke.Tests.ps1` | `PSScriptAnalyzer` | [PowerShell Guide](./skills/makefile-workflow/references/polyglot/powershell.md) |
-| Swift | `swift test` | `Tests/SmokeTests/SmokeTests.swift` | `swiftlint`, `swiftformat` | [Swift Guide](./skills/makefile-workflow/references/polyglot/swift.md) |
-| Ruby | `rspec` | `spec/smoke_spec.rb` | `rubocop` | [Ruby Guide](./skills/makefile-workflow/references/polyglot/ruby.md) |
-| SQL and Migrations | `pg_prove` / `dbt` | `tests/test_schema.sql` | `sqlfluff` | [SQL Guide](./skills/makefile-workflow/references/polyglot/sql_migrations.md) |
-| R, Julia, and Lua | `testthat`, `Pkg.test`, `busted` | `test-smoke.R`, `runtests.jl` | `lintr`, `JuliaFormatter` | [Scientific Guide](./skills/makefile-workflow/references/polyglot/scientific_r_julia_lua.md) |
-| GDScript (Godot) | `godot --headless` (GUT / GdUnit4) | `test/unit/test_smoke.gd` | `gdlint`, `gdformat` | [GDScript Guide](./skills/makefile-workflow/references/polyglot/gdscript_godot.md) |
-| Nim | `nimble test` / `testament` | `tests/t_smoke.nim` | `nim check`, `nph` / `nimpretty` | [Nim Guide](./skills/makefile-workflow/references/polyglot/nim.md) |
-| Haxe | `haxe` (`utest`) | `test/SmokeTest.hx` | `checkstyle`, `formatter` | [Haxe Guide](./skills/makefile-workflow/references/polyglot/haxe.md) |
-| Odin | `odin test` | `tests/smoke_test.odin` | `odin check -vet`, `odinfmt` | [Odin Guide](./skills/makefile-workflow/references/polyglot/odin.md) |
-| D | `dub test` / `dmd -unittest` | `source/smoke_test.d` | `dscanner`, `dfmt` | [D Guide](./skills/makefile-workflow/references/polyglot/dlang.md) |
+| Python | `pytest` | `tests/test_smoke.py` | `ruff`, `black` | [Python Guide](./skills/makeflow/references/polyglot/python.md) |
+| TypeScript and JS | `vitest` / `node --test` | `tests/smoke.test.ts` | `eslint`, `prettier` | [TypeScript Guide](./skills/makeflow/references/polyglot/typescript_javascript.md) |
+| Rust | `cargo test` | `tests/smoke_test.rs` | `clippy`, `rustfmt` | [Rust Guide](./skills/makeflow/references/polyglot/rust.md) |
+| Go | `go test` | `smoke_test.go` | `golangci-lint`, `gofmt` | [Go Guide](./skills/makeflow/references/polyglot/go.md) |
+| Dart and Flutter | `flutter test` | `test/smoke_test.dart` | `dart analyze`, `dart format` | [Dart Guide](./skills/makeflow/references/polyglot/dart_flutter.md) |
+| PHP | `phpunit` | `tests/SmokeTest.php` | `phpstan`, `php-cs-fixer` | [PHP Guide](./skills/makeflow/references/polyglot/php.md) |
+| C and C++ | `ctest` | `tests/smoke_test.c` | `clang-tidy`, `clang-format` | [C/C++ Guide](./skills/makeflow/references/polyglot/c_cpp.md) |
+| Elixir | `mix test` | `test/smoke_test.exs` | `credo`, `mix format` | [Elixir Guide](./skills/makeflow/references/polyglot/elixir.md) |
+| Perl | `prove` | `t/00-smoke.t` | `perlcritic`, `perltidy` | [Perl Guide](./skills/makeflow/references/polyglot/perl.md) |
+| Java, Kotlin, Scala | `mvn` / `gradle` / `sbt` | `SmokeTest.java` / `kt` / `scala` | Spotless, `ktlint`, `scalafmt` | [JVM Guide](./skills/makeflow/references/polyglot/java_kotlin_scala.md) |
+| C# (.NET) | `dotnet test` | `tests/SmokeTests.cs` | `dotnet format` | [C# Guide](./skills/makeflow/references/polyglot/csharp_dotnet.md) |
+| PowerShell | `Invoke-Pester` | `tests/Smoke.Tests.ps1` | `PSScriptAnalyzer` | [PowerShell Guide](./skills/makeflow/references/polyglot/powershell.md) |
+| Swift | `swift test` | `Tests/SmokeTests/SmokeTests.swift` | `swiftlint`, `swiftformat` | [Swift Guide](./skills/makeflow/references/polyglot/swift.md) |
+| Ruby | `rspec` | `spec/smoke_spec.rb` | `rubocop` | [Ruby Guide](./skills/makeflow/references/polyglot/ruby.md) |
+| SQL and Migrations | `pg_prove` / `dbt` | `tests/test_schema.sql` | `sqlfluff` | [SQL Guide](./skills/makeflow/references/polyglot/sql_migrations.md) |
+| R, Julia, and Lua | `testthat`, `Pkg.test`, `busted` | `test-smoke.R`, `runtests.jl` | `lintr`, `JuliaFormatter` | [Scientific Guide](./skills/makeflow/references/polyglot/scientific_r_julia_lua.md) |
+| GDScript (Godot) | `godot --headless` (GUT / GdUnit4) | `test/unit/test_smoke.gd` | `gdlint`, `gdformat` | [GDScript Guide](./skills/makeflow/references/polyglot/gdscript_godot.md) |
+| Nim | `nimble test` / `testament` | `tests/t_smoke.nim` | `nim check`, `nph` / `nimpretty` | [Nim Guide](./skills/makeflow/references/polyglot/nim.md) |
+| Haxe | `haxe` (`utest`) | `test/SmokeTest.hx` | `checkstyle`, `formatter` | [Haxe Guide](./skills/makeflow/references/polyglot/haxe.md) |
+| Odin | `odin test` | `tests/smoke_test.odin` | `odin check -vet`, `odinfmt` | [Odin Guide](./skills/makeflow/references/polyglot/odin.md) |
+| D | `dub test` / `dmd -unittest` | `source/smoke_test.d` | `dscanner`, `dfmt` | [D Guide](./skills/makeflow/references/polyglot/dlang.md) |
 
 ---
 
@@ -331,7 +331,7 @@ Five computer science and software design models shape this workflow:
 2. Fernando Flores (1986) and John Searle (1985): Committed speech acts model tasks as explicit requests, promises, assertions, and human declarations.
 3. Nuel Belnap (1977): Four-valued logic classifies repository facts during archaeology as `ESTABLISHED`, `CONTRADICTED`, `UNKNOWN`, or `RETRACTED`.
 4. AT&T System V `init.d`: Lexically numbered files (`00_..` through `99_..`) restore execution state cleanly on startup.
-5. Gang of Four (1994) and Robert Nystrom (2014): Design pattern guides ([`14_design_patterns_and_architecture.md`](./skills/makefile-workflow/references/14_design_patterns_and_architecture.md)) balance object composition, ORM encapsulation, parameterized large-dataset queries, and game frame budgets.
+5. Gang of Four (1994) and Robert Nystrom (2014): Design pattern guides ([`14_design_patterns_and_architecture.md`](./skills/makeflow/references/14_design_patterns_and_architecture.md)) balance object composition, ORM encapsulation, parameterized large-dataset queries, and game frame budgets.
 
 ---
 

@@ -87,7 +87,7 @@ def load_database_config(payload):
   for ws in payload.get("workspacePaths") or []:
     candidates.append(os.path.join(ws, ".workflow", "config.json"))
   candidates.append(os.path.join(os.getcwd(), ".workflow", "config.json"))
-  candidates.append(os.path.expanduser("~/.gemini/config/makefile-workflow.json"))
+  candidates.append(os.path.expanduser("~/.gemini/config/makeflow.json"))
 
   for cfg_path in candidates:
     if os.path.isfile(cfg_path):

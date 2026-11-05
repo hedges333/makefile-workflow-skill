@@ -24,7 +24,7 @@ This repository uses the Makefile Workflow. Follow these rules for every coding 
 
 ## Model Selection and Configuration
 
-Read `.workflow/config.json` or `~/.gemini/config/makefile-workflow.json` when present to load user model preferences.
+Read `.workflow/config.json` or `~/.gemini/config/makeflow.json` when present to load user model preferences.
 Use your session model for standard implementation tasks.
 At Target 40, run the Six-Pillar review with a high-reasoning model:
 

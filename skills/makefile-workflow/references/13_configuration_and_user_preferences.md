@@ -11,7 +11,7 @@ Different teams use different AI providers, API keys, and cost budgets. For that
 When a session starts or `workflow_get_config` runs, the plugin resolves configuration in this order (later environment variables override JSON values):
 
 1. Workspace file: `<workspace>/.workflow/config.json` (git-ignored).
-2. Global user file: `~/.gemini/config/makefile-workflow.json`.
+2. Global user file: `~/.gemini/config/makeflow.json`.
 3. Environment variables:
    - `MAKEFILE_WORKFLOW_CRITIC_MODEL` for `adversarial-critic`.
    - `MAKEFILE_WORKFLOW_WORKER_MODEL` or `MAKEFILE_WORKFLOW_ARCHAEOLOGY_MODEL` for `archaeology-worker`.
@@ -33,7 +33,7 @@ When a session starts or `workflow_get_config` runs, the plugin resolves configu
 
 ## 3. Configuration File Schema
 
-Copy [`.workflow/config.json.example`](../../../.workflow/config.json.example) to `<workspace>/.workflow/config.json` or `~/.gemini/config/makefile-workflow.json`:
+Copy [`.workflow/config.json.example`](../../../.workflow/config.json.example) to `<workspace>/.workflow/config.json` or `~/.gemini/config/makeflow.json`:
 
 ```json
 {
@@ -89,7 +89,7 @@ Antigravity loads agent definitions in priority order from three paths:
 
 1. Workspace path: `<workspace>/.agents/agents/<name>.md`
 2. Global user path: `~/.gemini/config/agents/<name>.md`
-3. Plugin path: `~/.gemini/config/plugins/makefile-workflow/agents/<name>.md`
+3. Plugin path: `~/.gemini/config/plugins/makeflow/agents/<name>.md`
 
 If you want custom prompt rules for `adversarial-critic`, create `~/.gemini/config/agents/adversarial-critic.md`. Antigravity loads your file instead of the plugin copy, and your file survives plugin upgrades.
 

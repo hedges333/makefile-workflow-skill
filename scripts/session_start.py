@@ -67,7 +67,7 @@ def load_default_config():
       ),
       os.path.join(os.getcwd(), "default_config.json"),
       os.path.expanduser(
-          "~/.gemini/config/plugins/makefile-workflow/default_config.json"
+          "~/.gemini/config/plugins/makeflow/default_config.json"
       ),
   ]
   for path in candidates:
@@ -112,8 +112,8 @@ def get_workflow_config(workspace_paths):
     candidates.append((os.path.join(ws, ".workflow", "config.json"), None))
   candidates.append((os.path.join(os.getcwd(), ".workflow", "config.json"), None))
   candidates.append((
-      os.path.expanduser("~/.gemini/config/makefile-workflow.json"),
-      "~/.gemini/config/makefile-workflow.json",
+      os.path.expanduser("~/.gemini/config/makeflow.json"),
+      "~/.gemini/config/makeflow.json",
   ))
 
   for cfg_path, label in candidates:

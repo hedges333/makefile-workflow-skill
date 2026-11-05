@@ -1,5 +1,5 @@
 {
-  "$comment": "Canonical default configuration for makefile-workflow. Overridden by .workflow/config.json or ~/.gemini/config/makefile-workflow.json.",
+  "$comment": "Canonical default configuration for makeflow. Overridden by .workflow/config.json or ~/.gemini/config/makeflow.json.",
   "models": {
     "adversarial-critic": "inherit",
     "archaeology-worker": "inherit",

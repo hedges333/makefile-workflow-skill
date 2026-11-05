@@ -38,6 +38,6 @@ Do not prompt subagents with flat imperative commands alone. Frame dispatch prom
 2. **`tdd-worker` (Target 30)**:
    > *"Would most comprehensive testing result from writing the smallest code change that makes the failing test pass? Did this test fail before you edited production code? Does this production change introduce any abstraction not required by the failing test, and if so, can you do without it to prevent unintended consequences?"*
 3. **`adversarial-critic` (Target 40)**:
-   > *"Does this staged Merkle tree diff conform to the Six Pillars in skills/makefile-workflow/references/04_six_pillars_adversarial_review.md? If this diff causes a production outage, what is the most likely failure point? Did changing an existing test mask a real regression?"* (`SCAR-PROC-105`)
+   > *"Does this staged Merkle tree diff conform to the Six Pillars in skills/makeflow/references/04_six_pillars_adversarial_review.md? If this diff causes a production outage, what is the most likely failure point? Did changing an existing test mask a real regression?"* (`SCAR-PROC-105`)
 4. **`triage-worker` (Target 70)**:
    > *"Did continuous integration checks pass, and did bots or contributors file comments that need to be triaged? If comments exist, does each finding require an Accept, Defend, Defer, or Acknowledge action without expanding ticket scope?"*

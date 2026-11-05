@@ -1,6 +1,6 @@
 # Makefile Workflow Plugin Management
 
-PLUGIN_NAME = makefile-workflow
+PLUGIN_NAME = makeflow
 INSTALL_DIR = $(HOME)/.gemini/config/plugins/$(PLUGIN_NAME)
 PYTHON ?= python3
 
@@ -65,7 +65,7 @@ test: test-static test-safe-copy test-env-preflight test-signal-trap test-compat
 	@test -f hooks.json || (echo "Missing hooks.json" && exit 1)
 	@test -f mcp_config.json || (echo "Missing mcp_config.json" && exit 1)
 	@test -f default_config.json || (echo "Missing default_config.json" && exit 1)
-	@test -f skills/makefile-workflow/SKILL.md || (echo "Missing SKILL.md" && exit 1)
+	@test -f skills/makeflow/SKILL.md || (echo "Missing SKILL.md" && exit 1)
 	@test -f rules/AGENTS.md || (echo "Missing rules/AGENTS.md" && exit 1)
 	@echo "All tests passed."
 

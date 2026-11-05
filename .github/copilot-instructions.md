@@ -11,7 +11,7 @@ Follow the Makefile Workflow lifecycle when assisting in this repository:
 7. In multi-language repositories, run tests in the affected subproject first, then run the full suite before commit.
 8. Stop and wait for explicit user approval at all six pause gates: Target 20 (plan), Target 42 (blocker triage), Target 45 (review), Target 50 (commit), Target 60 (push), and Target 75 (landing). Never declare or approve gates yourself under SCAR-PROC-102. Forbid agent self-approval.
 9. Write commit messages, documentation, and pull request summaries in Simple English: short sentences, active voice, and clear terms. Forbid `closes #` on local session commits.
-10. If `.workflow/config.json` or `~/.gemini/config/makefile-workflow.json` exists, read it to load user configuration.
+10. If `.workflow/config.json` or `~/.gemini/config/makeflow.json` exists, read it to load user configuration.
 11. Intercept POSIX signals (`SIGTERM` and `SIGINT`) in long-running workers and clean up lockfiles under `SCAR-SYS-07`.
 12. If shell commands require complex string escaping or multiple quoting layers, write the script to a file in a temporary directory under `SCAR-SH-01`.
 

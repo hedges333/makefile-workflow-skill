@@ -97,7 +97,7 @@ Agents must use Socratic Probes during:
 During Target 90 cleanup, record lessons from the active ticket:
 
 1. Check the session for user corrections, rejected reviews, or CI surprises.
-2. Open the matching domain spoke in `skills/makefile-workflow/references/scars/` or language guide in `skills/makefile-workflow/references/polyglot/`.
+2. Open the matching domain spoke in `skills/makeflow/references/scars/` or language guide in `skills/makeflow/references/polyglot/`.
 3. Append the new scar at the end of the file with the next sequential integer using the Wound, Trap, Permanent Reflex, and Socratic Probe fields.
 4. Add the new entry to the Master Routing Table in this index.
 5. Record the scar ID in `.workflow/history.json` and `.workflow/history.md`.

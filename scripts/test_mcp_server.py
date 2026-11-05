@@ -43,7 +43,7 @@ def run_test():
       )
       assert init_resp["id"] == 1
       assert (
-          init_resp["result"]["serverInfo"]["name"] == "makefile-workflow-guard"
+          init_resp["result"]["serverInfo"]["name"] == "makeflow-guard"
       )
       assert init_resp["result"]["serverInfo"]["version"] == "1.4.1"
       print("✔ MCP initialize handshake passed.")

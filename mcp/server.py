@@ -188,7 +188,7 @@ def load_default_config():
       ),
       os.path.join(os.getcwd(), "default_config.json"),
       os.path.expanduser(
-          "~/.gemini/config/plugins/makefile-workflow/default_config.json"
+          "~/.gemini/config/plugins/makeflow/default_config.json"
       ),
   ]
   for path in candidates:
@@ -227,7 +227,7 @@ def resolve_workflow_config(workspace_dir=None):
   """Resolves workflow configuration from workspace, global path, or environment."""
   ws = workspace_dir or resolve_workspace_dir({})
   local_cfg_path = os.path.join(ws, ".workflow", "config.json")
-  global_cfg_path = os.path.expanduser("~/.gemini/config/makefile-workflow.json")
+  global_cfg_path = os.path.expanduser("~/.gemini/config/makeflow.json")
 
   config = load_default_config()
   config["configSource"] = "defaults"
@@ -1503,7 +1503,7 @@ def handle_initialize(request_id):
           "protocolVersion": "2024-11-05",
           "capabilities": {"tools": {}},
           "serverInfo": {
-              "name": "makefile-workflow-guard",
+              "name": "makeflow-guard",
               "version": "1.4.1",
           },
       },

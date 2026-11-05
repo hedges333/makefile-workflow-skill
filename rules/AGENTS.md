@@ -1,6 +1,6 @@
 # Makefile Workflow Plugin Rules
 
-These rules apply when the `makefile-workflow` plugin is active.
+These rules apply when the `makeflow` plugin is active.
 
 ## 1. Chat Presentation, Input, and Artifact Rules
 
@@ -49,7 +49,7 @@ To prevent accidental GitHub issue closures, distinguish local session tasks fro
 
 When launching the `adversarial-critic` subagent at Target 40:
 
-1. Always include the explicit workspace path `skills/makefile-workflow/references/04_six_pillars_adversarial_review.md` in the dispatch prompt.
+1. Always include the explicit workspace path `skills/makeflow/references/04_six_pillars_adversarial_review.md` in the dispatch prompt.
 2. Instruct the subagent to audit the diff against that manual and format findings under the canonical six headings.
 3. Never substitute an informal prompt summary for the explicit manual reference.
 

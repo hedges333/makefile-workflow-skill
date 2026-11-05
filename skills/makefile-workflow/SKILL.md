@@ -1,5 +1,5 @@
 ---
-name: makefile-workflow
+name: makeflow
 description: Compaction-immune, DAG-based ticket resolution workflow using Stuart Feldman's Makefile architecture, persistent Memento state files, subagent isolation, 27-language polyglot TDD, design pattern guides, adversarial review, and human pause gates. Use whenever resolving tickets, implementing features, fixing bugs, or executing structured coding workflows.
 compatibility: agy claude-code cursor copilot codex
 ---
@@ -164,7 +164,7 @@ Read [`references/04_six_pillars`](./references/04_six_pillars_adversarial_revie
 
 1. Lock the staged Git Merkle tree hash (a cryptographic snapshot of staged files): run `git add -A && git write-tree > .workflow/state/approved_tree.txt`.
 2. In interactive IDEs, prompt the user in chat: "Switch the model picker to a deep-reasoning model for the Six-Pillar review."
-3. In Antigravity, fork `adversarial-critic` with `Model` set to `agyModelTiers["adversarial-critic"]` (default `inherit`), explicitly passing `skills/makefile-workflow/references/04_six_pillars_adversarial_review.md` in the prompt (`SCAR-PROC-105`).
+3. In Antigravity, fork `adversarial-critic` with `Model` set to `agyModelTiers["adversarial-critic"]` (default `inherit`), explicitly passing `skills/makeflow/references/04_six_pillars_adversarial_review.md` in the prompt (`SCAR-PROC-105`).
 4. Audit the diff across the Six Pillars: Intent, Verification (TDD, failure falsification, boundary testing), Architecture, Blast Radius (mandatory canary), Reviewer Defense (intentional non-changes, Simple English), and Immune Defenses & Crash Antibodies.
 5. Write `.workflow/state/40_critic_review.md`.
 6. If blockers exist, move to Target 42. If zero blockers exist, move to Target 45.

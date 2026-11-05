@@ -1,5 +1,5 @@
 {
-  "makefile-workflow-guard": {
+  "makeflow-guard": {
     "SessionStart": [
       {
         "type": "command",

@@ -4,7 +4,7 @@
 Verifies the configuration files, manifests, and rules for:
 1. Anthropic Claude Code (.claude-plugin/plugin.json, CLAUDE.md)
 2. OpenAI Codex (.codex-plugin/plugin.json)
-3. Cursor IDE (.cursorrules, .cursor/rules/makefile-workflow.mdc)
+3. Cursor IDE (.cursorrules, .cursor/rules/makeflow.mdc)
 4. GitHub Copilot (.github/copilot-instructions.md)
 5. ChatGPT (adapters/chatgpt/instructions.md)
 6. Hooks & MCP Declarations (hooks.json, mcp_config.json)
@@ -37,8 +37,8 @@ def validate_human_declaration_authority_and_pause_gates():
   Verifies:
   1. All 6 human pause gates (Target 20, Target 42, Target 45, Target 50,
      Target 60, Target 75) are present in rules/AGENTS.md,
-     skills/makefile-workflow/SKILL.md, CLAUDE.md, .cursorrules,
-     .cursor/rules/makefile-workflow.mdc, .github/copilot-instructions.md,
+     skills/makeflow/SKILL.md, CLAUDE.md, .cursorrules,
+     .cursor/rules/makeflow.mdc, .github/copilot-instructions.md,
      and adapters/chatgpt/instructions.md.
   2. Agent self-declaration / self-approval is explicitly prohibited in each
      rule and adapter file under SCAR-PROC-102.
@@ -47,10 +47,10 @@ def validate_human_declaration_authority_and_pause_gates():
   errors = []
   target_files = [
       "rules/AGENTS.md",
-      "skills/makefile-workflow/SKILL.md",
+      "skills/makeflow/SKILL.md",
       "CLAUDE.md",
       ".cursorrules",
-      ".cursor/rules/makefile-workflow.mdc",
+      ".cursor/rules/makeflow.mdc",
       ".github/copilot-instructions.md",
       "adapters/chatgpt/instructions.md",
   ]
@@ -99,7 +99,7 @@ def validate_human_declaration_authority_and_pause_gates():
       )
 
   # Check reference catalog and category spoke
-  catalog_rel = "skills/makefile-workflow/references/09_synthetic_scars_catalog.md"
+  catalog_rel = "skills/makeflow/references/09_synthetic_scars_catalog.md"
   catalog_path = repo_path(catalog_rel)
   if not os.path.exists(catalog_path):
     errors.append(f"Missing {catalog_rel}")
@@ -113,7 +113,7 @@ def validate_human_declaration_authority_and_pause_gates():
     if "Human Declaration Authority" not in catalog_text:
       errors.append(f"{catalog_rel} must index SCAR-PROC-102 Human Declaration Authority")
 
-  process_spoke_rel = "skills/makefile-workflow/references/scars/process.md"
+  process_spoke_rel = "skills/makeflow/references/scars/process.md"
   process_spoke = repo_path(process_spoke_rel)
   if not os.path.exists(process_spoke):
     errors.append(f"Missing {process_spoke_rel}")
@@ -142,10 +142,10 @@ def validate_plan_artifact_lifecycle_and_demotion():
   5. rules/AGENTS.md specifies built-in write_file tool demotion.
   6. rules/AGENTS.md guards against duplicate execution using 20_plan_approved.md.
   7. rules/AGENTS.md specifies Overwrite: true and writing an approved tombstone body inside <brain>/plan.md.
-  8. skills/makefile-workflow/references/09_synthetic_scars_catalog.md indexes SCAR-PROC-103 pointing to scars/process.md.
-  9. skills/makefile-workflow/references/scars/process.md documents SCAR-PROC-103 with complete Four-Part Anatomy
+  8. skills/makeflow/references/09_synthetic_scars_catalog.md indexes SCAR-PROC-103 pointing to scars/process.md.
+  9. skills/makeflow/references/scars/process.md documents SCAR-PROC-103 with complete Four-Part Anatomy
      (**Wound**:, **Trap**:, **Permanent Reflex**:, **Socratic Probe**:) and key invariants.
-  10. skills/makefile-workflow/SKILL.md preserves platform neutrality by not containing <brain> references.
+  10. skills/makeflow/SKILL.md preserves platform neutrality by not containing <brain> references.
   """
   errors = []
 
@@ -176,7 +176,7 @@ def validate_plan_artifact_lifecycle_and_demotion():
       errors.append(f"{agents_rel} must specify writing an approved tombstone body inside <brain>/plan.md")
 
   # 2. Synthetic Scars Catalog Index
-  catalog_rel = "skills/makefile-workflow/references/09_synthetic_scars_catalog.md"
+  catalog_rel = "skills/makeflow/references/09_synthetic_scars_catalog.md"
   catalog_path = repo_path(catalog_rel)
   if not os.path.exists(catalog_path):
     errors.append(f"Missing {catalog_rel}")
@@ -189,7 +189,7 @@ def validate_plan_artifact_lifecycle_and_demotion():
       errors.append(f"{catalog_rel} must route SCAR-PROC-103 to scars/process.md")
 
   # 3. Process Spoke Four-Part Anatomy & Key Invariants
-  process_spoke_rel = "skills/makefile-workflow/references/scars/process.md"
+  process_spoke_rel = "skills/makeflow/references/scars/process.md"
   process_spoke = repo_path(process_spoke_rel)
   if not os.path.exists(process_spoke):
     errors.append(f"Missing {process_spoke_rel}")
@@ -211,7 +211,7 @@ def validate_plan_artifact_lifecycle_and_demotion():
         errors.append(f"{process_spoke_rel} SCAR-PROC-103 missing shell rm invariant")
 
   # 4. Platform Neutrality in SKILL.md
-  skill_rel = "skills/makefile-workflow/SKILL.md"
+  skill_rel = "skills/makeflow/SKILL.md"
   skill_md = repo_path(skill_rel)
   if not os.path.exists(skill_md):
     errors.append(f"Missing {skill_rel}")
@@ -262,23 +262,23 @@ def validate_adversarial_critic_manual_reference():
 
   Verifies:
   1. rules/AGENTS.md mandates SCAR-PROC-105 and passing the explicit workspace path
-     skills/makefile-workflow/references/04_six_pillars_adversarial_review.md.
-  2. skills/makefile-workflow/SKILL.md Target 40 specifies passing
-     skills/makefile-workflow/references/04_six_pillars_adversarial_review.md
+     skills/makeflow/references/04_six_pillars_adversarial_review.md.
+  2. skills/makeflow/SKILL.md Target 40 specifies passing
+     skills/makeflow/references/04_six_pillars_adversarial_review.md
      and cites SCAR-PROC-105.
-  3. skills/makefile-workflow/references/08_subagent_orchestration.md specifies
-     skills/makefile-workflow/references/04_six_pillars_adversarial_review.md in the critic prompt pattern
+  3. skills/makeflow/references/08_subagent_orchestration.md specifies
+     skills/makeflow/references/04_six_pillars_adversarial_review.md in the critic prompt pattern
      and cites SCAR-PROC-105.
-  4. skills/makefile-workflow/references/04_six_pillars_adversarial_review.md documents SCAR-PROC-105.
-  5. skills/makefile-workflow/references/scars/process.md documents SCAR-PROC-105 with
+  4. skills/makeflow/references/04_six_pillars_adversarial_review.md documents SCAR-PROC-105.
+  5. skills/makeflow/references/scars/process.md documents SCAR-PROC-105 with
      all Four-Part Anatomy sections non-empty.
-  6. skills/makefile-workflow/references/09_synthetic_scars_catalog.md routes SCAR-PROC-105 to scars/process.md.
+  6. skills/makeflow/references/09_synthetic_scars_catalog.md routes SCAR-PROC-105 to scars/process.md.
   7. Negative falsification:
      - Prompts omitting the explicit manual path trigger validation errors.
      - Corrupted scar entries missing Four-Part Anatomy trigger validation errors.
   """
   errors = []
-  manual_path = "skills/makefile-workflow/references/04_six_pillars_adversarial_review.md"
+  manual_path = "skills/makeflow/references/04_six_pillars_adversarial_review.md"
 
   # 1. rules/AGENTS.md
   agents_rel = "rules/AGENTS.md"
@@ -293,8 +293,8 @@ def validate_adversarial_critic_manual_reference():
     if manual_path not in agents_text:
       errors.append(f"{agents_rel} must mandate explicit manual path '{manual_path}' for critic dispatch")
 
-  # 2. skills/makefile-workflow/SKILL.md
-  skill_rel = "skills/makefile-workflow/SKILL.md"
+  # 2. skills/makeflow/SKILL.md
+  skill_rel = "skills/makeflow/SKILL.md"
   skill_path = repo_path(skill_rel)
   if not os.path.exists(skill_path):
     errors.append(f"Missing {skill_rel}")
@@ -306,8 +306,8 @@ def validate_adversarial_critic_manual_reference():
     if manual_path not in skill_text:
       errors.append(f"{skill_rel} Target 40 must specify explicit manual path '{manual_path}'")
 
-  # 3. skills/makefile-workflow/references/08_subagent_orchestration.md
-  ref_08_rel = "skills/makefile-workflow/references/08_subagent_orchestration.md"
+  # 3. skills/makeflow/references/08_subagent_orchestration.md
+  ref_08_rel = "skills/makeflow/references/08_subagent_orchestration.md"
   ref_08_path = repo_path(ref_08_rel)
   if not os.path.exists(ref_08_path):
     errors.append(f"Missing {ref_08_rel}")
@@ -319,8 +319,8 @@ def validate_adversarial_critic_manual_reference():
     if manual_path not in r08_text:
       errors.append(f"{ref_08_rel} critic prompt pattern must include explicit manual path '{manual_path}'")
 
-  # 4. skills/makefile-workflow/references/04_six_pillars_adversarial_review.md
-  ref_04_rel = "skills/makefile-workflow/references/04_six_pillars_adversarial_review.md"
+  # 4. skills/makeflow/references/04_six_pillars_adversarial_review.md
+  ref_04_rel = "skills/makeflow/references/04_six_pillars_adversarial_review.md"
   ref_04_path = repo_path(ref_04_rel)
   if not os.path.exists(ref_04_path):
     errors.append(f"Missing {ref_04_rel}")
@@ -330,8 +330,8 @@ def validate_adversarial_critic_manual_reference():
     if "SCAR-PROC-105" not in r04_text:
       errors.append(f"{ref_04_rel} must document SCAR-PROC-105")
 
-  # 5. skills/makefile-workflow/references/scars/process.md
-  proc_rel = "skills/makefile-workflow/references/scars/process.md"
+  # 5. skills/makeflow/references/scars/process.md
+  proc_rel = "skills/makeflow/references/scars/process.md"
   proc_path = repo_path(proc_rel)
   if not os.path.exists(proc_path):
     errors.append(f"Missing {proc_rel}")
@@ -349,8 +349,8 @@ def validate_adversarial_critic_manual_reference():
       if manual_path not in scar_section:
         errors.append(f"{proc_rel} SCAR-PROC-105 must cite '{manual_path}' in Permanent Reflex")
 
-  # 6. skills/makefile-workflow/references/09_synthetic_scars_catalog.md
-  catalog_rel = "skills/makefile-workflow/references/09_synthetic_scars_catalog.md"
+  # 6. skills/makeflow/references/09_synthetic_scars_catalog.md
+  catalog_rel = "skills/makeflow/references/09_synthetic_scars_catalog.md"
   catalog_path = repo_path(catalog_rel)
   if not os.path.exists(catalog_path):
     errors.append(f"Missing {catalog_rel}")
@@ -371,15 +371,15 @@ def validate_temporary_script_quoting_scar():
   """Validates temporary script quoting scar invariants (GH-25, SCAR-SH-01).
 
   Verifies:
-  1. skills/makefile-workflow/references/scars/git_and_shell.md documents
+  1. skills/makeflow/references/scars/git_and_shell.md documents
      SCAR-SH-01 with complete Four-Part Anatomy and invariants (temporary directory,
      complex string escaping, quotes/quoting, Dart, Python).
-  2. skills/makefile-workflow/references/09_synthetic_scars_catalog.md routes
+  2. skills/makeflow/references/09_synthetic_scars_catalog.md routes
      SCAR-SH-01 strictly to scars/git_and_shell.md.
-  3. skills/makefile-workflow/references/10_security_and_data_isolation.md
+  3. skills/makeflow/references/10_security_and_data_isolation.md
      Section 2 documents SCAR-SH-01.
   4. rules/AGENTS.md Section 3.1 documents SCAR-SH-01.
-  5. All 5 adapters (CLAUDE.md, .cursorrules, .cursor/rules/makefile-workflow.mdc,
+  5. All 5 adapters (CLAUDE.md, .cursorrules, .cursor/rules/makeflow.mdc,
      .github/copilot-instructions.md, adapters/chatgpt/instructions.md) document
      SCAR-SH-01.
   6. Negative falsification:
@@ -388,7 +388,7 @@ def validate_temporary_script_quoting_scar():
   """
   errors = []
 
-  sh_spoke_rel = "skills/makefile-workflow/references/scars/git_and_shell.md"
+  sh_spoke_rel = "skills/makeflow/references/scars/git_and_shell.md"
   sh_spoke = repo_path(sh_spoke_rel)
   if not os.path.exists(sh_spoke):
     errors.append(f"Missing {sh_spoke_rel}")
@@ -412,7 +412,7 @@ def validate_temporary_script_quoting_scar():
               f"{sh_spoke_rel} SCAR-SH-01 missing invariant '{invariant}'"
           )
 
-  cat_rel = "skills/makefile-workflow/references/09_synthetic_scars_catalog.md"
+  cat_rel = "skills/makeflow/references/09_synthetic_scars_catalog.md"
   cat_path = repo_path(cat_rel)
   if not os.path.exists(cat_path):
     errors.append(f"Missing {cat_rel}")
@@ -427,7 +427,7 @@ def validate_temporary_script_quoting_scar():
       )
 
   sec_rel = (
-      "skills/makefile-workflow/references/10_security_and_data_isolation.md"
+      "skills/makeflow/references/10_security_and_data_isolation.md"
   )
   sec_path = repo_path(sec_rel)
   if not os.path.exists(sec_path):
@@ -451,7 +451,7 @@ def validate_temporary_script_quoting_scar():
   for adapter_rel in [
       "CLAUDE.md",
       ".cursorrules",
-      ".cursor/rules/makefile-workflow.mdc",
+      ".cursor/rules/makeflow.mdc",
       ".github/copilot-instructions.md",
       "adapters/chatgpt/instructions.md",
   ]:
@@ -482,15 +482,15 @@ def validate_posix_signal_trapping():
   """Validates POSIX signal trapping invariants (GH-24, SCAR-SYS-07).
 
   Verifies:
-  1. skills/makefile-workflow/references/scars/system_and_os.md documents
+  1. skills/makeflow/references/scars/system_and_os.md documents
      SCAR-SYS-07 with complete Four-Part Anatomy and invariants (SIGTERM, SIGINT,
      SignalTrap, LIFO, lockfile).
-  2. skills/makefile-workflow/references/09_synthetic_scars_catalog.md routes
+  2. skills/makeflow/references/09_synthetic_scars_catalog.md routes
      SCAR-SYS-07 strictly to scars/system_and_os.md.
-  3. skills/makefile-workflow/references/10_security_and_data_isolation.md
+  3. skills/makeflow/references/10_security_and_data_isolation.md
      Section 7 documents SCAR-SYS-07 and POSIX signal trapping.
   4. rules/AGENTS.md Section 2 documents SCAR-SYS-07 and SignalTrap.
-  5. All 5 adapters (CLAUDE.md, .cursorrules, .cursor/rules/makefile-workflow.mdc,
+  5. All 5 adapters (CLAUDE.md, .cursorrules, .cursor/rules/makeflow.mdc,
      .github/copilot-instructions.md, adapters/chatgpt/instructions.md) document
      SCAR-SYS-07.
   6. Makefile defines test-signal-trap target and includes it in test prerequisites.
@@ -501,7 +501,7 @@ def validate_posix_signal_trapping():
   """
   errors = []
 
-  sys_spoke_rel = "skills/makefile-workflow/references/scars/system_and_os.md"
+  sys_spoke_rel = "skills/makeflow/references/scars/system_and_os.md"
   sys_spoke = repo_path(sys_spoke_rel)
   if not os.path.exists(sys_spoke):
     errors.append(f"Missing {sys_spoke_rel}")
@@ -525,7 +525,7 @@ def validate_posix_signal_trapping():
               f"{sys_spoke_rel} SCAR-SYS-07 missing invariant '{invariant}'"
           )
 
-  cat_rel = "skills/makefile-workflow/references/09_synthetic_scars_catalog.md"
+  cat_rel = "skills/makeflow/references/09_synthetic_scars_catalog.md"
   cat_path = repo_path(cat_rel)
   if not os.path.exists(cat_path):
     errors.append(f"Missing {cat_rel}")
@@ -540,7 +540,7 @@ def validate_posix_signal_trapping():
       )
 
   sec_rel = (
-      "skills/makefile-workflow/references/10_security_and_data_isolation.md"
+      "skills/makeflow/references/10_security_and_data_isolation.md"
   )
   sec_path = repo_path(sec_rel)
   if not os.path.exists(sec_path):
@@ -568,7 +568,7 @@ def validate_posix_signal_trapping():
   for adapter_rel in [
       "CLAUDE.md",
       ".cursorrules",
-      ".cursor/rules/makefile-workflow.mdc",
+      ".cursor/rules/makeflow.mdc",
       ".github/copilot-instructions.md",
       "adapters/chatgpt/instructions.md",
   ]:
@@ -746,7 +746,7 @@ def validate():
     try:
       with open(claude_path) as f:
         data = json.load(f)
-      assert data.get("name") == "makefile-workflow"
+      assert data.get("name") == "makeflow"
       assert "skills" in data
       print(f"✔ Claude Code plugin manifest ({claude_rel}) valid.")
     except Exception as e:
@@ -761,7 +761,7 @@ def validate():
     try:
       with open(codex_path) as f:
         data = json.load(f)
-      assert data.get("name") == "makefile-workflow"
+      assert data.get("name") == "makeflow"
       print(f"✔ OpenAI Codex plugin manifest ({codex_rel}) valid.")
     except Exception as e:
       errors.append(f"Invalid {codex_rel}: {e}")
@@ -786,7 +786,7 @@ def validate():
   # 4. Cursor Rules
   cursorrules_rel = ".cursorrules"
   cursorrules = repo_path(cursorrules_rel)
-  cursor_mdc_rel = ".cursor/rules/makefile-workflow.mdc"
+  cursor_mdc_rel = ".cursor/rules/makeflow.mdc"
   cursor_mdc = repo_path(cursor_mdc_rel)
   if not os.path.exists(cursorrules):
     errors.append(f"Missing {cursorrules_rel}")
@@ -842,7 +842,7 @@ def validate():
     try:
       with open(hooks_path) as f:
         hooks_data = json.load(f)
-      guard = hooks_data.get("makefile-workflow-guard", {})
+      guard = hooks_data.get("makeflow-guard", {})
       assert "PreToolUse" in guard
       assert "SessionStart" in guard
       print(f"✔ Antigravity hooks manifest ({hooks_rel}) valid.")
@@ -859,8 +859,8 @@ def validate():
       with open(mcp_path) as f:
         mcp_data = json.load(f)
       servers = mcp_data.get("mcpServers", {})
-      assert "makefile-workflow" in servers
-      server_script = servers["makefile-workflow"]["args"][0]
+      assert "makeflow" in servers
+      server_script = servers["makeflow"]["args"][0]
       full_server_script = (
           repo_path(server_script)
           if not os.path.isabs(server_script)
@@ -925,7 +925,7 @@ def validate():
     except Exception as e:
       errors.append(f"Invalid {default_cfg_rel}: {e}")
 
-  ref_13_rel = "skills/makefile-workflow/references/13_configuration_and_user_preferences.md"
+  ref_13_rel = "skills/makeflow/references/13_configuration_and_user_preferences.md"
   ref_13 = repo_path(ref_13_rel)
   if not os.path.exists(ref_13):
     errors.append(f"Missing {ref_13_rel}")
@@ -947,7 +947,7 @@ def validate():
     if not any("references/13_" in e for e in errors):
       print(f"✔ Configuration reference manual ({ref_13_rel}) valid.")
 
-  ref_08_rel = "skills/makefile-workflow/references/08_subagent_orchestration.md"
+  ref_08_rel = "skills/makeflow/references/08_subagent_orchestration.md"
   ref_08 = repo_path(ref_08_rel)
   if not os.path.exists(ref_08):
     errors.append(f"Missing {ref_08_rel}")
@@ -963,7 +963,7 @@ def validate():
         errors.append(f"{ref_08_rel} must document Socratic prompt pattern for {role_name}")
 
   # 10. Design Patterns Reference Manual
-  ref_14_rel = "skills/makefile-workflow/references/14_design_patterns_and_architecture.md"
+  ref_14_rel = "skills/makeflow/references/14_design_patterns_and_architecture.md"
   ref_14 = repo_path(ref_14_rel)
   if not os.path.exists(ref_14):
     errors.append(f"Missing {ref_14_rel}")
@@ -984,14 +984,14 @@ def validate():
       "dlang.md",
   ):
     guide_rel = os.path.join(
-        "skills", "makefile-workflow", "references", "polyglot", guide_name
+        "skills", "makeflow", "references", "polyglot", guide_name
     )
     guide_path = repo_path(guide_rel)
     if not os.path.exists(guide_path):
       errors.append(f"Missing polyglot guide {guide_rel}")
   if not any("polyglot guide" in e for e in errors):
     with open(
-        repo_path("skills/makefile-workflow/references/polyglot/dlang.md")
+        repo_path("skills/makeflow/references/polyglot/dlang.md")
     ) as f:
       dlang_text = f.read()
     if "dfmt --check" in dlang_text:
@@ -1016,7 +1016,7 @@ def validate():
             " 27-language support"
         )
 
-  ref_09_rel = "skills/makefile-workflow/references/09_synthetic_scars_catalog.md"
+  ref_09_rel = "skills/makeflow/references/09_synthetic_scars_catalog.md"
   ref_09 = repo_path(ref_09_rel)
   r09_text = ""
   if not os.path.exists(ref_09):
@@ -1060,7 +1060,7 @@ def validate():
       errors.append(f"{ref_09_rel} must document Socratic Reflex Protocol")
 
   # 11b. Hub-and-Spoke Category Files (references/scars/)
-  scars_dir_rel = "skills/makefile-workflow/references/scars"
+  scars_dir_rel = "skills/makeflow/references/scars"
   spoke_files = (
       "process.md",
       "testing.md",
@@ -1131,7 +1131,7 @@ def validate():
       errors.append(f"{system_spoke_rel} must document SIGTERM and SignalTrap for SCAR-SYS-07")
 
   # 11c. Full Language Name Polyglot Scars (dart_flutter.md)
-  dart_guide_rel = "skills/makefile-workflow/references/polyglot/dart_flutter.md"
+  dart_guide_rel = "skills/makeflow/references/polyglot/dart_flutter.md"
   dart_guide = repo_path(dart_guide_rel)
   if not os.path.exists(dart_guide):
     errors.append(f"Missing {dart_guide_rel}")
@@ -1142,7 +1142,7 @@ def validate():
       if d_scar not in dg_text:
         errors.append(f"{dart_guide_rel} must document full language name {d_scar}")
 
-  ref_03_rel = "skills/makefile-workflow/references/03_tdd_and_code_quality.md"
+  ref_03_rel = "skills/makeflow/references/03_tdd_and_code_quality.md"
   ref_03 = repo_path(ref_03_rel)
   if not os.path.exists(ref_03):
     errors.append(f"Missing {ref_03_rel}")
@@ -1156,7 +1156,7 @@ def validate():
     if "SCAR-TEST-10" not in r03_text:
       errors.append(f"{ref_03_rel} must document SCAR-TEST-10")
 
-  ref_04_rel = "skills/makefile-workflow/references/04_testing_isolation.md"
+  ref_04_rel = "skills/makeflow/references/04_testing_isolation.md"
   ref_04 = repo_path(ref_04_rel)
   if not os.path.exists(ref_04):
     errors.append(f"Missing {ref_04_rel}")
@@ -1181,7 +1181,7 @@ def validate():
     if "evidence" not in aw_text.lower() or "guess" not in aw_text.lower():
       errors.append(f"{arch_worker_rel} Rule 5 must instruct worker to question verification evidence for Belnap claims")
 
-  ref_02_rel = "skills/makefile-workflow/references/02_archaeology_and_planning.md"
+  ref_02_rel = "skills/makeflow/references/02_archaeology_and_planning.md"
   ref_02 = repo_path(ref_02_rel)
   if not os.path.exists(ref_02):
     errors.append(f"Missing {ref_02_rel}")
@@ -1266,7 +1266,7 @@ def validate():
     if "pre-fetched" in tw_text.lower():
       errors.append(f"{triage_agent_rel} must not require pre-fetched CI results from supervisor")
 
-  ref_07_rel = "skills/makefile-workflow/references/07_ci_and_bot_triage.md"
+  ref_07_rel = "skills/makeflow/references/07_ci_and_bot_triage.md"
   ref_07 = repo_path(ref_07_rel)
   if not os.path.exists(ref_07):
     errors.append(f"Missing {ref_07_rel}")
@@ -1280,7 +1280,7 @@ def validate():
     if "maxwaitseconds" not in r07_text.lower() and "single-probe" not in r07_text.lower():
       errors.append(f"{ref_07_rel} must document single-probe non-blocking query option")
 
-  ref_04_review_rel = "skills/makefile-workflow/references/04_six_pillars_adversarial_review.md"
+  ref_04_review_rel = "skills/makeflow/references/04_six_pillars_adversarial_review.md"
   ref_04_review = repo_path(ref_04_review_rel)
   if not os.path.exists(ref_04_review):
     errors.append(f"Missing {ref_04_review_rel}")
@@ -1321,7 +1321,7 @@ def validate():
     if "20 words" not in r04_rev_text:
       errors.append(f"{ref_04_review_rel} Pillar 5 must document sentence length caps (20 words)")
 
-  ref_10_rel = "skills/makefile-workflow/references/10_security_and_data_isolation.md"
+  ref_10_rel = "skills/makeflow/references/10_security_and_data_isolation.md"
   ref_10 = repo_path(ref_10_rel)
   if not os.path.exists(ref_10):
     errors.append(f"Missing {ref_10_rel}")
@@ -1340,7 +1340,7 @@ def validate():
       errors.append(f"{ref_10_rel} Section 7 must document SCAR-SYS-07 and POSIX signal trapping")
 
   # 12. SKILL.md Single-Page Size Ceiling (SCAR-PROC-99)
-  skill_rel = "skills/makefile-workflow/SKILL.md"
+  skill_rel = "skills/makeflow/SKILL.md"
   skill_md = repo_path(skill_rel)
   if not os.path.exists(skill_md):
     errors.append(f"Missing {skill_rel}")
@@ -1562,7 +1562,7 @@ def validate():
       errors.append(f"{history_md_rel} must use GH-<N> for GitHub issue links")
 
   # Request History Ledger Git lifecycle documentation check
-  ledger_ref_rel = "skills/makefile-workflow/references/12_request_history_ledger.md"
+  ledger_ref_rel = "skills/makeflow/references/12_request_history_ledger.md"
   ledger_ref = repo_path(ledger_ref_rel)
   if os.path.exists(ledger_ref):
     with open(ledger_ref) as f:
@@ -1578,7 +1578,7 @@ def validate():
           " history ledger"
       )
 
-  intake_ref_rel = "skills/makefile-workflow/references/01_intake_and_branching.md"
+  intake_ref_rel = "skills/makeflow/references/01_intake_and_branching.md"
   intake_ref = repo_path(intake_ref_rel)
   if os.path.exists(intake_ref):
     with open(intake_ref) as f:
@@ -1586,7 +1586,7 @@ def validate():
     if "feat/local-" not in intake_text and "feat/local-<N>" not in intake_text:
       errors.append(f"{intake_ref_rel} must mandate 'feat/local-<N>-<slug>' or 'fix/local-<N>-<slug>' for ad-hoc / local tasks")
 
-  hygiene_ref_rel = "skills/makefile-workflow/references/05_pre_commit_hygiene.md"
+  hygiene_ref_rel = "skills/makeflow/references/05_pre_commit_hygiene.md"
   hygiene_ref = repo_path(hygiene_ref_rel)
   if os.path.exists(hygiene_ref):
     with open(hygiene_ref) as f:
@@ -1610,10 +1610,10 @@ def validate():
   for path, expected_tokens in [
       ("CLAUDE.md", ["feat/local-", "closes #"]),
       (".cursorrules", ["feat/local-", "closes #"]),
-      (".cursor/rules/makefile-workflow.mdc", ["feat/local-", "closes #"]),
+      (".cursor/rules/makeflow.mdc", ["feat/local-", "closes #"]),
       (".github/copilot-instructions.md", ["feat/local-", "closes #"]),
       ("adapters/chatgpt/instructions.md", ["feat/local-", "closes #"]),
-      ("skills/makefile-workflow/SKILL.md", ["feat/local-", "closes #", "LOCAL-", "GH-"]),
+      ("skills/makeflow/SKILL.md", ["feat/local-", "closes #", "LOCAL-", "GH-"]),
   ]:
     full_path = repo_path(path)
     if os.path.exists(full_path):

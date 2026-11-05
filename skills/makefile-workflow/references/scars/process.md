@@ -61,10 +61,10 @@ This reference manual documents core process and workflow scars (`SCAR-PROC-*`).
 
 ### SCAR-PROC-105: Explicit Six Pillars Review Manual Path in Adversarial Critic Dispatch
 
-- **Wound**: When launching `adversarial-critic` at Target 40, supervisors that omit the explicit path to `skills/makefile-workflow/references/04_six_pillars_adversarial_review.md` generate shallow, un-anchored review prompts, causing the critic to miss domain invariants, relax scrutiny across canonical headings, or skip mandatory blast radius and crash antibody evaluations.
+- **Wound**: When launching `adversarial-critic` at Target 40, supervisors that omit the explicit path to `skills/makeflow/references/04_six_pillars_adversarial_review.md` generate shallow, un-anchored review prompts, causing the critic to miss domain invariants, relax scrutiny across canonical headings, or skip mandatory blast radius and crash antibody evaluations.
 - **Trap**: Assuming the critic subagent will instinctively remember or infer the detailed Six Pillars criteria and invariants without an explicit file path in the dispatch prompt, or providing a brief informal prompt summary that leaves out key evaluation guidelines.
-- **Permanent Reflex**: When launching the `adversarial-critic` subagent at Target 40, the supervisor must explicitly include the full relative workspace path `skills/makefile-workflow/references/04_six_pillars_adversarial_review.md` in the dispatch prompt, instructing the critic to audit the diff against that manual and structure its report with the canonical six headings and binary verdict header.
-- **Socratic Probe**: Does the adversarial-critic dispatch prompt explicitly supply the path `skills/makefile-workflow/references/04_six_pillars_adversarial_review.md`? If you omit this explicit manual path, will the critic rely on shallow heuristics and overlook crucial verification, blast radius, or crash antibody invariants?
+- **Permanent Reflex**: When launching the `adversarial-critic` subagent at Target 40, the supervisor must explicitly include the full relative workspace path `skills/makeflow/references/04_six_pillars_adversarial_review.md` in the dispatch prompt, instructing the critic to audit the diff against that manual and structure its report with the canonical six headings and binary verdict header.
+- **Socratic Probe**: Does the adversarial-critic dispatch prompt explicitly supply the path `skills/makeflow/references/04_six_pillars_adversarial_review.md`? If you omit this explicit manual path, will the critic rely on shallow heuristics and overlook crucial verification, blast radius, or crash antibody invariants?
 
 ### SCAR-PROC-138: Yield on Repeated Timer Conflicts
 
