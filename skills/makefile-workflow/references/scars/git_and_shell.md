@@ -6,12 +6,20 @@ This reference manual documents Git operations and shell execution scars (`SCAR-
 
 | ID | Title | Scope |
 | :--- | :--- | :--- |
+| `SCAR-SH-01` | Prefer Temporary Script Files Over Complex Shell Quoting | Command Quoting & Script Isolation |
 | `SCAR-SH-03` | Shell Redirection and Comment Stripping | Pre-Tool Guard Parsing |
 | `SCAR-GIT-20` | Pre-Push Merge Check | Branch Conflict Prevention |
 | `SCAR-GIT-25` | Destructive Git Command Protection | Working Tree & Branch Safety |
 | `SCAR-GIT-30` | Pure Git Mode and Tool Discovery | Non-GitHub / Offline Workflows |
 
 ---
+
+### SCAR-SH-01: Prefer Temporary Script Files Over Complex Shell Quoting
+
+- **Wound**: An agent attempts complex multiline or quoted shell invocations (`bash -c "..."` or inline pipes), leading to syntax errors, unescaped variable expansion, or corrupted arguments.
+- **Trap**: Trying to escape layers of quotes inline inside shell command strings instead of writing the logic to an executable script file.
+- **Permanent Reflex**: If shell commands require complex string escaping or multiple quoting layers, write the script to a file in a temporary directory (or scratch directory) and execute that file directly. Prefer Dart when available, falling back to Python.
+- **Socratic Probe**: Does this command involve fragile nested quotes or shell escapes that should be extracted into a temporary script?
 
 ### SCAR-SH-03: Shell Redirection and Comment Stripping
 
