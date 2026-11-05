@@ -730,6 +730,65 @@ def run_test():
     assert res["failedChecks"] == ["lint"]
   print("✔ MCP poll_ci_status in-memory branch coverage passed.")
 
+  # 15. Plugin directory isolation test
+  with tempfile.TemporaryDirectory() as mock_plugin_dir, tempfile.TemporaryDirectory() as ws_dir:
+    with open(os.path.join(mock_plugin_dir, "plugin.json"), "w", encoding="utf-8") as f:
+      json.dump({"name": "makeflow"}, f)
+    plugin_state = os.path.join(mock_plugin_dir, ".workflow", "state")
+    os.makedirs(plugin_state)
+    with open(os.path.join(plugin_state, "10_ticket.md"), "w", encoding="utf-8") as f:
+      f.write("# Ticket\n- Ticket ID: GH-999\n")
+
+    p_iso = subprocess.Popen(
+        [sys.executable, SERVER_SCRIPT],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        cwd=mock_plugin_dir,
+        text=True,
+    )
+    try:
+      send_rpc(p_iso, {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}})
+
+      # Calling workflow_get_state with {} in plugin dir returns error or does not leak plugin cards
+      resp_empty = send_rpc(
+          p_iso,
+          {
+              "jsonrpc": "2.0",
+              "id": 2,
+              "method": "tools/call",
+              "params": {
+                  "name": "workflow_get_state",
+                  "arguments": {},
+              },
+          },
+      )
+      res_obj = resp_empty.get("result", {})
+      text_out = res_obj.get("content", [{}])[0].get("text", "")
+      assert "GH-999" not in text_out, f"Leaked plugin cards: {text_out}"
+      assert res_obj.get("isError") is True or "does not exist" in text_out or "BLOCKED" in text_out
+
+      # Calling workflow_get_state with workspaceDir pointing to pristine workspace
+      resp_ws = send_rpc(
+          p_iso,
+          {
+              "jsonrpc": "2.0",
+              "id": 3,
+              "method": "tools/call",
+              "params": {
+                  "name": "workflow_get_state",
+                  "arguments": {"workspaceDir": ws_dir},
+              },
+          },
+      )
+      text_ws = resp_ws.get("result", {}).get("content", [{}])[0].get("text", "")
+      assert "GH-999" not in text_ws
+      assert "does not exist" in text_ws
+    finally:
+      p_iso.kill()
+      p_iso.wait()
+  print("✔ MCP plugin directory isolation passed.")
+
   print("\nAll MCP Server test cases passed.")
 
 
