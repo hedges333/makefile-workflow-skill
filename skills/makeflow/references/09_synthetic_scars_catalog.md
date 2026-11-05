@@ -16,7 +16,8 @@ references/
 │   ├── system_and_os.md             <-- SCAR-SYS-*, SCAR-ENV-*
 │   ├── data_and_database.md         <-- SCAR-DATA-*, SCAR-DB-*
 │   ├── security_and_auth.md         <-- SCAR-SEC-*, SCAR-AUTH-*
-│   └── tooling_and_hci.md           <-- SCAR-TOOL-*, SCAR-HCI-*, SCAR-DOC-*
+│   ├── tooling_and_hci.md           <-- SCAR-TOOL-*, SCAR-HCI-*, SCAR-DOC-*
+│   └── architecture.md              <-- SCAR-ARCH-*
 └── polyglot/                        <-- Language Spokes (Domain-Specific)
     ├── dart_flutter.md              <-- SCAR-LANG-DART-*
     ├── python.md                    <-- SCAR-LANG-PYTHON-*
@@ -80,6 +81,7 @@ Agents must use Socratic Probes during:
 | `SCAR-TOOL-15` | Anchored State Marker Detection vs Substring Matching | Tooling & HCI | [`scars/tooling_and_hci.md`](./scars/tooling_and_hci.md) |
 | `SCAR-HCI-08` | Multi-Choice Prompt Rule | Tooling & HCI | [`scars/tooling_and_hci.md`](./scars/tooling_and_hci.md) |
 | `SCAR-DOC-16` | Concentric Documentation Rings | Tooling & HCI | [`scars/tooling_and_hci.md`](./scars/tooling_and_hci.md) |
+| `SCAR-ARCH-05` | Testable Object-Oriented Script Template (BaseScript Pattern) | Architecture | [`scars/architecture.md`](./scars/architecture.md) |
 
 ### Language-Specific Failure Vaccines
 

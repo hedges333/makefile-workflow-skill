@@ -478,6 +478,152 @@ def validate_temporary_script_quoting_scar():
   return errors
 
 
+def validate_basescript_pattern_scar():
+  """Validates BaseScript pattern and SCAR-ARCH-05 codification (GH-31).
+
+  Verifies:
+  1. skills/makeflow/references/scars/architecture.md documents
+     SCAR-ARCH-05 with complete Four-Part Anatomy and invariants (BaseScript,
+     Template Method, execute, setup, run, cleanup, sys.exit).
+  2. skills/makeflow/references/09_synthetic_scars_catalog.md routes
+     SCAR-ARCH-05 strictly to scars/architecture.md and indexes architecture.md spoke.
+  3. skills/makeflow/references/14_design_patterns_and_architecture.md
+     Section 4 documents SCAR-ARCH-05 and BaseScript pattern with polyglot templates.
+  4. rules/AGENTS.md Section 3.1 documents SCAR-ARCH-05 and BaseScript.
+  5. All 5 adapters (CLAUDE.md, .cursorrules, .cursor/rules/makeflow.mdc,
+     .github/copilot-instructions.md, adapters/chatgpt/instructions.md) document
+     SCAR-ARCH-05.
+  6. Makefile defines test-base-script target and includes it in test prerequisites.
+  7. scripts/base_script.py and scripts/test_base_script.py exist.
+  8. Negative falsification:
+     - Missing Four-Part Anatomy fields or corrupted text triggers errors.
+     - Misrouted catalog table rows trigger errors.
+  """
+  errors = []
+
+  arch_spoke_rel = "skills/makeflow/references/scars/architecture.md"
+  arch_spoke = repo_path(arch_spoke_rel)
+  if not os.path.exists(arch_spoke):
+    errors.append(f"Missing {arch_spoke_rel}")
+  else:
+    with open(arch_spoke, "r", encoding="utf-8") as f:
+      arch_text = f.read()
+    if "SCAR-ARCH-05" not in arch_text:
+      errors.append(f"{arch_spoke_rel} must document SCAR-ARCH-05")
+    else:
+      scar_section = (
+          arch_text.split("### SCAR-ARCH-05")[1].split("### SCAR-")[0]
+          if "### SCAR-ARCH-05" in arch_text
+          else ""
+      )
+      for field in ("Wound", "Trap", "Permanent Reflex", "Socratic Probe"):
+        if f"**{field}**:" not in scar_section:
+          errors.append(f"{arch_spoke_rel} SCAR-ARCH-05 missing '**{field}**:'")
+      for invariant in (
+          "basescript",
+          "template method",
+          "execute",
+          "setup",
+          "run",
+          "cleanup",
+          "sys.exit",
+      ):
+        if invariant.lower() not in scar_section.lower():
+          errors.append(
+              f"{arch_spoke_rel} SCAR-ARCH-05 missing invariant '{invariant}'"
+          )
+
+  cat_rel = "skills/makeflow/references/09_synthetic_scars_catalog.md"
+  cat_path = repo_path(cat_rel)
+  if not os.path.exists(cat_path):
+    errors.append(f"Missing {cat_rel}")
+  else:
+    with open(cat_path, "r", encoding="utf-8") as f:
+      cat_text = f.read()
+    if "SCAR-ARCH-05" not in cat_text:
+      errors.append(f"{cat_rel} must index SCAR-ARCH-05")
+    if "architecture.md" not in cat_text:
+      errors.append(f"{cat_rel} must list architecture.md in Hub-and-Spoke index")
+    if not check_scar_catalog_routing(cat_text, "SCAR-ARCH-05", "architecture.md"):
+      errors.append(
+          f"{cat_rel} must route SCAR-ARCH-05 to scars/architecture.md"
+      )
+
+  pat_rel = "skills/makeflow/references/14_design_patterns_and_architecture.md"
+  pat_path = repo_path(pat_rel)
+  if not os.path.exists(pat_path):
+    errors.append(f"Missing {pat_rel}")
+  else:
+    with open(pat_path, "r", encoding="utf-8") as f:
+      pat_text = f.read()
+    if "SCAR-ARCH-05" not in pat_text:
+      errors.append(f"{pat_rel} must document SCAR-ARCH-05")
+    if "BaseScript" not in pat_text:
+      errors.append(f"{pat_rel} must document BaseScript pattern")
+    if "Template Method" not in pat_text:
+      errors.append(f"{pat_rel} must document Template Method lifecycle")
+
+  agents_rel = "rules/AGENTS.md"
+  agents_path = repo_path(agents_rel)
+  if not os.path.exists(agents_path):
+    errors.append(f"Missing {agents_rel}")
+  else:
+    with open(agents_path, "r", encoding="utf-8") as f:
+      agents_text = f.read()
+    if "SCAR-ARCH-05" not in agents_text:
+      errors.append(f"{agents_rel} Section 3.1 must reference SCAR-ARCH-05")
+    if "BaseScript" not in agents_text:
+      errors.append(f"{agents_rel} Section 3.1 must mention BaseScript")
+
+  for adapter_rel in [
+      "CLAUDE.md",
+      ".cursorrules",
+      ".cursor/rules/makeflow.mdc",
+      ".github/copilot-instructions.md",
+      "adapters/chatgpt/instructions.md",
+  ]:
+    adapter_path = repo_path(adapter_rel)
+    if not os.path.exists(adapter_path):
+      errors.append(f"Missing {adapter_rel}")
+    else:
+      with open(adapter_path, "r", encoding="utf-8") as f:
+        adapter_text = f.read()
+      if "SCAR-ARCH-05" not in adapter_text:
+        errors.append(f"{adapter_rel} must document SCAR-ARCH-05")
+
+  mk_rel = "Makefile"
+  mk_path = repo_path(mk_rel)
+  if not os.path.exists(mk_path):
+    errors.append(f"Missing {mk_rel}")
+  else:
+    with open(mk_path, "r", encoding="utf-8") as f:
+      mk_text = f.read()
+    if "test-base-script:" not in mk_text:
+      errors.append(f"{mk_rel} must define 'test-base-script:' target")
+    if "test-base-script" not in mk_text.split("test:")[1].split("\n")[0]:
+      errors.append(
+          f"{mk_rel} 'test:' target must list 'test-base-script' prerequisite"
+      )
+
+  for script_rel in ["scripts/base_script.py", "scripts/test_base_script.py"]:
+    script_path = repo_path(script_rel)
+    if not os.path.exists(script_path):
+      errors.append(f"Missing {script_rel}")
+
+  # Negative Falsification Checks
+  mock_corrupted_spoke = "### SCAR-ARCH-05: Broken\n**Wound**: Foo"
+  if "**Trap**:" in mock_corrupted_spoke:
+    errors.append("Falsification failed: corrupted spoke should not have Trap")
+  mock_misrouted = (
+      "| `SCAR-ARCH-05` | Architecture | BaseScript |"
+      " [`scars/process.md`](./scars/process.md) |"
+  )
+  if check_scar_catalog_routing(mock_misrouted, "SCAR-ARCH-05", "architecture.md"):
+    errors.append("Falsification failed: misrouted catalog line was accepted")
+
+  return errors
+
+
 def validate_posix_signal_trapping():
   """Validates POSIX signal trapping invariants (GH-24, SCAR-SYS-07).
 
@@ -1069,6 +1215,7 @@ def validate():
       "data_and_database.md",
       "security_and_auth.md",
       "tooling_and_hci.md",
+      "architecture.md",
   )
   for sf in spoke_files:
     sf_rel = os.path.join(scars_dir_rel, sf)
@@ -1097,8 +1244,8 @@ def validate():
       if r09_text and not check_scar_catalog_routing(r09_text, scar_id, sf):
         errors.append(f"{ref_09_rel} Master Routing Table must strictly route {scar_id} to scars/{sf}")
 
-  if total_scars_found != 31:
-    errors.append(f"Expected 31 synthetic scars across category spokes, found {total_scars_found}")
+  if total_scars_found != 32:
+    errors.append(f"Expected 32 synthetic scars across category spokes, found {total_scars_found}")
 
   testing_spoke_rel = os.path.join(scars_dir_rel, "testing.md")
   testing_spoke = repo_path(testing_spoke_rel)
@@ -1658,6 +1805,12 @@ def validate():
   errors.extend(temp_script_errors)
   if not temp_script_errors:
     print("✔ Temporary script quoting invariants (GH-25, SCAR-SH-01) verified.")
+
+  # BaseScript Pattern Invariants (GH-31, SCAR-ARCH-05)
+  basescript_errors = validate_basescript_pattern_scar()
+  errors.extend(basescript_errors)
+  if not basescript_errors:
+    print("✔ BaseScript pattern invariants (GH-31, SCAR-ARCH-05) verified.")
 
   # Diagnostic Path Formatting (GH-63)
   path_formatting_errors = validate_diagnostic_path_formatting()
