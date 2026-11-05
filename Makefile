@@ -4,7 +4,7 @@ PLUGIN_NAME = makeflow
 INSTALL_DIR = $(HOME)/.gemini/config/plugins/$(PLUGIN_NAME)
 PYTHON ?= python3
 
-.PHONY: all validate install uninstall test test-static test-safe-copy test-env-preflight test-signal-trap test-mcp test-compat test-hooks help
+.PHONY: all validate install uninstall test test-static test-safe-copy test-env-preflight test-signal-trap test-mcp test-compat test-base-script test-hooks help
 
 all: validate test
 
@@ -55,11 +55,15 @@ test-compat:
 	@echo "Testing cross-agent compatibility..."
 	@$(PYTHON) scripts/test_cross_agent_compatibility.py
 
+test-base-script:
+	@echo "Testing BaseScript execution lifecycle..."
+	@$(PYTHON) scripts/test_base_script.py -v
+
 test-hooks:
 	@echo "Testing SessionStart and PreToolUse hooks..."
 	@$(PYTHON) scripts/test_hooks.py
 
-test: test-static test-safe-copy test-env-preflight test-signal-trap test-compat test-mcp test-hooks
+test: test-static test-safe-copy test-env-preflight test-signal-trap test-compat test-base-script test-mcp test-hooks
 	@echo "Testing file structure..."
 	@test -f plugin.json || (echo "Missing plugin.json" && exit 1)
 	@test -f hooks.json || (echo "Missing hooks.json" && exit 1)

@@ -93,3 +93,146 @@ Game engines include Godot, Haxe Flixel or Heaps, Unity, Unreal, SDL, and Raylib
 - `Dirty Flag`: Caches derived data such as world transforms and recomputes them only when local values change.
 - `Object Pool`: Preallocates fixed arrays of projectiles or particles and reuses slots to prevent garbage-collection pauses.
 - `Spatial Partition`: Indexes entities in grids, quadtrees, octrees, or bounding volume hierarchies for fast neighbor queries.
+
+---
+
+## 4. Testable Object-Oriented Script Pattern (BaseScript / Template Method)
+
+Procedural CLI scripts and standalone automation utilities often resist clean unit testing. When scripts execute procedural code at the top level or within a monolithic procedural block, test suites are forced to invoke slow OS subprocesses or mutate global variables. Moreover, calling process termination functions (`sys.exit()`, `process.exit()`, `os.Exit()`) inside business logic aborts the test runner itself.
+
+Under `SCAR-ARCH-05`, encapsulate script execution in class objects or runner structures using the classic GoF **Template Method** pattern (`BaseScript`).
+
+### Execution Lifecycle Stages
+
+The Template Method (`execute()`) controls execution flow across five distinct lifecycle phases:
+
+```
++-------------------------------------------------------------+
+| execute(args, stdout, stderr)                               |
+|                                                             |
+| 1. Bind Streams: Assign stdout and stderr streams           |
+| 2. parse_args(args): Convert CLI strings into structures    |
+| 3. setup(): Pre-flight verification and resource acquisition|
+| 4. run(): Core business logic, returns exit code            |
+| 5. cleanup(exit_code): Guaranteed resource release (finally)|
+| 6. Trap Unhandled Exceptions: Return non-zero status        |
++-------------------------------------------------------------+
+```
+
+### Polyglot Implementations
+
+#### 1. Python (`BaseScript`)
+```python
+import sys
+from typing import List, Optional, TextIO
+
+class BaseScript:
+    def __init__(self) -> None:
+        self.stdout: TextIO = sys.stdout
+        self.stderr: TextIO = sys.stderr
+        self.raw_args: List[str] = []
+
+    def parse_args(self, args: Optional[List[str]] = None) -> None:
+        self.raw_args = list(args) if args is not None else []
+
+    def setup(self) -> None:
+        pass
+
+    def run(self) -> Optional[int]:
+        return 0
+
+    def cleanup(self, exit_code: int) -> None:
+        pass
+
+    def execute(self, args: Optional[List[str]] = None, stdout: Optional[TextIO] = None, stderr: Optional[TextIO] = None) -> int:
+        self.stdout = stdout if stdout is not None else sys.stdout
+        self.stderr = stderr if stderr is not None else sys.stderr
+        if args is None:
+            args = sys.argv[1:]
+        exit_code = 0
+        try:
+            self.parse_args(args)
+            self.setup()
+            res = self.run()
+            exit_code = 0 if res is None else int(res)
+        except Exception as exc:
+            raw_code = getattr(exc, "exit_code", 1)
+            try:
+                exit_code = int(raw_code)
+            except (ValueError, TypeError):
+                exit_code = 1
+            self.stderr.write(f"Error: {exc}\n")
+        finally:
+            self.cleanup(exit_code)
+        return exit_code
+
+if __name__ == "__main__":
+    sys.exit(BaseScript().execute())
+```
+
+#### 2. TypeScript / Node (`BaseScript`)
+```typescript
+import { Writable } from 'node:stream';
+
+export abstract class BaseScript {
+  protected stdout: Writable = process.stdout;
+  protected stderr: Writable = process.stderr;
+
+  abstract run(): Promise<number>;
+  async setup(): Promise<void> {}
+  async cleanup(exitCode: number): Promise<void> {}
+
+  async execute(args: string[] = process.argv.slice(2), stdout?: Writable, stderr?: Writable): Promise<number> {
+    if (stdout) this.stdout = stdout;
+    if (stderr) this.stderr = stderr;
+    let exitCode = 0;
+    try {
+      await this.setup();
+      exitCode = await this.run();
+    } catch (err) {
+      exitCode = 1;
+      this.stderr.write(`Error: ${err}\n`);
+    } finally {
+      await this.cleanup(exitCode);
+    }
+    return exitCode;
+  }
+}
+```
+
+#### 3. Go / Rust (`Runner` Pattern)
+In Go and Rust, implement the runner lifecycle via an interface/trait without calling `os::exit` inside business methods:
+```go
+type Script interface {
+    Setup(ctx context.Context) error
+    Run(ctx context.Context) (int, error)
+    Cleanup(exitCode int)
+}
+
+func Execute(s Script, args []string, stdout, stderr io.Writer) int {
+    // Coordinate lifecycle and return integer status code
+}
+```
+
+#### 4. Dart (`BaseScript` with Zones)
+```dart
+abstract class BaseScript {
+  Future<int> run();
+  Future<void> setup() async {}
+  Future<void> cleanup(int exitCode) async {}
+
+  Future<int> execute({List<String>? args, StringSink? stdout, StringSink? stderr}) async {
+    int exitCode = 0;
+    try {
+      await setup();
+      exitCode = await run();
+    } catch (e) {
+      exitCode = 1;
+      stderr?.writeln('Error: $e');
+    } finally {
+      await cleanup(exitCode);
+    }
+    return exitCode;
+  }
+}
+```

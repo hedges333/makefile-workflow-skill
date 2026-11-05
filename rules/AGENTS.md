@@ -76,7 +76,7 @@ Keep each code change small and within ticket scope.
 5. Use an ORM (a library that maps database rows to objects) by default. If large datasets slow down the ORM, encapsulate parameterized SQL or NoSQL queries behind repository methods.
 6. If you find unrelated defects during a ticket, do not edit them. Record them in ticket notes for a separate task.
 
-### 3.1 Temporary Script and Automation Rules (`SCAR-SH-01`, `SCAR-TOOL-07`)
+### 3.1 Temporary Script and Automation Rules (`SCAR-SH-01`, `SCAR-TOOL-07`, `SCAR-ARCH-05`)
 
 Apply these rules for scratch scripts and automation utilities:
 
@@ -84,6 +84,7 @@ Apply these rules for scratch scripts and automation utilities:
 2. If Dart is not installed, use Python.
 3. Never attempt to install Dart.
 4. If shell commands require complex string escaping or multiple quoting layers, write the script to a file in a temporary directory and execute that file directly (`SCAR-SH-01`).
+5. Encapsulate script and entry-point logic in testable class objects or lifecycle runners that manage argument parsing, setup, execution, cleanup, and fatal exception trapping (the BaseScript / Template Method pattern, `SCAR-ARCH-05`). Keep executable CLI entry points to thin two-line wrappers (`sys.exit(ScriptClass().execute())`).
 
 ## 4. Simple English Documentation Rules
 
