@@ -878,7 +878,69 @@ def test_hook_mcp_parity():
   print("✔ Hook and MCP Git guard parity assertions passed.")
 
 
+def test_plugin_directory_isolation():
+  """Tests that plugin installation directory never leaks state cards to user workspaces."""
+  guard_mod = _load_module("pre_tool_guard", PRE_TOOL)
+
+  with tempfile.TemporaryDirectory() as mock_plugin_dir, tempfile.TemporaryDirectory() as ws_dir:
+    # 1. Setup mock plugin directory with leftover state cards
+    with open(os.path.join(mock_plugin_dir, "plugin.json"), "w", encoding="utf-8") as f:
+      json.dump({"name": "makeflow"}, f)
+    plugin_state = os.path.join(mock_plugin_dir, ".workflow", "state")
+    os.makedirs(plugin_state)
+    with open(os.path.join(plugin_state, "10_ticket.md"), "w", encoding="utf-8") as f:
+      f.write("# Ticket\n- Ticket ID: GH-999\n")
+    with open(os.path.join(plugin_state, "99_next_action.md"), "w", encoding="utf-8") as f:
+      f.write("# Target 90 Finished: COMPLETE\n- Status: COMPLETE (make finish satisfied)\n- Active Target: Target 90\n")
+    with open(os.path.join(plugin_state, "45_review_approved.md"), "w", encoding="utf-8") as f:
+      f.write("# Approved\n")
+
+    # 2. Test session_start: pristine workspace reports ZERO cards and does not mention plugin state cards
+    res = run_hook(
+        SESSION_START,
+        {"workspacePaths": [ws_dir]},
+        cwd=mock_plugin_dir,
+    )
+    if "injectSteps" in res:
+      msg = res["injectSteps"][0]["systemMessage"]["systemMessage"]
+      assert "state card(s)" not in msg, f"Leaked state cards into session message: {msg}"
+      assert "GH-999" not in msg
+
+    # 3. Test pre_tool_guard: commit in pristine workspace is Target 50, NOT Target 90
+    commit_res = run_hook(
+        PRE_TOOL,
+        {
+            "workspacePaths": [ws_dir],
+            "toolCall": {
+                "name": "run_command",
+                "args": {"CommandLine": "git commit -m 'feat: test isolation'"},
+            },
+        },
+        cwd=mock_plugin_dir,
+    )
+    assert commit_res["decision"] == "force_ask"
+    assert "Target 50 Commit Gate" in commit_res["reason"], f"Wrong gate: {commit_res['reason']}"
+    assert "Target 90" not in commit_res["reason"]
+
+    # 4. Test resolve_state_dir: strictly returns workspace state, never plugin dir
+    state_dir = guard_mod.resolve_state_dir({"workspacePaths": [ws_dir]})
+    assert state_dir == os.path.join(ws_dir, ".workflow", "state")
+    assert state_dir != plugin_state
+
+    # When workspacePaths is empty and cwd is plugin directory, resolve_state_dir returns ""
+    old_cwd = os.getcwd()
+    try:
+      os.chdir(mock_plugin_dir)
+      state_dir_no_ws = guard_mod.resolve_state_dir({})
+      assert state_dir_no_ws == "", f"Expected empty string, got: {state_dir_no_ws}"
+    finally:
+      os.chdir(old_cwd)
+
+  print("✔ Plugin directory state isolation assertions passed.")
+
+
 if __name__ == "__main__":
   test_pre_tool_guard()
   test_session_start()
   test_hook_mcp_parity()
+  test_plugin_directory_isolation()

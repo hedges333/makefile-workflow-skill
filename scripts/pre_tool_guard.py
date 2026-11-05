@@ -75,6 +75,37 @@ def _parse_csv_env(env_name):
   return [item.strip() for item in raw.split(",") if item.strip()]
 
 
+def is_plugin_dir(path):
+  """Checks whether a directory is inside a makeflow plugin installation root."""
+  if not path or not isinstance(path, str):
+    return False
+  norm_path = os.path.abspath(os.path.expanduser(path))
+  known_plugin_prefixes = (
+      os.path.abspath(os.path.expanduser("~/.gemini/config/plugins")),
+      os.path.abspath(os.path.expanduser("~/.gemini/plugins")),
+      os.path.abspath(os.path.expanduser("~/.claude/plugins")),
+  )
+  for prefix in known_plugin_prefixes:
+    if norm_path == prefix or norm_path.startswith(prefix + os.sep):
+      return True
+
+  curr = norm_path
+  while curr and curr != os.path.dirname(curr):
+    if os.path.isdir(os.path.join(curr, ".git")):
+      return False
+    plugin_json_path = os.path.join(curr, "plugin.json")
+    if os.path.isfile(plugin_json_path):
+      try:
+        with open(plugin_json_path, "r", encoding="utf-8") as f:
+          data = json.load(f)
+        if isinstance(data, dict) and data.get("name") == "makeflow":
+          return True
+      except Exception:
+        pass
+    curr = os.path.dirname(curr)
+  return False
+
+
 def load_database_config(payload):
   """Loads database isolation rules from workspace config, global config, and env."""
   db_cfg = {
@@ -84,9 +115,11 @@ def load_database_config(payload):
   }
 
   candidates = []
-  for ws in payload.get("workspacePaths") or []:
+  workspace_paths = payload.get("workspacePaths") or []
+  for ws in workspace_paths:
     candidates.append(os.path.join(ws, ".workflow", "config.json"))
-  candidates.append(os.path.join(os.getcwd(), ".workflow", "config.json"))
+  if not workspace_paths and not is_plugin_dir(os.getcwd()):
+    candidates.append(os.path.join(os.getcwd(), ".workflow", "config.json"))
   candidates.append(os.path.expanduser("~/.gemini/config/makeflow.json"))
 
   for cfg_path in candidates:
@@ -883,9 +916,10 @@ def _detect_target_90(cmd, state_dir=None):
   )
   is_t90_state = False
   if state_dir is None:
-    cwd_state = os.path.join(os.getcwd(), ".workflow", "state")
-    if os.path.isdir(cwd_state):
-      state_dir = cwd_state
+    if not is_plugin_dir(os.getcwd()):
+      cwd_state = os.path.join(os.getcwd(), ".workflow", "state")
+      if os.path.isdir(cwd_state):
+        state_dir = cwd_state
 
   if state_dir and os.path.isdir(state_dir):
     next_action_card = os.path.join(state_dir, "99_next_action.md")
@@ -1247,7 +1281,10 @@ def resolve_state_dir(payload):
   if workspace_paths:
     return os.path.join(workspace_paths[0], ".workflow", "state")
 
-  return os.path.join(os.getcwd(), ".workflow", "state")
+  if not is_plugin_dir(os.getcwd()):
+    return os.path.join(os.getcwd(), ".workflow", "state")
+
+  return ""
 
 
 def is_database_command(cmd):
@@ -1282,8 +1319,8 @@ def evaluate_tool_call(payload):
 
   # 2. Destructive Git guards and milestone pause gates
   state_dir = resolve_state_dir(payload)
-  review_card = os.path.join(state_dir, "45_review_approved.md")
-  has_review = os.path.isfile(review_card)
+  review_card = os.path.join(state_dir, "45_review_approved.md") if state_dir else ""
+  has_review = bool(review_card and os.path.isfile(review_card))
   return evaluate_git_command(cmd, has_review, state_dir=state_dir)
 
 

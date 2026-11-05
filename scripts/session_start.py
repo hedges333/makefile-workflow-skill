@@ -102,6 +102,37 @@ def load_default_config():
   }
 
 
+def is_plugin_dir(path):
+  """Checks whether a directory is inside a makeflow plugin installation root."""
+  if not path or not isinstance(path, str):
+    return False
+  norm_path = os.path.abspath(os.path.expanduser(path))
+  known_plugin_prefixes = (
+      os.path.abspath(os.path.expanduser("~/.gemini/config/plugins")),
+      os.path.abspath(os.path.expanduser("~/.gemini/plugins")),
+      os.path.abspath(os.path.expanduser("~/.claude/plugins")),
+  )
+  for prefix in known_plugin_prefixes:
+    if norm_path == prefix or norm_path.startswith(prefix + os.sep):
+      return True
+
+  curr = norm_path
+  while curr and curr != os.path.dirname(curr):
+    if os.path.isdir(os.path.join(curr, ".git")):
+      return False
+    plugin_json_path = os.path.join(curr, "plugin.json")
+    if os.path.isfile(plugin_json_path):
+      try:
+        with open(plugin_json_path, "r", encoding="utf-8") as f:
+          data = json.load(f)
+        if isinstance(data, dict) and data.get("name") == "makeflow":
+          return True
+      except Exception:
+        pass
+    curr = os.path.dirname(curr)
+  return False
+
+
 def get_workflow_config(workspace_paths):
   default_cfg = load_default_config()
   raw_cfg = {}
@@ -110,7 +141,8 @@ def get_workflow_config(workspace_paths):
   candidates = []
   for ws in workspace_paths:
     candidates.append((os.path.join(ws, ".workflow", "config.json"), None))
-  candidates.append((os.path.join(os.getcwd(), ".workflow", "config.json"), None))
+  if not workspace_paths and not is_plugin_dir(os.getcwd()):
+    candidates.append((os.path.join(os.getcwd(), ".workflow", "config.json"), None))
   candidates.append((
       os.path.expanduser("~/.gemini/config/makeflow.json"),
       "~/.gemini/config/makeflow.json",
@@ -215,14 +247,17 @@ def check_simple_english(workspace_paths):
 
 
 def find_state_dir(workspace_paths, artifact_dir):
-  for ws in workspace_paths:
-    candidate = os.path.join(ws, ".workflow", "state")
-    if os.path.isdir(candidate):
-      return candidate
+  if workspace_paths:
+    for ws in workspace_paths:
+      candidate = os.path.join(ws, ".workflow", "state")
+      if os.path.isdir(candidate):
+        return candidate
+    return ""
 
-  cwd_state = os.path.join(os.getcwd(), ".workflow", "state")
-  if os.path.isdir(cwd_state):
-    return cwd_state
+  if not is_plugin_dir(os.getcwd()):
+    cwd_state = os.path.join(os.getcwd(), ".workflow", "state")
+    if os.path.isdir(cwd_state):
+      return cwd_state
 
   if artifact_dir:
     brain_state = os.path.join(artifact_dir, "state")

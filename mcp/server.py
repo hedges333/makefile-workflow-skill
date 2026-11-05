@@ -122,6 +122,37 @@ REQUIRED_STATE_CARDS = {
 }
 
 
+def is_plugin_dir(path):
+  """Checks whether a directory is inside a makeflow plugin installation root."""
+  if not path or not isinstance(path, str):
+    return False
+  norm_path = os.path.abspath(os.path.expanduser(path))
+  known_plugin_prefixes = (
+      os.path.abspath(os.path.expanduser("~/.gemini/config/plugins")),
+      os.path.abspath(os.path.expanduser("~/.gemini/plugins")),
+      os.path.abspath(os.path.expanduser("~/.claude/plugins")),
+  )
+  for prefix in known_plugin_prefixes:
+    if norm_path == prefix or norm_path.startswith(prefix + os.sep):
+      return True
+
+  curr = norm_path
+  while curr and curr != os.path.dirname(curr):
+    if os.path.isdir(os.path.join(curr, ".git")):
+      return False
+    plugin_json_path = os.path.join(curr, "plugin.json")
+    if os.path.isfile(plugin_json_path):
+      try:
+        with open(plugin_json_path, "r", encoding="utf-8") as f:
+          data = json.load(f)
+        if isinstance(data, dict) and data.get("name") == "makeflow":
+          return True
+      except Exception:
+        pass
+    curr = os.path.dirname(curr)
+  return False
+
+
 def resolve_workspace_dir(arguments):
   ws = (arguments or {}).get("workspaceDir")
   if ws:
@@ -129,6 +160,8 @@ def resolve_workspace_dir(arguments):
   env_ws = os.getenv("MAKEFILE_WORKFLOW_WORKSPACE")
   if env_ws:
     return os.path.expanduser(env_ws)
+  if is_plugin_dir(os.getcwd()):
+    return None
   return os.getcwd()
 
 
@@ -225,15 +258,16 @@ def load_default_config():
 
 def resolve_workflow_config(workspace_dir=None):
   """Resolves workflow configuration from workspace, global path, or environment."""
-  ws = workspace_dir or resolve_workspace_dir({})
-  local_cfg_path = os.path.join(ws, ".workflow", "config.json")
+  ws = workspace_dir if workspace_dir is not None else resolve_workspace_dir({})
+  local_cfg_path = os.path.join(ws, ".workflow", "config.json") if ws else None
   global_cfg_path = os.path.expanduser("~/.gemini/config/makeflow.json")
 
   config = load_default_config()
   config["configSource"] = "defaults"
   config["envOverrides"] = []
 
-  for cfg_path in (local_cfg_path, global_cfg_path):
+  candidates = [p for p in (local_cfg_path, global_cfg_path) if p]
+  for cfg_path in candidates:
     if os.path.isfile(cfg_path):
       try:
         with open(cfg_path, "r", encoding="utf-8") as f:
@@ -1690,6 +1724,12 @@ def handle_tools_call(request_id, tool_name, arguments):
 
   if tool_name == "workflow_get_state":
     ws = resolve_workspace_dir(arguments)
+    if ws is None:
+      return _error_result(
+          request_id,
+          "BLOCKED: Running inside plugin installation directory without a workspaceDir. "
+          "Pass 'workspaceDir' with the absolute path to your project workspace.",
+      )
     raw_state_dir = arguments.get("stateDir", ".workflow/state")
     state_dir = (
         raw_state_dir
@@ -1772,6 +1812,11 @@ def handle_tools_call(request_id, tool_name, arguments):
 
     if arguments.get("workspaceDir") or arguments.get("stateDir"):
       ws = resolve_workspace_dir(arguments)
+      if ws is None:
+        return _error_result(
+            request_id,
+            "BLOCKED: Missing workspaceDir when running in plugin directory.",
+        )
       raw_state_dir = arguments.get("stateDir", ".workflow/state")
       state_dir = (
           raw_state_dir
@@ -1801,6 +1846,12 @@ def handle_tools_call(request_id, tool_name, arguments):
   elif tool_name == "workflow_verify_tree":
     expected = arguments.get("expectedApprovedTree", "").strip()
     ws = resolve_workspace_dir(arguments)
+    if ws is None:
+      return _error_result(
+          request_id,
+          "BLOCKED: Running inside plugin installation directory without a workspaceDir. "
+          "Pass 'workspaceDir' with the path to the Git repository.",
+      )
     try:
       res = subprocess.run(
           ["git", "write-tree"],
@@ -1876,6 +1927,12 @@ def handle_tools_call(request_id, tool_name, arguments):
   elif tool_name == "workflow_poll_ci":
     pr_num = arguments.get("prNumber", 0)
     ws = resolve_workspace_dir(arguments)
+    if ws is None:
+      return _error_result(
+          request_id,
+          "BLOCKED: Running inside plugin installation directory without a workspaceDir. "
+          "Pass 'workspaceDir' with the path to the Git repository.",
+      )
     q_sec = arguments.get("quiescenceSeconds")
     p_sec = arguments.get("pollIntervalSeconds")
     max_wait = arguments.get("maxWaitSeconds", 600)
