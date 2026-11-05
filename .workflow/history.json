@@ -742,5 +742,28 @@
     "scars_earned": [
       "SCAR-SYS-07: POSIX Signal Trapping for Long-Running Workers (SIGTERM / SIGINT)"
     ]
+  },
+  {
+    "id": "GH-25",
+    "issue_url": "https://github.com/hedges333/makeflow-skill/issues/25",
+    "title": "Codify SCAR-SH: Prefer temporary script files over complex shell quoting",
+    "request": "Codify SCAR-SH-01 in synthetic scars catalog, reference manuals, agent rules, and adapters. Prefer temporary script files over complex inline shell quoting, and assert 31 synthetic scars.",
+    "branch": "feat/25-temp-scripts-over-complex-quoting",
+    "subprojects": [
+      "rules",
+      "skills",
+      "scripts",
+      "adapters"
+    ],
+    "started_at": "2026-11-05T18:30:00Z",
+    "completed_at": "2026-11-05T19:30:00Z",
+    "commit_sha": "72e294d",
+    "pr_number": 73,
+    "pr_url": "https://github.com/hedges333/makeflow-skill/pull/73",
+    "closes_issue": true,
+    "tests_added": 11,
+    "scars_earned": [
+      "SCAR-SH-01: Prefer Temporary Script Files Over Complex Shell Quoting"
+    ]
   }
 ]
