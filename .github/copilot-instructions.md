@@ -13,6 +13,7 @@ Follow the Makefile Workflow lifecycle when assisting in this repository:
 9. Write commit messages, documentation, and pull request summaries in Simple English: short sentences, active voice, and clear terms. Forbid `closes #` on local session commits.
 10. If `.workflow/config.json` or `~/.gemini/config/makefile-workflow.json` exists, read it to load user configuration.
 11. Intercept POSIX signals (`SIGTERM` and `SIGINT`) in long-running workers and clean up lockfiles under `SCAR-SYS-07`.
+12. If shell commands require complex string escaping or multiple quoting layers, write the script to a file in a temporary directory under `SCAR-SH-01`.
 
 ## Interactive Model Switch Reminder
 

@@ -367,6 +367,117 @@ def validate_adversarial_critic_manual_reference():
   return errors
 
 
+def validate_temporary_script_quoting_scar():
+  """Validates temporary script quoting scar invariants (GH-25, SCAR-SH-01).
+
+  Verifies:
+  1. skills/makefile-workflow/references/scars/git_and_shell.md documents
+     SCAR-SH-01 with complete Four-Part Anatomy and invariants (temporary directory,
+     complex string escaping, quotes/quoting, Dart, Python).
+  2. skills/makefile-workflow/references/09_synthetic_scars_catalog.md routes
+     SCAR-SH-01 strictly to scars/git_and_shell.md.
+  3. skills/makefile-workflow/references/10_security_and_data_isolation.md
+     Section 2 documents SCAR-SH-01.
+  4. rules/AGENTS.md Section 3.1 documents SCAR-SH-01.
+  5. All 5 adapters (CLAUDE.md, .cursorrules, .cursor/rules/makefile-workflow.mdc,
+     .github/copilot-instructions.md, adapters/chatgpt/instructions.md) document
+     SCAR-SH-01.
+  6. Negative falsification:
+     - Missing Four-Part Anatomy fields or corrupted text triggers errors.
+     - Misrouted catalog table rows trigger errors.
+  """
+  errors = []
+
+  sh_spoke_rel = "skills/makefile-workflow/references/scars/git_and_shell.md"
+  sh_spoke = repo_path(sh_spoke_rel)
+  if not os.path.exists(sh_spoke):
+    errors.append(f"Missing {sh_spoke_rel}")
+  else:
+    with open(sh_spoke, "r", encoding="utf-8") as f:
+      sh_text = f.read()
+    if "SCAR-SH-01" not in sh_text:
+      errors.append(f"{sh_spoke_rel} must document SCAR-SH-01")
+    else:
+      scar_section = (
+          sh_text.split("### SCAR-SH-01")[1].split("### SCAR-")[0]
+          if "### SCAR-SH-01" in sh_text
+          else ""
+      )
+      for field in ("Wound", "Trap", "Permanent Reflex", "Socratic Probe"):
+        if f"**{field}**:" not in scar_section:
+          errors.append(f"{sh_spoke_rel} SCAR-SH-01 missing '**{field}**:'")
+      for invariant in ("temporary directory", "complex string escaping", "quotes", "Dart", "Python"):
+        if invariant.lower() not in scar_section.lower():
+          errors.append(
+              f"{sh_spoke_rel} SCAR-SH-01 missing invariant '{invariant}'"
+          )
+
+  cat_rel = "skills/makefile-workflow/references/09_synthetic_scars_catalog.md"
+  cat_path = repo_path(cat_rel)
+  if not os.path.exists(cat_path):
+    errors.append(f"Missing {cat_rel}")
+  else:
+    with open(cat_path, "r", encoding="utf-8") as f:
+      cat_text = f.read()
+    if "SCAR-SH-01" not in cat_text:
+      errors.append(f"{cat_rel} must index SCAR-SH-01")
+    if not check_scar_catalog_routing(cat_text, "SCAR-SH-01", "git_and_shell.md"):
+      errors.append(
+          f"{cat_rel} must route SCAR-SH-01 to scars/git_and_shell.md"
+      )
+
+  sec_rel = (
+      "skills/makefile-workflow/references/10_security_and_data_isolation.md"
+  )
+  sec_path = repo_path(sec_rel)
+  if not os.path.exists(sec_path):
+    errors.append(f"Missing {sec_rel}")
+  else:
+    with open(sec_path, "r", encoding="utf-8") as f:
+      sec_text = f.read()
+    if "SCAR-SH-01" not in sec_text:
+      errors.append(f"{sec_rel} must document SCAR-SH-01")
+
+  agents_rel = "rules/AGENTS.md"
+  agents_path = repo_path(agents_rel)
+  if not os.path.exists(agents_path):
+    errors.append(f"Missing {agents_rel}")
+  else:
+    with open(agents_path, "r", encoding="utf-8") as f:
+      agents_text = f.read()
+    if "SCAR-SH-01" not in agents_text:
+      errors.append(f"{agents_rel} Section 3.1 must reference SCAR-SH-01")
+
+  for adapter_rel in [
+      "CLAUDE.md",
+      ".cursorrules",
+      ".cursor/rules/makefile-workflow.mdc",
+      ".github/copilot-instructions.md",
+      "adapters/chatgpt/instructions.md",
+  ]:
+    adapter_path = repo_path(adapter_rel)
+    if not os.path.exists(adapter_path):
+      errors.append(f"Missing {adapter_rel}")
+    else:
+      with open(adapter_path, "r", encoding="utf-8") as f:
+        adapter_text = f.read()
+      if "SCAR-SH-01" not in adapter_text:
+        errors.append(f"{adapter_rel} must document SCAR-SH-01")
+
+  # Negative Falsification Checks
+  mock_corrupted_spoke = "### SCAR-SH-01: Broken\n**Wound**: Foo"
+  if "**Trap**:" in mock_corrupted_spoke:
+    errors.append("Falsification failed: corrupted spoke should not have Trap")
+  mock_misrouted = (
+      "| `SCAR-SH-01` | Shell | Git & Shell |"
+      " [`scars/process.md`](./scars/process.md) |"
+  )
+  if check_scar_catalog_routing(mock_misrouted, "SCAR-SH-01", "git_and_shell.md"):
+    errors.append("Falsification failed: misrouted catalog line was accepted")
+
+  return errors
+
+
 def validate_posix_signal_trapping():
   """Validates POSIX signal trapping invariants (GH-24, SCAR-SYS-07).
 
@@ -986,8 +1097,8 @@ def validate():
       if r09_text and not check_scar_catalog_routing(r09_text, scar_id, sf):
         errors.append(f"{ref_09_rel} Master Routing Table must strictly route {scar_id} to scars/{sf}")
 
-  if total_scars_found != 30:
-    errors.append(f"Expected 30 synthetic scars across category spokes, found {total_scars_found}")
+  if total_scars_found != 31:
+    errors.append(f"Expected 31 synthetic scars across category spokes, found {total_scars_found}")
 
   testing_spoke_rel = os.path.join(scars_dir_rel, "testing.md")
   testing_spoke = repo_path(testing_spoke_rel)
@@ -1541,6 +1652,12 @@ def validate():
   errors.extend(signal_trap_errors)
   if not signal_trap_errors:
     print("✔ POSIX signal trapping invariants (GH-24, SCAR-SYS-07) verified.")
+
+  # Temporary Script Quoting Invariants (GH-25, SCAR-SH-01)
+  temp_script_errors = validate_temporary_script_quoting_scar()
+  errors.extend(temp_script_errors)
+  if not temp_script_errors:
+    print("✔ Temporary script quoting invariants (GH-25, SCAR-SH-01) verified.")
 
   # Diagnostic Path Formatting (GH-63)
   path_formatting_errors = validate_diagnostic_path_formatting()

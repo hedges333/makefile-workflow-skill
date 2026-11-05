@@ -20,6 +20,7 @@ This repository uses the Makefile Workflow. Follow these rules for every coding 
 7. Run targeted subproject tests at Target 30, and run the full repository test suite at Target 50 and Target 75.
 8. Write documentation, commit messages, and pull request summaries in Simple English with short sentences and active voice.
 9. Intercept POSIX signals (`SIGTERM` and `SIGINT`) in long-running workers and clean up lockfiles under `SCAR-SYS-07`.
+10. If shell commands require complex string escaping or multiple quoting layers, write the script to a file in a temporary directory under `SCAR-SH-01`.
 
 ## Model Selection and Configuration
 
