@@ -12,8 +12,10 @@
 </p>
 
 <p align="center">
-  Compaction-immune, DAG-based software engineering for Google Antigravity, Claude Code, Cursor, GitHub Copilot, and ChatGPT.
+  Compaction-immune, DAG-based software engineering assitant workflow for Google Antigravity, Claude Code, Cursor, GitHub Copilot, and ChatGPT.
 </p>
+
+<p align="center">Stop arguing with the AI coding assistant as if it is a "junior" or even a "person."  Make it work like the machine that it is.</p>
 
 ---
 
@@ -352,9 +354,17 @@ At Target 90, the agent appends completed task metadata to `.workflow/history.js
 
 ## License and Acknowledgments
 
+### Copyright
+
+Copyright (c) 2026 Mark Hedges.  To some extent copyright 2026 Randal L. Schwartz where his work was used with permission.
+
 ### License
 
 This repository uses the MIT License. Read [`LICENSE`](./LICENSE) for the full license text.
+
+### Donations
+
+Unofficially, this is Jobware or Coffeeware.  If you like it, please [donate to buy me a coffee](https://ko-fi.com/stellaratorgames).  If you really like it, or if your company finds it invaluable, please offer me a job.
 
 ### Acknowledgments
 
