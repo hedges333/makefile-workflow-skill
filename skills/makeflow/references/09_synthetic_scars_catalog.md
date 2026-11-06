@@ -67,7 +67,7 @@ Agents must use Socratic Probes during:
 | `SCAR-SH-03` | Shell Redirection and Comment Stripping | Git & Shell | [`scars/git_and_shell.md`](./scars/git_and_shell.md) |
 | `SCAR-GIT-20` | Pre-Push Merge Check | Git & Shell | [`scars/git_and_shell.md`](./scars/git_and_shell.md) |
 | `SCAR-GIT-25` | Destructive Working-Tree and History Guards | Git & Shell | [`scars/git_and_shell.md`](./scars/git_and_shell.md) |
-| `SCAR-GIT-30` | Pure Git Mode and Tool Discovery | Git & Shell | [`scars/git_and_shell.md`](./scars/git_and_shell.md) |
+| `SCAR-GIT-30` | Pure Git Mode and Repository-Scoped Hosting Discovery | Git & Shell | [`scars/git_and_shell.md`](./scars/git_and_shell.md) |
 | `SCAR-ENV-04` | Shared Workspace Umask Permissions | System & OS | [`scars/system_and_os.md`](./scars/system_and_os.md) |
 | `SCAR-SYS-05` | Cross-User File Promotion | System & OS | [`scars/system_and_os.md`](./scars/system_and_os.md) |
 | `SCAR-SYS-06` | Native Runtime Environment Path Pre-Flight | System & OS | [`scars/system_and_os.md`](./scars/system_and_os.md) |

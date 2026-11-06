@@ -32,12 +32,12 @@ After the user approves the push, run these steps:
    ```bash
    git push -u origin <branch-name>
    ```
-2. If `gh auth status` succeeds, open a pull request with `gh pr create` and include the Six Pillars summary in the description:
+2. If hosting discovery detected GitHub mode (`SCAR-GIT-30`), open a pull request with `gh pr create`. Include the Six Pillars summary in the description:
    - Intent and scope summary.
    - Verification commands and passing test counts.
    - Architecture and API symmetry notes.
    - Blast radius review.
    - Readability notes.
    - Error handling and edge cases covered.
-3. If `gh` is unavailable or unauthenticated, use Pure Git Mode (`SCAR-GIT-30`). Record `HOSTING_MODE: PURE_GIT` in `.workflow/state/99_next_action.md` and skip `gh pr create`.
+3. If in Pure Git Mode (`SCAR-GIT-30`), record `HOSTING_MODE: PURE_GIT` in `.workflow/state/99_next_action.md` and skip `gh pr create`.
 4. Advance to Target 70.

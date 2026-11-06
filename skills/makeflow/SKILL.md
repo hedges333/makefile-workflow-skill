@@ -126,11 +126,12 @@ Read [`references/02`](./references/02_archaeology_and_planning.md) and [`refere
 1. Fork an `archaeology-worker` subagent with the tier from `agyModelTiers["archaeology-worker"]` (default `inherit`).
 2. Scan the repository for subprojects across all 27 supported languages.
 3. Locate existing test runners, or prepare smoke test templates when no tests exist.
-4. Inspect `.workflow/config.json` and database manifests. If live versus test database names remain unclear, ask the user before Target 30.
-5. Inspect sibling modules so that new code matches existing names, types, and error patterns.
-6. Classify failure mechanisms and evaluate testing feasibility and execution burden balance (`SCAR-TEST-11`).
-7. Tag each technical claim with a Belnap truth state (a four-state fact label: `ESTABLISHED`, `CONTRADICTED`, `UNKNOWN`, or `RETRACTED`).
-8. Write `.workflow/state/15_archaeology_receipt.md` and advance to Target 20.
+4. Discover repository-scoped hosting mode (`SCAR-GIT-30`): check origin remote URL, `gh` binary, `gh auth status`, and `gh repo view`. If non-GitHub or unauthenticated, set `HOSTING_MODE: PURE_GIT`.
+5. Inspect `.workflow/config.json` and database manifests. If live versus test database names remain unclear, ask the user before Target 30.
+6. Inspect sibling modules so that new code matches existing names, types, and error patterns.
+7. Classify failure mechanisms and evaluate testing feasibility and execution burden balance (`SCAR-TEST-11`).
+8. Tag each technical claim with a Belnap truth state (a four-state fact label: `ESTABLISHED`, `CONTRADICTED`, `UNKNOWN`, or `RETRACTED`).
+9. Write `.workflow/state/15_archaeology_receipt.md` and advance to Target 20.
 
 ### Target 20: `approved-plan` (Plan File and Human Approval)
 
@@ -204,7 +205,7 @@ Read [`references/06`](./references/06_clean_commit_and_pr.md) for landability r
 
 1. Fetch the remote default branch and test clean mergeability with `git merge-tree`.
 2. Stop tool calls (`tool_calls: []`) and wait for `human-push-approval`.
-3. After user approval, push the branch (`git push -u origin <branch>`). If `gh auth status` succeeds, create the pull request (`gh pr create`). If `gh` is unauthenticated or unavailable, use Pure Git Mode (`SCAR-GIT-30`) and advance to Target 70.
+3. After user approval, push the branch (`git push -u origin <branch>`). In GitHub mode, create the pull request (`gh pr create`). In Pure Git Mode (`SCAR-GIT-30`), skip PR creation, record `HOSTING_MODE: PURE_GIT`, and advance to Target 70.
 
 ### Target 70: `bot-quiescence` (Remote CI and Bot Triage)
 

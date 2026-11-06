@@ -19,7 +19,8 @@ Do not plan code edits from guesswork. Inspect the repository first to gather fa
 7. Convert user requirements into Given-When-Then scenarios that become unit tests in Target 30.
 8. If the target subproject has no test runner or test directory, prepare a smoke test template.
 9. Classify the underlying failure mechanism and evaluate testing feasibility and execution burden balance (< 100 ms execution budget, hermetic fixtures) (`SCAR-TEST-11`).
-10. Write `.workflow/state/15_archaeology_receipt.md` and advance to Target 20.
+10. Discover repository-scoped hosting mode (`SCAR-GIT-30`). Check `git remote get-url origin`, `gh` binary, `gh auth status`, and `gh repo view`. If origin does not point to GitHub or CLI checks fail, record `HOSTING_MODE: PURE_GIT`.
+11. Write `.workflow/state/15_archaeology_receipt.md` and advance to Target 20.
 
 ## 2. Target 20: Plan File Creation (`20_plan.md`)
 
