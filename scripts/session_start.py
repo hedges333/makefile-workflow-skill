@@ -99,6 +99,9 @@ def load_default_config():
           "testDatabases": [],
           "prodHosts": [],
       },
+      "state": {
+          "completedCardAction": "unlink",
+      },
   }
 
 
@@ -222,11 +225,53 @@ def get_workflow_config(workspace_paths):
         db_cfg[db_key] = merged
         env_applied.append(env_var)
 
+  state_cfg = {"completedCardAction": "unlink"}
+  raw_state = merged_cfg.get("state")
+  if isinstance(raw_state, dict):
+    action = raw_state.get("completedCardAction")
+    if action in ("unlink", "archive"):
+      state_cfg["completedCardAction"] = action
+
+  env_card_action = os.getenv("MAKEFILE_WORKFLOW_COMPLETED_CARD_ACTION")
+  if env_card_action and env_card_action.strip() in ("unlink", "archive"):
+    state_cfg["completedCardAction"] = env_card_action.strip()
+    env_applied.append("MAKEFILE_WORKFLOW_COMPLETED_CARD_ACTION")
+
   if env_applied:
     env_label = "env (" + ", ".join(env_applied) + ")"
     source = (source + " + " + env_label) if source else env_label
 
-  return {"models": models, "ci": ci_cfg, "database": db_cfg}, source
+  return {
+      "models": models,
+      "ci": ci_cfg,
+      "database": db_cfg,
+      "state": state_cfg,
+  }, source
+
+
+def is_ticket_active(state_dir):
+  """Checks whether an active in-progress ticket exists in state_dir."""
+  if not state_dir or not os.path.isdir(state_dir):
+    return False
+  state_files = [f for f in os.listdir(state_dir) if f.endswith(".md")]
+  if not state_files:
+    return False
+
+  next_action_file = os.path.join(state_dir, "99_next_action.md")
+  if os.path.isfile(next_action_file):
+    try:
+      with open(next_action_file, "r", encoding="utf-8") as f:
+        content = f.read()
+      if (
+          "# Target 90 Finished: COMPLETE" in content
+          or "Status: COMPLETE" in content
+          or "make finish satisfied" in content
+      ):
+        return False
+    except Exception:
+      pass
+
+  return True
 
 
 def check_simple_english(workspace_paths):
@@ -290,13 +335,16 @@ def main():
     tdd_model = models.get("tdd-worker", "inherit")
 
     notes = []
-    if state_dir:
+    if is_ticket_active(state_dir):
       state_files = sorted(f for f in os.listdir(state_dir) if f.endswith(".md"))
-      if state_files:
-        notes.append(
-            f"Makefile Workflow found {len(state_files)} state card(s) in {state_dir}. "
-            "Read all state cards at Target 00 (read-init-d) before taking new action."
-        )
+      notes.append(
+          f"Makefile Workflow found {len(state_files)} state card(s) in {state_dir}. "
+          "Read all state cards at Target 00 (read-init-d) before taking new action."
+      )
+    else:
+      notes.append(
+          "Makefile Workflow: Workspace is clean and ready for Target 10 intake."
+      )
 
     if cfg_source:
       ci_cfg = cfg.get("ci") if isinstance(cfg.get("ci"), dict) else {}

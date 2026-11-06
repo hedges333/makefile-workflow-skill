@@ -81,10 +81,11 @@ install: validate test
 		echo "Copying plugin to $(INSTALL_DIR)..."; \
 		rm -rf $(INSTALL_DIR); \
 		mkdir -p $(INSTALL_DIR); \
-		tar --exclude='./.git' --exclude='./.tmp' --exclude='./.venv' --exclude='./.workflow/state' --exclude='./.workflow/config.json' --exclude='./.workflow/plan.md' --exclude='./.workflow/commit_msg.txt' -cf - . | tar -xf - -C $(INSTALL_DIR); \
+		tar --exclude='./.git' --exclude='./.tmp' --exclude='./.venv' --exclude='./.workflow/state' --exclude='./.workflow/archive' --exclude='./.workflow/config.json' --exclude='./.workflow/plan.md' --exclude='./.workflow/commit_msg.txt' -cf - . | tar -xf - -C $(INSTALL_DIR); \
 		echo "Installed to $(INSTALL_DIR)"; \
 	fi
 	@rm -rf $(INSTALL_DIR)/.workflow/state
+	@rm -rf $(INSTALL_DIR)/.workflow/archive
 
 uninstall:
 	@if command -v agy >/dev/null 2>&1; then \

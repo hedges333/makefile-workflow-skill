@@ -22,6 +22,7 @@ When a session starts or `workflow_get_config` runs, the plugin resolves configu
    - `MAKEFILE_WORKFLOW_PROD_HOSTS` for comma-separated live database hosts to block.
    - `MAKEFILE_WORKFLOW_CI_QUIESCENCE_SECONDS` for continuous integration quiet window in seconds (default 180).
    - `MAKEFILE_WORKFLOW_CI_POLL_INTERVAL` for continuous integration polling interval in seconds (default 30).
+   - `MAKEFILE_WORKFLOW_COMPLETED_CARD_ACTION` for completed state card action (`unlink` or `archive`, default `unlink`).
 4. Canonical defaults in `default_config.json` (packaged at repository root). Single-item user overrides in `.workflow/config.json` deep-merge recursively into defaults without dropping unset default fields:
    - `adversarial-critic`: `inherit`
    - `archaeology-worker`: `inherit`
@@ -29,6 +30,7 @@ When a session starts or `workflow_get_config` runs, the plugin resolves configu
    - `triage-worker`: `inherit`
    - `ci.quiescenceSeconds`: `180`
    - `ci.pollIntervalSeconds`: `30`
+   - `state.completedCardAction`: `unlink` (removes intermediate cards `10_` through `80_` at Target 90; set to `archive` to preserve them in `.workflow/archive/<ticket-id>/`).
    - Database guard: blocks standalone `prod` and `production` names automatically.
 
 ## 3. Configuration File Schema
@@ -55,6 +57,9 @@ Copy [`.workflow/config.json.example`](../../../.workflow/config.json.example) t
     "prodDatabases": [],
     "testDatabases": [],
     "prodHosts": []
+  },
+  "state": {
+    "completedCardAction": "unlink"
   }
 }
 ```

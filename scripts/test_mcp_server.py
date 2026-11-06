@@ -289,6 +289,8 @@ def run_test():
         assert "prodDatabases" in cfg_data["database"]
         assert "testDatabases" in cfg_data["database"]
         assert "prodHosts" in cfg_data["database"]
+        assert "state" in cfg_data
+        assert cfg_data["state"]["completedCardAction"] == "unlink"
         print("✔ MCP workflow_get_config returned valid default configuration.")
 
       # 8. Custom database configuration in workspaceDir for workflow_get_config and workflow_safety_check
@@ -499,6 +501,7 @@ def run_test():
     custom_env["MAKEFILE_WORKFLOW_TRIAGE_MODEL"] = "flash"
     custom_env["MAKEFILE_WORKFLOW_CI_QUIESCENCE_SECONDS"] = "40"
     custom_env["MAKEFILE_WORKFLOW_CI_POLL_INTERVAL"] = "8"
+    custom_env["MAKEFILE_WORKFLOW_COMPLETED_CARD_ACTION"] = "archive"
     p_env = subprocess.Popen(
         [sys.executable, SERVER_SCRIPT],
         stdin=subprocess.PIPE,
@@ -538,6 +541,8 @@ def run_test():
       assert env_cfg["agyModelTiers"]["triage-worker"] == "flash"
       assert env_cfg["ci"]["quiescenceSeconds"] == 40
       assert env_cfg["ci"]["pollIntervalSeconds"] == 8
+      assert env_cfg["state"]["completedCardAction"] == "archive"
+      assert any("MAKEFILE_WORKFLOW_COMPLETED_CARD_ACTION=archive" in ov for ov in env_cfg["envOverrides"])
 
       env_sc_bad = send_rpc(
           p_env,
@@ -784,6 +789,46 @@ def run_test():
       text_ws = resp_ws.get("result", {}).get("content", [{}])[0].get("text", "")
       assert "GH-999" not in text_ws
       assert "does not exist" in text_ws
+
+      # GH-74: workflow_get_state on empty state directory
+      empty_st = os.path.join(ws_dir, ".workflow", "state")
+      os.makedirs(empty_st)
+      resp_empty_st = send_rpc(
+          p_iso,
+          {
+              "jsonrpc": "2.0",
+              "id": 4,
+              "method": "tools/call",
+              "params": {
+                  "name": "workflow_get_state",
+                  "arguments": {"workspaceDir": ws_dir},
+              },
+          },
+      )
+      text_empty_st = resp_empty_st.get("result", {}).get("content", [{}])[0].get("text", "")
+      assert "clean (0 state cards)" in text_empty_st
+      assert "Ready for Target 10 intake" in text_empty_st
+
+      # GH-74: workflow_get_state on completed ticket
+      with open(os.path.join(empty_st, "10_ticket.md"), "w", encoding="utf-8") as f:
+        f.write("# Ticket Intake: GH-20\n")
+      with open(os.path.join(empty_st, "99_next_action.md"), "w", encoding="utf-8") as f:
+        f.write("# Target 90 Finished: COMPLETE\n- Status: COMPLETE (make finish satisfied)\n")
+      resp_comp_st = send_rpc(
+          p_iso,
+          {
+              "jsonrpc": "2.0",
+              "id": 5,
+              "method": "tools/call",
+              "params": {
+                  "name": "workflow_get_state",
+                  "arguments": {"workspaceDir": ws_dir},
+              },
+          },
+      )
+      text_comp_st = resp_comp_st.get("result", {}).get("content", [{}])[0].get("text", "")
+      assert "Previous ticket is complete" in text_comp_st
+      assert "Ready for Target 10 intake" in text_comp_st
     finally:
       p_iso.kill()
       p_iso.wait()

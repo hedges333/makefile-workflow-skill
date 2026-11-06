@@ -114,9 +114,10 @@ Read [`references/01`](./references/01_intake_and_branching.md) for intake modes
 1. In Mode A, extract the ticket ID and scope from the user request or GitHub issue. Use `GH-<N>` for GitHub issues and `LOCAL-<N>` for local session tasks.
 2. In Mode B, list open backlog items sorted by priority (`P0`, `P1`, `P2`, `P3`).
 3. Make sure that `git status --short` is clean on the default branch (`main` or `master`).
-4. Exclude local state cards from Git: run `git check-ignore -q .workflow/state/ || echo ".workflow/state/" >> .git/info/exclude`.
-5. Create and switch to a branch named `feat/<id>-<slug>`, `fix/<id>-<slug>`, or `ticket/<id>-<slug>`. For local tasks, prefix with `local-` (e.g. `feat/local-<n>-<slug>`).
-6. Write `.workflow/state/10_ticket.md` and advance to Target 15.
+4. Exclude local state cards and archives from Git: run `git check-ignore -q .workflow/state/ || echo ".workflow/state/" >> .git/info/exclude && git check-ignore -q .workflow/archive/ || echo ".workflow/archive/" >> .git/info/exclude`.
+5. Run clean intake check: unlink leftover cards (default) or archive them per `state.completedCardAction` before writing `10_ticket.md`.
+6. Create and switch to a branch named `feat/<id>-<slug>`, `fix/<id>-<slug>`, or `ticket/<id>-<slug>`. For local tasks, prefix with `local-` (e.g. `feat/local-<n>-<slug>`).
+7. Write `.workflow/state/10_ticket.md` and advance to Target 15.
 
 ### Target 15: `archaeology-verified` (Fact-Finding and Polyglot Scan)
 
@@ -238,7 +239,8 @@ Read [`references/09`](./references/09_synthetic_scars_catalog.md) and [`referen
 1. Review the session for human corrections and record any new Synthetic Scars (process rules learned from past failures).
 2. Append the completed ticket record to `.workflow/history.json` and `.workflow/history.md`.
 3. If direct push is permitted, commit ledger files and run `git push origin main`. If branch protection forbids direct push, record the ledger at Target 75 before merge.
-4. Mark `.workflow/state/99_next_action.md` as `COMPLETE (make finish satisfied)` and print the closing summary in chat.
+4. Archive or unlink completed state cards per `state.completedCardAction` (default `unlink` removes intermediate cards `10_` through `80_`; `archive` moves them to `.workflow/archive/<id>/`).
+5. Mark `.workflow/state/99_next_action.md` as `COMPLETE (make finish satisfied)` and print the closing summary in chat.
 
 ---
 

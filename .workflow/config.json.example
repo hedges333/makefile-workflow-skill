@@ -18,5 +18,8 @@
     "prodDatabases": [],
     "testDatabases": [],
     "prodHosts": []
+  },
+  "state": {
+    "completedCardAction": "unlink"
   }
 }
