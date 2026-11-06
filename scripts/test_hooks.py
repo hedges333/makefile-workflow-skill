@@ -806,6 +806,60 @@ def test_session_start():
     msg_with_se = res_with_se["injectSteps"][0]["systemMessage"]["systemMessage"]
     assert "simple-english plugin is recommended" not in msg_with_se
 
+    # 5. GH-74: Ticket lifecycle and clean intake check in SessionStart
+    # 5a. Empty state directory reports clean and ready for Target 10 intake
+    with tempfile.TemporaryDirectory() as empty_ws:
+      empty_state = os.path.join(empty_ws, ".workflow", "state")
+      os.makedirs(empty_state)
+      res_empty = run_hook(
+          SESSION_START,
+          {"workspacePaths": [empty_ws]},
+          cwd=hook_cwd,
+      )
+      steps_empty = res_empty.get("injectSteps", [])
+      assert len(steps_empty) == 1
+      msg_empty = steps_empty[0]["systemMessage"]["systemMessage"]
+      assert "clean and ready for Target 10 intake" in msg_empty
+      assert "Read all state cards at Target 00" not in msg_empty
+
+    # 5b. Completed ticket (99_next_action.md indicating COMPLETE) reports clean intake readiness
+    with tempfile.TemporaryDirectory() as completed_ws:
+      comp_state = os.path.join(completed_ws, ".workflow", "state")
+      os.makedirs(comp_state)
+      with open(os.path.join(comp_state, "10_ticket.md"), "w", encoding="utf-8") as f:
+        f.write("# Ticket Intake: GH-10\n")
+      with open(os.path.join(comp_state, "99_next_action.md"), "w", encoding="utf-8") as f:
+        f.write("# Target 90 Finished: COMPLETE\n- Status: COMPLETE (make finish satisfied)\n")
+      res_comp = run_hook(
+          SESSION_START,
+          {"workspacePaths": [completed_ws]},
+          cwd=hook_cwd,
+      )
+      steps_comp = res_comp.get("injectSteps", [])
+      assert len(steps_comp) == 1
+      msg_comp = steps_comp[0]["systemMessage"]["systemMessage"]
+      assert "clean and ready for Target 10 intake" in msg_comp
+      assert "Read all state cards at Target 00" not in msg_comp
+
+    # 5c. Active ticket in progress reports state cards and prompts Target 00
+    with tempfile.TemporaryDirectory() as active_ws:
+      active_state = os.path.join(active_ws, ".workflow", "state")
+      os.makedirs(active_state)
+      with open(os.path.join(active_state, "10_ticket.md"), "w", encoding="utf-8") as f:
+        f.write("# Ticket Intake: GH-11\n")
+      with open(os.path.join(active_state, "99_next_action.md"), "w", encoding="utf-8") as f:
+        f.write("# 99_next_action: Live Memento Readerboard\n- Active Target: Target 15\n- Last Completed Step: Target 10\n")
+      res_active = run_hook(
+          SESSION_START,
+          {"workspacePaths": [active_ws]},
+          cwd=hook_cwd,
+      )
+      steps_active = res_active.get("injectSteps", [])
+      assert len(steps_active) == 1
+      msg_active = steps_active[0]["systemMessage"]["systemMessage"]
+      assert "2 state card(s)" in msg_active
+      assert "Read all state cards at Target 00" in msg_active
+
   print("✔ SessionStart hook assertions passed.")
 
 

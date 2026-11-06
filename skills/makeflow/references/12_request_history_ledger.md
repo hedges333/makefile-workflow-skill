@@ -110,3 +110,7 @@ Run these steps during Target 90 after a pull request merges:
 4. Add a matching summary row to `.workflow/history.md`.
 5. Commit the updated ledger files when the project tracks `.workflow/history.*` in Git: `git commit -m "docs(history): record <id>"`.
 6. If direct push to `main` is permitted, push the ledger commit with `git push origin main`.
+7. Archive or clean up completed state cards per `state.completedCardAction`:
+   - If `state.completedCardAction` is `unlink` (default), remove intermediate cards `10_` through `80_` from `.workflow/state/`.
+   - If `state.completedCardAction` is `archive`, move intermediate cards `10_` through `80_` to `.workflow/archive/<ticket-id>/`.
+8. Mark `.workflow/state/99_next_action.md` as `COMPLETE (make finish satisfied)` and print the closing summary in chat.

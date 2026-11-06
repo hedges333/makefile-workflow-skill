@@ -253,6 +253,9 @@ def load_default_config():
           "testDatabases": [],
           "prodHosts": [],
       },
+      "state": {
+          "completedCardAction": "unlink",
+      },
   }
 
 
@@ -324,6 +327,21 @@ def resolve_workflow_config(workspace_dir=None):
       if num > 0:
         config["ci"][ci_key] = num
         config["envOverrides"].append(f"{env_var}={num}")
+
+  if "state" not in config or not isinstance(config["state"], dict):
+    config["state"] = {"completedCardAction": "unlink"}
+  else:
+    action = config["state"].get("completedCardAction", "unlink")
+    if action not in ("unlink", "archive"):
+      action = "unlink"
+    config["state"]["completedCardAction"] = action
+
+  env_card_action = os.getenv("MAKEFILE_WORKFLOW_COMPLETED_CARD_ACTION")
+  if env_card_action and env_card_action.strip() in ("unlink", "archive"):
+    config["state"]["completedCardAction"] = env_card_action.strip()
+    config["envOverrides"].append(
+        f"MAKEFILE_WORKFLOW_COMPLETED_CARD_ACTION={env_card_action.strip()}"
+    )
 
   config["agyModelTiers"] = {
       role: map_to_agy_tier(val) for role, val in config["models"].items()
@@ -1719,6 +1737,31 @@ def _error_result(request_id, message):
   }
 
 
+def is_ticket_active(state_dir):
+  """Checks whether an active in-progress ticket exists in state_dir."""
+  if not state_dir or not os.path.isdir(state_dir):
+    return False
+  state_files = [f for f in os.listdir(state_dir) if f.endswith(".md")]
+  if not state_files:
+    return False
+
+  next_action_file = os.path.join(state_dir, "99_next_action.md")
+  if os.path.isfile(next_action_file):
+    try:
+      with open(next_action_file, "r", encoding="utf-8") as f:
+        content = f.read()
+      if (
+          "# Target 90 Finished: COMPLETE" in content
+          or "Status: COMPLETE" in content
+          or "make finish satisfied" in content
+      ):
+        return False
+    except Exception:
+      pass
+
+  return True
+
+
 def handle_tools_call(request_id, tool_name, arguments):
   arguments = arguments or {}
 
@@ -1752,6 +1795,36 @@ def handle_tools_call(request_id, tool_name, arguments):
       }
 
     files = sorted(f for f in os.listdir(state_dir) if f.endswith(".md"))
+    if not files:
+      return {
+          "jsonrpc": "2.0",
+          "id": request_id,
+          "result": {
+              "content": [{
+                  "type": "text",
+                  "text": (
+                      f"State directory '{state_dir}' is clean (0 state cards)."
+                      " Ready for Target 10 intake."
+                  ),
+              }]
+          },
+      }
+
+    if not is_ticket_active(state_dir):
+      return {
+          "jsonrpc": "2.0",
+          "id": request_id,
+          "result": {
+              "content": [{
+                  "type": "text",
+                  "text": (
+                      f"Previous ticket is complete in '{state_dir}'."
+                      " Ready for Target 10 intake."
+                  ),
+              }]
+          },
+      }
+
     summary = f"Found {len(files)} state card(s) in {state_dir}:\n" + "\n".join(
         f"- {f}" for f in files
     )

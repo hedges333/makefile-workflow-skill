@@ -23,18 +23,20 @@ When the user provides a task description, issue number, or issue URL, run these
    ```bash
    git checkout main && git pull --ff-only
    ```
-4. Exclude `.workflow/state/` from Git tracking so state cards never pollute `git add -A` or `git status`:
+4. Exclude `.workflow/state/` and `.workflow/archive/` from Git tracking:
    ```bash
    git check-ignore -q .workflow/state/ || echo ".workflow/state/" >> .git/info/exclude
+   git check-ignore -q .workflow/archive/ || echo ".workflow/archive/" >> .git/info/exclude
    ```
-5. Create and switch to a feature branch that matches standard Git naming rules:
+5. Run clean intake pre-flight check: If leftover state cards from prior sessions exist in `.workflow/state/`, remove them (`unlink`, default) or move them to `.workflow/archive/<old-id>/` (`archive`) per `state.completedCardAction` before writing `10_ticket.md`.
+6. Create and switch to a feature branch that matches standard Git naming rules:
    - GitHub Bug (`#<number>` or `GH-<number>`): `fix/<number>-<slug>`, for example `fix/42-login-redirect`. Ticket ID is `GH-<number>`.
    - GitHub Feature (`#<number>` or `GH-<number>`): `feat/<number>-<slug>`, for example `feat/101-csv-export`. Ticket ID is `GH-<number>`.
    - General GitHub Issue (`#<number>` or `GH-<number>`): `ticket/<number>-<slug>`, for example `ticket/55-upgrade-deps`. Ticket ID is `GH-<number>`.
    - Jira or Linear Issue (`<PROJECT>-<NUMBER>`): `feat/<project>-<number>-<slug>` or `fix/<project>-<number>-<slug>`.
    - Ad-hoc Chat Task / Pure Git Session (no external tracker): Determine next local count `N` from the highest `LOCAL-<N>` in `.workflow/history.json`. Use `feat/local-<N+1>-<slug>` or `fix/local-<N+1>-<slug>`. Ticket ID is `LOCAL-<N+1>`. Never use bare integers for local branches.
-6. Format `<slug>` with lowercase letters, digits, and single hyphens (`[a-z0-9-]`), up to 40 characters.
-7. Write the ticket details to `<workspace>/.workflow/state/10_ticket.md` and advance to Target 15.
+7. Format `<slug>` with lowercase letters, digits, and single hyphens (`[a-z0-9-]`), up to 40 characters.
+8. Write the ticket details to `<workspace>/.workflow/state/10_ticket.md` and advance to Target 15.
 
 ### Mode B: Open Backlog Discovery
 
