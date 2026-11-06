@@ -53,6 +53,15 @@ When launching the `adversarial-critic` subagent at Target 40:
 2. Instruct the subagent to audit the diff against that manual and format findings under the canonical six headings.
 3. Never substitute an informal prompt summary for the explicit manual reference.
 
+### 1.5 Subagent Frontmatter Tool Permissions (GH-83)
+
+In Antigravity CLI (agy 1.5.2+), subagents receive read-only tools by default.
+
+1. Declare tool permissions explicitly in `agents/*.md` YAML frontmatter.
+2. Grant `enable_write_tools: true` to `tdd-worker`, `adversarial-critic`, and `triage-worker`.
+3. Set `enable_mcp_tools: true` for `triage-worker` and `archaeology-worker`.
+4. Set `enable_subagent_tools: false` for all worker agents to prevent nested subagent loops.
+
 ## 2. Production Data Protection Rules
 
 Never connect tests or agent commands to live systems.

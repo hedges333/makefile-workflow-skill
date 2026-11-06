@@ -697,6 +697,125 @@ def validate_vector4_reflex_gates_scar():
   return errors
 
 
+def parse_frontmatter(content):
+  """Parses YAML frontmatter from markdown file content."""
+  if not content.startswith("---"):
+    return {}
+  parts = content.split("---", 2)
+  if len(parts) < 3:
+    return {}
+  frontmatter_str = parts[1]
+  result = {}
+  for line in frontmatter_str.splitlines():
+    line = line.strip()
+    if not line or line.startswith("#"):
+      continue
+    if ":" in line:
+      key, val = line.split(":", 1)
+      key = key.strip()
+      val_lower = val.strip().lower()
+      if val_lower == "true":
+        result[key] = True
+      elif val_lower == "false":
+        result[key] = False
+      else:
+        result[key] = val.strip()
+  return result
+
+
+def validate_subagent_tool_mounting_permissions():
+  """Validates subagent YAML frontmatter tool mounting permissions (GH-83)."""
+  errors = []
+
+  expected_perms = {
+      "agents/tdd-worker.md": {
+          "enable_write_tools": True,
+          "enable_mcp_tools": False,
+          "enable_subagent_tools": False,
+      },
+      "agents/adversarial-critic.md": {
+          "enable_write_tools": True,
+          "enable_mcp_tools": False,
+          "enable_subagent_tools": False,
+      },
+      "agents/triage-worker.md": {
+          "enable_write_tools": True,
+          "enable_mcp_tools": True,
+          "enable_subagent_tools": False,
+      },
+      "agents/archaeology-worker.md": {
+          "enable_write_tools": False,
+          "enable_mcp_tools": True,
+          "enable_subagent_tools": False,
+      },
+  }
+
+  for rel_path, expected in expected_perms.items():
+    full_path = repo_path(rel_path)
+    if not os.path.exists(full_path):
+      errors.append(f"Missing {rel_path}")
+      continue
+    with open(full_path, "r", encoding="utf-8") as f:
+      content = f.read()
+    fm = parse_frontmatter(content)
+    for flag, exp_val in expected.items():
+      if flag not in fm:
+        errors.append(f"{rel_path} frontmatter missing '{flag}: {str(exp_val).lower()}'")
+      elif fm[flag] is not exp_val:
+        errors.append(
+            f"{rel_path} frontmatter '{flag}' must be {str(exp_val).lower()}, got {str(fm[flag]).lower()}"
+        )
+
+  # Check reference manual 08_subagent_orchestration.md
+  ref_08_rel = "skills/makeflow/references/08_subagent_orchestration.md"
+  ref_08_path = repo_path(ref_08_rel)
+  if not os.path.exists(ref_08_path):
+    errors.append(f"Missing {ref_08_rel}")
+  else:
+    with open(ref_08_path, "r", encoding="utf-8") as f:
+      text = f.read()
+    for req_term in (
+        "enable_write_tools",
+        "enable_mcp_tools",
+        "enable_subagent_tools",
+        "tdd-worker",
+        "adversarial-critic",
+        "triage-worker",
+        "archaeology-worker",
+    ):
+      if req_term.lower() not in text.lower():
+        errors.append(f"{ref_08_rel} must document '{req_term}'")
+
+  # Check rules/AGENTS.md
+  agents_rel = "rules/AGENTS.md"
+  agents_path = repo_path(agents_rel)
+  if not os.path.exists(agents_path):
+    errors.append(f"Missing {agents_rel}")
+  else:
+    with open(agents_path, "r", encoding="utf-8") as f:
+      text = f.read()
+    for req_term in (
+        "enable_write_tools",
+        "enable_mcp_tools",
+        "enable_subagent_tools",
+    ):
+      if req_term.lower() not in text.lower():
+        errors.append(f"{agents_rel} must document '{req_term}'")
+
+  # Negative Falsification Checks:
+  mock_missing = "---\nname: tdd-worker\ndescription: test\n---\nbody"
+  fm_mock = parse_frontmatter(mock_missing)
+  if "enable_write_tools" in fm_mock:
+    errors.append("Falsification failed: parsed enable_write_tools from frontmatter lacking it")
+
+  mock_inverted = "---\nname: tdd-worker\nenable_write_tools: false\n---\nbody"
+  fm_inv = parse_frontmatter(mock_inverted)
+  if fm_inv.get("enable_write_tools") is not False:
+    errors.append("Falsification failed: enable_write_tools false was not parsed as False")
+
+  return errors
+
+
 def validate_posix_signal_trapping():
   """Validates POSIX signal trapping invariants (GH-24, SCAR-SYS-07).
 
@@ -2022,6 +2141,12 @@ def validate():
   errors.extend(reflex_errors)
   if not reflex_errors:
     print("✔ Just-in-Time Vector 4 Reflex gates invariants (GH-57, SCAR-ARCH-06) verified.")
+
+  # Subagent Tool Mounting Permissions Invariants (GH-83)
+  subagent_tool_errors = validate_subagent_tool_mounting_permissions()
+  errors.extend(subagent_tool_errors)
+  if not subagent_tool_errors:
+    print("✔ Subagent tool mounting permissions (GH-83) verified.")
 
   if errors:
     print(f"\n❌ Validation failed with {len(errors)} error(s):")
