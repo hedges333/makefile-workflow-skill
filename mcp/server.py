@@ -1318,12 +1318,66 @@ def evaluate_git_safety(cmd):
   return True, last_reason
 
 
+def detect_hosting_mode(repo_dir="."):
+  """Detects if repo_dir uses GitHub hosting with working gh CLI or pure Git.
+
+  Returns:
+      "github" if origin remote points to GitHub, gh CLI is available,
+      gh auth status succeeds, and gh repo view succeeds.
+      "pure_git" otherwise.
+  """
+  try:
+    res = subprocess.run(
+        ["git", "remote", "get-url", "origin"],
+        cwd=repo_dir,
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    if res.returncode != 0:
+      return "pure_git"
+    remote_url = (res.stdout or "").strip()
+    if not remote_url:
+      return "pure_git"
+    is_github = "github.com" in remote_url.lower()
+    if not is_github:
+      return "pure_git"
+
+    if not shutil.which("gh"):
+      return "pure_git"
+
+    auth_res = subprocess.run(
+        ["gh", "auth", "status"],
+        cwd=repo_dir,
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    if auth_res.returncode != 0:
+      return "pure_git"
+
+    repo_res = subprocess.run(
+        ["gh", "repo", "view"],
+        cwd=repo_dir,
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    if repo_res.returncode != 0:
+      return "pure_git"
+
+    return "github"
+  except (subprocess.SubprocessError, OSError):
+    return "pure_git"
+
+
 def poll_ci_status(
     pr_number,
     ws,
     quiescence_sec=None,
     poll_interval_sec=None,
     max_wait_sec=600,
+    hosting_mode=None,
 ):
   cfg = resolve_workflow_config(ws)
   ci_cfg = cfg.get("ci", {})
@@ -1338,7 +1392,10 @@ def poll_ci_status(
       else ci_cfg.get("pollIntervalSeconds", 30)
   )
 
-  if pr_number <= 0 or not shutil.which("gh"):
+  effective_mode = (
+      hosting_mode if hosting_mode is not None else detect_hosting_mode(ws)
+  )
+  if effective_mode == "pure_git" or pr_number <= 0:
     return {
         "mode": "pure_git",
         "ciStatus": "SKIPPED",
@@ -1347,8 +1404,9 @@ def poll_ci_status(
         "unresolvedBotCommentsCount": 0,
         "botComments": [],
         "message": (
-            "Pure Git Mode: GitHub CLI not available or PR number is 0. Run"
-            " local tests (make all) for verification."
+            "Pure Git Mode: Repository is not GitHub-hosted, GitHub CLI is not"
+            " available, or PR number is 0. Run local tests (make all) for"
+            " verification."
         ),
     }
 

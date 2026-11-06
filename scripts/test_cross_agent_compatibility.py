@@ -855,6 +855,117 @@ def validate_diagnostic_path_formatting():
   return errors
 
 
+def validate_hosting_mode_and_pure_git_invariants():
+  """Validates repository-scoped hosting discovery and Pure Git mode invariants (GH-76, SCAR-GIT-30).
+
+  Verifies:
+  1. skills/makeflow/references/scars/git_and_shell.md documents SCAR-GIT-30 with
+     complete Four-Part Anatomy (**Wound**:, **Trap**:, **Permanent Reflex**:, **Socratic Probe**:),
+     referencing repository-scoped hosting discovery (remote URL, gh binary, gh auth status, gh repo view).
+  2. skills/makeflow/references/02_archaeology_and_planning.md references Target 15 hosting discovery
+     under SCAR-GIT-30.
+  3. skills/makeflow/references/06_clean_commit_and_pr.md specifies Pure Git Mode bypass of gh pr create.
+  4. skills/makeflow/references/07_ci_and_bot_triage.md specifies Target 75 local readiness and
+     Target 80 local squash-merge for Pure Git Mode.
+  5. skills/makeflow/SKILL.md documents hosting discovery / Pure Git Mode across Target 15,
+     Target 60, Target 70, Target 75, and Target 80, staying within 24 KB ceiling.
+  """
+  errors = []
+
+  # 1. Spoke reference: scars/git_and_shell.md
+  spoke_rel = "skills/makeflow/references/scars/git_and_shell.md"
+  spoke_path = repo_path(spoke_rel)
+  if not os.path.exists(spoke_path):
+    errors.append(f"Missing {spoke_rel}")
+  else:
+    with open(spoke_path, "r", encoding="utf-8") as f:
+      spoke_text = f.read()
+    if "SCAR-GIT-30" not in spoke_text:
+      errors.append(f"{spoke_rel} must document SCAR-GIT-30")
+    else:
+      scar_section = (
+          spoke_text.split("### SCAR-GIT-30")[1].split("### SCAR-")[0]
+          if "### SCAR-GIT-30" in spoke_text
+          else ""
+      )
+      for field in ("Wound", "Trap", "Permanent Reflex", "Socratic Probe"):
+        if f"**{field}**:" not in scar_section:
+          errors.append(f"{spoke_rel} SCAR-GIT-30 missing '**{field}**:'")
+      for required_phrase in (
+          "git remote get-url origin",
+          "gh auth status",
+          "gh repo view",
+          "HOSTING_MODE: PURE_GIT",
+      ):
+        if required_phrase not in scar_section:
+          errors.append(
+              f"{spoke_rel} SCAR-GIT-30 missing required phrase '{required_phrase}'"
+          )
+
+  # 2. Target 15 discovery: references/02_archaeology_and_planning.md
+  arch_rel = "skills/makeflow/references/02_archaeology_and_planning.md"
+  arch_path = repo_path(arch_rel)
+  if not os.path.exists(arch_path):
+    errors.append(f"Missing {arch_rel}")
+  else:
+    with open(arch_path, "r", encoding="utf-8") as f:
+      arch_text = f.read()
+    if "SCAR-GIT-30" not in arch_text:
+      errors.append(f"{arch_rel} must reference SCAR-GIT-30 for hosting discovery")
+    if "git remote get-url origin" not in arch_text:
+      errors.append(
+          f"{arch_rel} must reference 'git remote get-url origin' for hosting discovery"
+      )
+
+  # 3. Target 60 bypass: references/06_clean_commit_and_pr.md
+  commit_rel = "skills/makeflow/references/06_clean_commit_and_pr.md"
+  commit_path = repo_path(commit_rel)
+  if not os.path.exists(commit_path):
+    errors.append(f"Missing {commit_rel}")
+  else:
+    with open(commit_path, "r", encoding="utf-8") as f:
+      commit_text = f.read()
+    if "SCAR-GIT-30" not in commit_text:
+      errors.append(f"{commit_rel} must reference SCAR-GIT-30")
+    if "HOSTING_MODE: PURE_GIT" not in commit_text:
+      errors.append(f"{commit_rel} must reference 'HOSTING_MODE: PURE_GIT'")
+
+  # 4. Target 75 & 80 local readiness/merge: references/07_ci_and_bot_triage.md
+  ci_rel = "skills/makeflow/references/07_ci_and_bot_triage.md"
+  ci_path = repo_path(ci_rel)
+  if not os.path.exists(ci_path):
+    errors.append(f"Missing {ci_rel}")
+  else:
+    with open(ci_path, "r", encoding="utf-8") as f:
+      ci_text = f.read()
+    if "SCAR-GIT-30" not in ci_text:
+      errors.append(f"{ci_rel} must reference SCAR-GIT-30")
+    if "git merge --squash" not in ci_text:
+      errors.append(
+          f"{ci_rel} must reference 'git merge --squash' for Pure Git Mode landing"
+      )
+
+  # 5. SKILL.md invariants and size ceiling
+  skill_rel = "skills/makeflow/SKILL.md"
+  skill_path = repo_path(skill_rel)
+  if not os.path.exists(skill_path):
+    errors.append(f"Missing {skill_rel}")
+  else:
+    with open(skill_path, "r", encoding="utf-8") as f:
+      skill_text = f.read()
+    if "SCAR-GIT-30" not in skill_text:
+      errors.append(f"{skill_rel} must reference SCAR-GIT-30")
+    if "HOSTING_MODE: PURE_GIT" not in skill_text:
+      errors.append(f"{skill_rel} must reference 'HOSTING_MODE: PURE_GIT'")
+    skill_size = os.path.getsize(skill_path)
+    if skill_size > 24576:
+      errors.append(
+          f"{skill_rel} exceeds 24 KB ceiling ({skill_size} bytes > 24576 bytes)"
+      )
+
+  return errors
+
+
 def validate_arbitrary_cwd_execution():
   """Validates arbitrary cwd execution without breaking relative path lookups."""
   if os.environ.get("_COMPAT_CHILD") == "1":
@@ -1823,6 +1934,15 @@ def validate():
   errors.extend(cwd_errors)
   if not cwd_errors and os.environ.get("_COMPAT_CHILD") != "1":
     print("✔ Arbitrary CWD execution verified from temporary directory.")
+
+  # Repository-Scoped Hosting Discovery Invariants (GH-76, SCAR-GIT-30)
+  hosting_errors = validate_hosting_mode_and_pure_git_invariants()
+  errors.extend(hosting_errors)
+  if not hosting_errors:
+    print(
+        "✔ Repository-scoped hosting discovery invariants (GH-76, SCAR-GIT-30)"
+        " verified."
+    )
 
   if errors:
     print(f"\n❌ Validation failed with {len(errors)} error(s):")

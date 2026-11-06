@@ -10,7 +10,7 @@ This reference manual documents Git operations and shell execution scars (`SCAR-
 | `SCAR-SH-03` | Shell Redirection and Comment Stripping | Pre-Tool Guard Parsing |
 | `SCAR-GIT-20` | Pre-Push Merge Check | Branch Conflict Prevention |
 | `SCAR-GIT-25` | Destructive Git Command Protection | Working Tree & Branch Safety |
-| `SCAR-GIT-30` | Pure Git Mode and Tool Discovery | Non-GitHub / Offline Workflows |
+| `SCAR-GIT-30` | Pure Git Mode and Repository-Scoped Hosting Discovery | Non-GitHub / Offline Workflows |
 
 ---
 
@@ -42,9 +42,9 @@ This reference manual documents Git operations and shell execution scars (`SCAR-
 - **Permanent Reflex**: Block work-discarding and force-push Git commands in hooks and MCP. Require explicit human approval before `git rebase` and `git branch -D`.
 - **Socratic Probe**: If you run destructive Git commands to reset state, could you wipe out uncommitted user work? Would it be safer to isolate changes non-destructively and require human approval before altering history?
 
-### SCAR-GIT-30: Pure Git Mode and Hosting Tool Discovery
+### SCAR-GIT-30: Pure Git Mode and Repository-Scoped Hosting Discovery
 
-- **Wound**: An agent attempts to run `gh pr create` or `gh pr checks` in an SSH-only or non-GitHub repository and stalls at Target 60 or Target 70 even though Git push succeeded.
-- **Trap**: Assuming every repository uses authenticated GitHub CLI tooling instead of checking whether `gh` is authenticated.
-- **Permanent Reflex**: Check `gh auth status` at Target 15. If `gh` is unavailable or unauthenticated, use Pure Git Mode: skip remote PR creation at Target 60, run full local repository tests at Target 70, present local landing readiness at Target 75, and squash-merge on `main` at Target 80 using standard Git commands.
-- **Socratic Probe**: If the environment lacks authenticated GitHub CLI tooling, will commands like `gh pr create` stall the workflow? Can you detect tool availability early and fall back smoothly to pure Git operations?
+- **Wound**: An agent checks global `gh auth status` on a machine where GitHub CLI is logged in. The agent treats a local checkout or non-GitHub repository as a GitHub repo. The agent then stalls at Target 60 or Target 70 on failing `gh pr create` calls.
+- **Trap**: Relying on global `gh auth status` rather than verifying repository remote origin and reachability.
+- **Permanent Reflex**: At Target 15, discover hosting mode for the current repository. Verify that `git remote get-url origin` points to GitHub. Check that `gh auth status` succeeds. Verify repository reachability with `gh repo view`. If any check fails, record `HOSTING_MODE: PURE_GIT`. Skip remote PR creation at Target 60. Run full local test sweeps at Target 70. Present local test results at Target 75. Squash-merge locally on `main` at Target 80.
+- **Socratic Probe**: Does this repository have a remote pointing to GitHub with working `gh repo view` access? If `gh` is globally logged in, will checking repository remote origin prevent failing downstream GitHub CLI calls?

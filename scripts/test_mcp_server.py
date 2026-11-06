@@ -684,7 +684,11 @@ def run_test():
         stdout=json.dumps(mock_data_bot), stderr="", returncode=0
     )
     res = poll_ci_status(
-        ws=REPO_ROOT, pr_number=123, quiescence_sec=10, max_wait_sec=1
+        ws=REPO_ROOT,
+        pr_number=123,
+        quiescence_sec=10,
+        max_wait_sec=1,
+        hosting_mode="github",
     )
     assert res["ciStatus"] == "SUCCESS"
     assert res["readyToLand"] is False
@@ -709,7 +713,11 @@ def run_test():
         stdout=json.dumps(mock_data_clean), stderr="", returncode=0
     )
     res = poll_ci_status(
-        ws=REPO_ROOT, pr_number=123, quiescence_sec=10, max_wait_sec=1
+        ws=REPO_ROOT,
+        pr_number=123,
+        quiescence_sec=10,
+        max_wait_sec=1,
+        hosting_mode="github",
     )
     assert res["ciStatus"] == "SUCCESS"
     assert res["readyToLand"] is True
@@ -729,7 +737,11 @@ def run_test():
         stdout=json.dumps(mock_data_fail), stderr="", returncode=0
     )
     res = poll_ci_status(
-        ws=REPO_ROOT, pr_number=123, quiescence_sec=10, max_wait_sec=1
+        ws=REPO_ROOT,
+        pr_number=123,
+        quiescence_sec=10,
+        max_wait_sec=1,
+        hosting_mode="github",
     )
     assert res["ciStatus"] == "FAILURE"
     assert res["failedChecks"] == ["lint"]
@@ -833,6 +845,86 @@ def run_test():
       p_iso.kill()
       p_iso.wait()
   print("✔ MCP plugin directory isolation passed.")
+
+  # 16. Unit tests for detect_hosting_mode and poll_ci_status hosting mode integration (GH-76)
+  from mcp.server import detect_hosting_mode
+
+  # Case a: No remote (or git remote get-url origin returns non-zero) -> "pure_git"
+  with patch("subprocess.run") as mock_run:
+    mock_run.return_value = MagicMock(returncode=128, stdout="", stderr="fatal: No such remote 'origin'")
+    assert detect_hosting_mode("/fake/repo") == "pure_git"
+
+  # Case b: Non-GitHub remote (e.g. git@gitlab.com:org/repo.git or https://gitlab.com/org/repo.git) -> "pure_git"
+  for non_gh_url in [
+      "git@gitlab.com:org/repo.git",
+      "https://gitlab.com/org/repo.git",
+      "https://bitbucket.org/org/repo.git",
+      "file:///local/path/repo.git",
+  ]:
+    with patch("subprocess.run") as mock_run:
+      mock_run.return_value = MagicMock(returncode=0, stdout=non_gh_url + "\n", stderr="")
+      assert detect_hosting_mode("/fake/repo") == "pure_git", f"Failed for {non_gh_url}"
+
+  # Case c: GitHub remote, but gh binary missing -> "pure_git"
+  with patch("subprocess.run") as mock_run, patch("shutil.which", return_value=None):
+    mock_run.return_value = MagicMock(returncode=0, stdout="git@github.com:org/repo.git\n", stderr="")
+    assert detect_hosting_mode("/fake/repo") == "pure_git"
+
+  # Case d: GitHub remote, gh present, but gh auth status non-zero -> "pure_git"
+  def mock_subp_auth_fail(cmd, **kwargs):
+    if cmd[:3] == ["git", "remote", "get-url"]:
+      return MagicMock(returncode=0, stdout="https://github.com/org/repo.git\n", stderr="")
+    if cmd[:3] == ["gh", "auth", "status"]:
+      return MagicMock(returncode=1, stdout="", stderr="You are not logged into any GitHub hosts")
+    return MagicMock(returncode=0, stdout="", stderr="")
+
+  with patch("shutil.which", return_value="/usr/bin/gh"), patch(
+      "subprocess.run", side_effect=mock_subp_auth_fail
+  ):
+    assert detect_hosting_mode("/fake/repo") == "pure_git"
+
+  # Case e: GitHub remote, gh auth status 0, but gh repo view non-zero -> "pure_git"
+  def mock_subp_repo_fail(cmd, **kwargs):
+    if cmd[:3] == ["git", "remote", "get-url"]:
+      return MagicMock(returncode=0, stdout="https://github.com/org/repo.git\n", stderr="")
+    if cmd[:3] == ["gh", "auth", "status"]:
+      return MagicMock(returncode=0, stdout="Logged in to github.com\n", stderr="")
+    if cmd[:3] == ["gh", "repo", "view"]:
+      return MagicMock(returncode=1, stdout="", stderr="GraphQL: Could not resolve to a Repository")
+    return MagicMock(returncode=0, stdout="", stderr="")
+
+  with patch("shutil.which", return_value="/usr/bin/gh"), patch(
+      "subprocess.run", side_effect=mock_subp_repo_fail
+  ):
+    assert detect_hosting_mode("/fake/repo") == "pure_git"
+
+  # Case f: GitHub remote, gh auth status 0, and gh repo view 0 -> "github"
+  def mock_subp_all_pass(cmd, **kwargs):
+    if cmd[:3] == ["git", "remote", "get-url"]:
+      return MagicMock(returncode=0, stdout="https://github.com/org/repo.git\n", stderr="")
+    if cmd[:3] == ["gh", "auth", "status"]:
+      return MagicMock(returncode=0, stdout="Logged in to github.com\n", stderr="")
+    if cmd[:3] == ["gh", "repo", "view"]:
+      return MagicMock(returncode=0, stdout='{"name": "repo"}', stderr="")
+    return MagicMock(returncode=0, stdout="", stderr="")
+
+  with patch("shutil.which", return_value="/usr/bin/gh"), patch(
+      "subprocess.run", side_effect=mock_subp_all_pass
+  ):
+    assert detect_hosting_mode("/fake/repo") == "github"
+
+  # Case g: Integration test in poll_ci_status: when detect_hosting_mode returns "pure_git",
+  # poll_ci_status returns mode: "pure_git" cleanly.
+  with patch("mcp.server.detect_hosting_mode", return_value="pure_git"):
+    res_pure = poll_ci_status(
+        pr_number=99, ws="/fake/repo", quiescence_sec=10, max_wait_sec=1
+    )
+    assert res_pure["mode"] == "pure_git"
+    assert res_pure["ciStatus"] == "SKIPPED"
+    assert res_pure["readyToLand"] is True
+    assert "Pure Git Mode" in res_pure["message"]
+
+  print("✔ detect_hosting_mode 6 branch cases and poll_ci_status pure_git integration passed.")
 
   print("\nAll MCP Server test cases passed.")
 

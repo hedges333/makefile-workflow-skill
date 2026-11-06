@@ -55,8 +55,8 @@ If any accepted finding requires code modifications:
 
 Target 75 is a mandatory human pause gate.
 
-1. Verify that `gh pr view` reports `mergeable: "MERGEABLE"` and `mergeStateStatus: "CLEAN"`.
-2. Print the CI status summary and resolved bot comment count in chat.
+1. In GitHub mode, verify that `gh pr view` reports `mergeable: "MERGEABLE"` and `mergeStateStatus: "CLEAN"`. In Pure Git Mode (`SCAR-GIT-30`), verify that local test suites pass with `make all`.
+2. Print the CI status summary (or local test sweep evidence in Pure Git Mode) and resolved bot comment count in chat.
 3. Print the 7-criteria review policy table:
    - Security impact.
    - Breaking API changes.
@@ -74,14 +74,20 @@ Target 75 is a mandatory human pause gate.
 
 After the user approves landing, merge the pull request and clean up local Git state:
 
-1. Squash-merge the pull request and delete the remote branch:
+1. In GitHub mode, squash-merge the pull request and delete the remote branch:
    ```bash
    gh pr merge <PR_NUMBER> --squash --delete-branch
    ```
-2. Verify that the linked GitHub issue is closed.
-3. Switch to the default branch and pull the merged commit:
+   Verify that the linked GitHub issue is closed.
+2. In Pure Git Mode (`SCAR-GIT-30`), squash-merge locally on `main`:
    ```bash
-   git checkout main && git pull --ff-only
+   git checkout main && git merge --squash <branch>
+   git commit -F .workflow/state/50_commit_msg.txt
+   git remote | grep -q "^origin$" && git push origin main || true
+   ```
+3. If an origin remote exists, pull the merged commit on `main`:
+   ```bash
+   git checkout main && (git remote | grep -q "^origin$" && git pull --ff-only || true)
    ```
 4. Delete the local feature branch:
    ```bash
