@@ -827,5 +827,27 @@
     "closes_issue": true,
     "tests_added": 5,
     "scars_earned": []
+  },
+  {
+    "id": "GH-76",
+    "issue_url": "https://github.com/hedges333/makeflow-skill/issues/76",
+    "title": "Prevent global gh auth from misidentifying local checkouts as GitHub repos (enhance SCAR-GIT-30)",
+    "request": "Prevent global gh auth from misidentifying local checkouts or non-GitHub repositories as GitHub projects, enhancing SCAR-GIT-30 to detect repository-scoped hosting and activate Pure Git Mode cleanly.",
+    "branch": "feat/76-pure-git-hosting-detection",
+    "subprojects": [
+      "mcp",
+      "scripts",
+      "skills"
+    ],
+    "started_at": "2026-11-06T19:40:35Z",
+    "completed_at": "2026-11-06T20:44:37Z",
+    "commit_sha": "755e33d",
+    "pr_number": 82,
+    "pr_url": "https://github.com/hedges333/makeflow-skill/pull/82",
+    "closes_issue": true,
+    "tests_added": 7,
+    "scars_earned": [
+      "SCAR-GIT-30: Pure Git Mode and Repository-Scoped Hosting Discovery"
+    ]
   }
 ]
