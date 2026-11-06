@@ -849,5 +849,28 @@
     "scars_earned": [
       "SCAR-GIT-30: Pure Git Mode and Repository-Scoped Hosting Discovery"
     ]
+  },
+  {
+    "id": "GH-57",
+    "issue_url": "https://github.com/hedges333/makeflow-skill/issues/57",
+    "title": "Add Just-in-Time Vector 4 Reflex gates and cut SKILL.md context by 41.9%",
+    "request": "Investigate @fgrandon Vector 4 Reflexes and context reduction, move negative guardrails out of static SKILL.md prose into deterministic per-workspace Make and Python gates exiting 2, and document context savings and attribution.",
+    "branch": "feat/57-vector-4-reflexes",
+    "subprojects": [
+      "scripts",
+      "skills",
+      "build",
+      "docs"
+    ],
+    "started_at": "2026-11-06T20:58:00Z",
+    "completed_at": "2026-11-06T23:04:41Z",
+    "commit_sha": "f350ef7",
+    "pr_number": 86,
+    "pr_url": "https://github.com/hedges333/makeflow-skill/pull/86",
+    "closes_issue": true,
+    "tests_added": 19,
+    "scars_earned": [
+      "SCAR-ARCH-06: Just-in-Time Vector 4 Reflex Gates"
+    ]
   }
 ]
