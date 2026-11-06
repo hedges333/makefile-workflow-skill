@@ -54,7 +54,7 @@ This plugin prevents those failures with four mechanisms:
 3. Human pause gates: The agent stops at six checkpoints (Plan, Blocker Triage, Review, Commit, Push, and Landing) and waits for your approval in chat.
 4. Ephemeral subagents: Heavy file scans, test runs, and CI checks run in child workers. The main agent context stays small and avoids chat compression.
 
-This project builds on Randal L. Schwartz's [*Synthetic Scars* series on DEV.to](https://dev.to/randalschwartz/series/44156) and public Gist `598a1f2b5760a23c1d70b57e9e85393f`.
+This project builds on Randal L. Schwartz's [*Synthetic Scars* series on DEV.to](https://dev.to/randalschwartz/series/44156) and public Gist `598a1f2b5760a23c1d70b57e9e85393f`. Its Just-in-Time gate reflexes draw from Francisco Grandón's (`@fgrandon`) [*Antigravity Field Notes* series](https://dev.to/fgrandon/series/45720).
 
 ---
 
@@ -325,13 +325,14 @@ At Target 15, `archaeology-worker` detects every language and subproject in the 
 
 ## Architecture and Foundations
 
-Five computer science and software design models shape this workflow:
+Six computer science and software design models shape this workflow:
 
 1. Stuart Feldman (1976): `make` evaluates build targets as a DAG so that prerequisites finish before downstream targets run.
 2. Fernando Flores (1986) and John Searle (1985): Committed speech acts model tasks as explicit requests, promises, assertions, and human declarations.
 3. Nuel Belnap (1977): Four-valued logic classifies repository facts during archaeology as `ESTABLISHED`, `CONTRADICTED`, `UNKNOWN`, or `RETRACTED`.
 4. AT&T System V `init.d`: Lexically numbered files (`00_..` through `99_..`) restore execution state cleanly on startup.
 5. Gang of Four (1994) and Robert Nystrom (2014): Design pattern guides ([`14_design_patterns_and_architecture.md`](./skills/makeflow/references/14_design_patterns_and_architecture.md)) balance object composition, ORM encapsulation, parameterized large-dataset queries, and game frame budgets.
+6. Francisco Grandón (`@fgrandon`, 2026): [*Antigravity Field Notes*](https://dev.to/fgrandon/series/45720) guides Just-in-Time Vector 4 Reflex gates (`SCAR-ARCH-06`) that emit recovery directives with exit code `2`. Moving negative guardrails into `Make` gates reduced `skills/makeflow/SKILL.md` from `22,223` bytes (`~5,556` tokens) to `12,907` bytes (`~3,227` tokens), a `41.9%` context reduction.
 
 ---
 
@@ -373,4 +374,5 @@ Unofficially, this is Jobware or Coffeeware.  If you like it, please [donate to 
 - Documentation Style: Written in plain English following ASD-STE100 principles from the [SimpleEnglish plugin](https://github.com/AminBlg/SimpleEnglish).
 - Summary of [Game Programming Patterns](https://gameprogrammingpatterns.com) analyzed by Robert Nystrom provides an invaluable resource to apply to game programming.
 - **E. Gamma, R. Helm, R. Johnson, and J. Vlissides**, *Design Patterns: Elements of Reusable Object-Oriented Software*. Reading, MA: Addison-Wesley, 1994.
+- Vector 4 Reflexes: Inspired by Francisco Grandón (`@fgrandon`) in the [*Antigravity Field Notes*](https://dev.to/fgrandon/series/45720) series. Part 1 is *I Cut My Agent's Fixed Context by 42% and Moved Its Test Rules into a Hash-Checked CLI*. Part 3 is [*Goodhart's Law Has Root Access*](https://dev.to/fgrandon/goodharts-law-has-root-access-hardening-autonomous-agent-governance-from-agops-v21-to-v23-203o).
 

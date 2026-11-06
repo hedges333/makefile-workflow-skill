@@ -624,6 +624,79 @@ def validate_basescript_pattern_scar():
   return errors
 
 
+def validate_vector4_reflex_gates_scar():
+  """Validates Just-in-Time Vector 4 Reflex gates and SCAR-ARCH-06 (GH-57)."""
+  errors = []
+
+  arch_spoke_rel = "skills/makeflow/references/scars/architecture.md"
+  arch_spoke = repo_path(arch_spoke_rel)
+  if not os.path.exists(arch_spoke):
+    errors.append(f"Missing {arch_spoke_rel}")
+  else:
+    with open(arch_spoke, "r", encoding="utf-8") as f:
+      arch_text = f.read()
+    if "SCAR-ARCH-06" not in arch_text:
+      errors.append(f"{arch_spoke_rel} must document SCAR-ARCH-06")
+    else:
+      scar_section = (
+          arch_text.split("### SCAR-ARCH-06")[1].split("### SCAR-")[0]
+          if "### SCAR-ARCH-06" in arch_text
+          else ""
+      )
+      for field in ("Wound", "Trap", "Permanent Reflex", "Socratic Probe"):
+        if f"**{field}**:" not in scar_section:
+          errors.append(f"{arch_spoke_rel} SCAR-ARCH-06 missing '**{field}**:'")
+
+  cat_rel = "skills/makeflow/references/09_synthetic_scars_catalog.md"
+  cat_path = repo_path(cat_rel)
+  if not os.path.exists(cat_path):
+    errors.append(f"Missing {cat_rel}")
+  else:
+    with open(cat_path, "r", encoding="utf-8") as f:
+      cat_text = f.read()
+    if "SCAR-ARCH-06" not in cat_text:
+      errors.append(f"{cat_rel} must index SCAR-ARCH-06")
+    if not check_scar_catalog_routing(cat_text, "SCAR-ARCH-06", "architecture.md"):
+      errors.append(
+          f"{cat_rel} must route SCAR-ARCH-06 to scars/architecture.md"
+      )
+
+  mk_rel = "Makefile"
+  mk_path = repo_path(mk_rel)
+  if not os.path.exists(mk_path):
+    errors.append(f"Missing {mk_rel}")
+  else:
+    with open(mk_path, "r", encoding="utf-8") as f:
+      mk_text = f.read()
+    if "test-reflex:" not in mk_text:
+      errors.append(f"{mk_rel} must define 'test-reflex:' target")
+    if "test:" not in mk_text or "test-reflex" not in mk_text.split("test:")[1].split("\n")[0]:
+      errors.append(
+          f"{mk_rel} 'test:' target must list 'test-reflex' prerequisite"
+      )
+
+  for script_rel in (
+      "scripts/emit_reflex.py",
+      "scripts/workflow_gates.py",
+      "scripts/test_emit_reflex.py",
+  ):
+    script_path = repo_path(script_rel)
+    if not os.path.exists(script_path):
+      errors.append(f"Missing {script_rel}")
+
+  reflex_test_rel = "scripts/test_emit_reflex.py"
+  reflex_test_path = repo_path(reflex_test_rel)
+  if os.path.exists(reflex_test_path):
+    with open(reflex_test_path, "r", encoding="utf-8") as f:
+      rt_text = f.read()
+    if "sys.executable" not in rt_text:
+      errors.append(f"{reflex_test_rel} must use sys.executable for child subprocesses")
+    if '["python3"' in rt_text or "['python3'" in rt_text:
+      errors.append(f"{reflex_test_rel} must not hardcode 'python3' in subprocess calls")
+
+  return errors
+
+
 def validate_posix_signal_trapping():
   """Validates POSIX signal trapping invariants (GH-24, SCAR-SYS-07).
 
@@ -1355,8 +1428,8 @@ def validate():
       if r09_text and not check_scar_catalog_routing(r09_text, scar_id, sf):
         errors.append(f"{ref_09_rel} Master Routing Table must strictly route {scar_id} to scars/{sf}")
 
-  if total_scars_found != 32:
-    errors.append(f"Expected 32 synthetic scars across category spokes, found {total_scars_found}")
+  if total_scars_found != 33:
+    errors.append(f"Expected 33 synthetic scars across category spokes, found {total_scars_found}")
 
   testing_spoke_rel = os.path.join(scars_dir_rel, "testing.md")
   testing_spoke = repo_path(testing_spoke_rel)
@@ -1943,6 +2016,12 @@ def validate():
         "✔ Repository-scoped hosting discovery invariants (GH-76, SCAR-GIT-30)"
         " verified."
     )
+
+  # Just-in-Time Vector 4 Reflex Gates Invariants (GH-57, SCAR-ARCH-06)
+  reflex_errors = validate_vector4_reflex_gates_scar()
+  errors.extend(reflex_errors)
+  if not reflex_errors:
+    print("✔ Just-in-Time Vector 4 Reflex gates invariants (GH-57, SCAR-ARCH-06) verified.")
 
   if errors:
     print(f"\n❌ Validation failed with {len(errors)} error(s):")
