@@ -807,5 +807,25 @@
     "closes_issue": true,
     "tests_added": 2,
     "scars_earned": []
+  },
+  {
+    "id": "GH-74",
+    "issue_url": "https://github.com/hedges333/makeflow-skill/issues/74",
+    "title": "Archive or clean up completed state cards at Target 90 and add clean intake check",
+    "request": "Archive or clean up completed state cards at Target 90 per state.completedCardAction (default unlink), add Target 10 clean intake pre-flight check, and update SessionStart and MCP workflow_get_state to recognize clean workspaces and completed tickets.",
+    "branch": "feat/74-archive-cleanup-state-cards",
+    "subprojects": [
+      "scripts",
+      "mcp",
+      "skills"
+    ],
+    "started_at": "2026-11-05T21:26:00Z",
+    "completed_at": "2026-11-06T19:37:22Z",
+    "commit_sha": "703a17a",
+    "pr_number": 80,
+    "pr_url": "https://github.com/hedges333/makeflow-skill/pull/80",
+    "closes_issue": true,
+    "tests_added": 5,
+    "scars_earned": []
   }
 ]
