@@ -21,7 +21,22 @@ Four subagent roles handle isolated phases of the workflow:
 
 Read [13. Configuration and User Preferences](13_configuration_and_user_preferences.md) to override model tiers per role.
 
-## 3. Subagent Lifecycle and Timers
+## 3. Subagent Tool Permissions (GH-83)
+
+Antigravity CLI (agy 1.5.2+) provisions subagents with read-only tools by default.
+Declare tool permissions explicitly in `agents/*.md` YAML frontmatter:
+
+| Subagent Role | `enable_write_tools` | `enable_mcp_tools` | `enable_subagent_tools` | Reason |
+| :--- | :--- | :--- | :--- | :--- |
+| `archaeology-worker` | `false` | `true` | `false` | Safe read-only inspection with MCP state tools. |
+| `tdd-worker` | `true` | `false` | `false` | Requires `write_file`, `edit_file`, and `run_command` for test loops. |
+| `adversarial-critic` | `true` | `false` | `false` | Requires `run_command` for git diff checks. File edits remain prohibited by prompt. |
+| `triage-worker` | `true` | `true` | `false` | Requires `run_command` for git checks and `call_mcp_tool` for CI polling. |
+
+If a runtime build ignores plugin agent frontmatter, use supervisor fallback:
+Spawn subagents using `define_subagent(..., EnableWriteTools=True)` before dispatch.
+
+## 4. Subagent Lifecycle and Timers
 
 Follow three rules when launching background subagents:
 
@@ -29,7 +44,7 @@ Follow three rules when launching background subagents:
 2. Stop calling tools (`tool_calls: []`) right after dispatch and wait for the system notification. Never poll in a loop with shell `sleep` commands (`SCAR-PROC-53`).
 3. If a timer conflict happens twice in a row, stop and yield to the user (`SCAR-PROC-138`).
 
-## 4. Socratic Subagent Delegation Protocol
+## 5. Socratic Subagent Delegation Protocol
 
 Do not prompt subagents with flat imperative commands alone. Frame dispatch prompts using directive-embedded Socratic questions to prune reckless reasoning branches:
 

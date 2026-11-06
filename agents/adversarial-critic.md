@@ -1,6 +1,9 @@
 ---
 name: adversarial-critic
 description: Runs Six-Pillar code reviews on Git diffs before commit.
+enable_write_tools: true
+enable_mcp_tools: false
+enable_subagent_tools: false
 ---
 
 # Adversarial Code Reviewer
