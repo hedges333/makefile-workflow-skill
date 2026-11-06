@@ -872,5 +872,27 @@
     "scars_earned": [
       "SCAR-ARCH-06: Just-in-Time Vector 4 Reflex Gates"
     ]
+  },
+  {
+    "id": "GH-83",
+    "issue_url": "https://github.com/hedges333/makeflow-skill/issues/83",
+    "title": "Declare explicit write, shell, and MCP tool permissions in subagent YAML frontmatter",
+    "request": "Ensure tdd-worker, adversarial-critic, and triage-worker dispatches mount required write, shell, and MCP tools under Antigravity CLI 1.5.2 least-privilege defaults.",
+    "branch": "fix/83-subagent-write-tools",
+    "subprojects": [
+      "agents",
+      "rules",
+      "scripts",
+      "skills",
+      "docs"
+    ],
+    "started_at": "2026-11-06T23:08:00Z",
+    "completed_at": "2026-11-06T23:35:03Z",
+    "commit_sha": "3e104de",
+    "pr_number": 87,
+    "pr_url": "https://github.com/hedges333/makeflow-skill/pull/87",
+    "closes_issue": true,
+    "tests_added": 18,
+    "scars_earned": []
   }
 ]
