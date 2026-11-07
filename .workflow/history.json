@@ -1124,5 +1124,28 @@
     "closes_issue": true,
     "tests_added": 1,
     "scars_earned": []
+  },
+  {
+    "id": "GH-69",
+    "issue_url": "https://github.com/hedges333/makeflow-skill/issues/69",
+    "title": "[FEAT] Codify SCAR-SYS-08: Atomic Directory-Based Mutual Exclusion Locks (mkdir over lockfile)",
+    "request": "Codify a new synthetic scar (SCAR-SYS-08) directing implementations to use the platform-agnostic, race-condition-proof mkdir system call to create an atomic empty lock directory instead of regular file-based locks. In addition, address lockfile concurrency in scripts/signal_trap.py where concurrent removal can trigger noisy warnings.",
+    "branch": "feat/69-atomic-mkdir-lock",
+    "subprojects": [
+      "scripts",
+      "skills",
+      "rules",
+      "adapters"
+    ],
+    "started_at": "2026-11-06T19:53:21-08:00",
+    "completed_at": "2026-11-06T21:07:37-08:00",
+    "commit_sha": "f443ba9",
+    "pr_number": 107,
+    "pr_url": "https://github.com/hedges333/makeflow-skill/pull/107",
+    "closes_issue": true,
+    "tests_added": 5,
+    "scars_earned": [
+      "SCAR-SYS-08: Atomic Directory-Based Mutual Exclusion Locks (mkdir over lockfile)"
+    ]
   }
 ]
