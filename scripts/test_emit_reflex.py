@@ -346,7 +346,33 @@ class TestWorkflowGatesScript(unittest.TestCase):
       )
       os.remove(leftover)
 
-      # 4. Fails when dirty working tree exists
+      # 4. Fails when leftover approved_tree.txt exists
+      tree_leftover = os.path.join(state_dir, "approved_tree.txt")
+      with open(tree_leftover, "w", encoding="utf-8") as f:
+        f.write("4b825dc642cb6eb9a060e54bf8d69288fbee4904\n")
+      err_tree = io.StringIO()
+      code_tree = WorkflowGatesScript().execute(
+          args=["--repo-root", tmpdir, "intake"],
+          stdout=io.StringIO(),
+          stderr=err_tree,
+      )
+      self.assertEqual(code_tree, 2)
+      self.assertIn(
+          "[SCAR-ID: GIT-25] UNCLEAN_INTAKE_STATE", err_tree.getvalue()
+      )
+      self.assertIn("approved_tree.txt", err_tree.getvalue())
+      os.remove(tree_leftover)
+
+      err_post_tree = io.StringIO()
+      code_post_tree = WorkflowGatesScript().execute(
+          args=["--repo-root", tmpdir, "intake"],
+          stdout=io.StringIO(),
+          stderr=err_post_tree,
+      )
+      self.assertEqual(code_post_tree, 0, err_post_tree.getvalue())
+      self.assertEqual(err_post_tree.getvalue(), "")
+
+      # 5. Fails when dirty working tree exists
       with open(os.path.join(tmpdir, "dirty.txt"), "w", encoding="utf-8") as f:
         f.write("dirty\n")
       err_dirty = io.StringIO()

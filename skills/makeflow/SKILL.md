@@ -92,7 +92,7 @@ Memento state files (numbered markdown progress cards on disk) preserve task pro
 
 1. At Target 00, read `.workflow/state/*.md` in lexical order and load `.workflow/config.json` via `workflow_get_config`.
 2. Label GitHub issues `GH-<N>` and local tasks `LOCAL-<N>` (or list `P0`..`P3` in Mode B). Ingest comments with `gh issue view <n> --comments` (`SCAR-PROC-107`).
-3. Exclude `.workflow/state/` and `.workflow/archive/` in `.git/info/exclude` and clear stale `10_`..`80_` cards.
+3. Exclude `.workflow/state/` and `.workflow/archive/` in `.git/info/exclude` and clear stale `10_`..`80_` cards and `approved_tree.txt`.
 4. Run `python3 <plugin_root>/scripts/workflow_gates.py --repo-root . init-makefile` (`<plugin_root>` is two directories above `SKILL.md`).
 5. Run `make -f .workflow/state/Makefile check-intake` before you create a branch.
 6. Create branch `feat/<id>-<slug>` or `fix/<id>-<slug>` (`feat/local-<n>-<slug>` for local tasks), write `10_ticket.md`, and update `99_next_action.md`.
@@ -156,7 +156,7 @@ Read `references/07`, `references/09`, and `references/12` for triage and ledger
 3. Write `70_bot_triage.md`. If accepted bot findings require code edits, return to Target 30.
 4. At Target 75, print CI status and the 7-criteria policy table, then pause for `human-landing-approval`.
 5. At Target 80, run `gh pr merge <PR> --squash --delete-branch` and fast-forward `main`. In Pure Git Mode, run `git merge --squash` on `main` instead.
-6. At Target 90, record merged scar IDs in `.workflow/history.json` and `.workflow/history.md` without editing core catalog files on `main`. In external projects, record project-local lessons in `.workflow/scars/`. If direct push is permitted, push `origin main`. Clean `10_`..`80_` cards per `state.completedCardAction` and mark `99_next_action.md` `COMPLETE`.
+6. At Target 90, record merged scar IDs in `.workflow/history.json` and `.workflow/history.md` without editing core catalog files on `main`. In external projects, record project-local lessons in `.workflow/scars/`. If direct push is permitted, push `origin main`. Clean `10_`..`80_` cards and `approved_tree.txt` per `state.completedCardAction` and mark `99_next_action.md` `COMPLETE`.
 
 ---
 

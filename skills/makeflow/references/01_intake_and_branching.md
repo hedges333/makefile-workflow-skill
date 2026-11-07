@@ -28,7 +28,7 @@ When the user provides a task description, issue number, or issue URL, run these
    git check-ignore -q .workflow/state/ || echo ".workflow/state/" >> .git/info/exclude
    git check-ignore -q .workflow/archive/ || echo ".workflow/archive/" >> .git/info/exclude
    ```
-5. Run clean intake pre-flight check: If leftover state cards from prior sessions exist in `.workflow/state/`, remove them (`unlink`, default) or move them to `.workflow/archive/<old-id>/` (`archive`) per `state.completedCardAction` before writing `10_ticket.md`.
+5. Run clean intake pre-flight check: If leftover state cards or `approved_tree.txt` from prior sessions exist in `.workflow/state/`, remove them (`unlink`, default) or move them to `.workflow/archive/<old-id>/` (`archive`) per `state.completedCardAction` before writing `10_ticket.md`.
 6. Create and switch to a feature branch that matches standard Git naming rules:
    - GitHub Bug (`#<number>` or `GH-<number>`): `fix/<number>-<slug>`, for example `fix/42-login-redirect`. Ticket ID is `GH-<number>`.
    - GitHub Feature (`#<number>` or `GH-<number>`): `feat/<number>-<slug>`, for example `feat/101-csv-export`. Ticket ID is `GH-<number>`.

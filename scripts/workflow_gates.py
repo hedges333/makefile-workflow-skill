@@ -33,7 +33,7 @@ REQUIRED_PLUGIN_FILES = (
     "rules/AGENTS.md",
 )
 
-_LEFTOVER_CARD_RE = re.compile(r"^[1-8][0-9]_.*")
+_LEFTOVER_CARD_RE = re.compile(r"^(?:[1-8][0-9]_.*|approved_tree\.txt$)")
 _LOCAL_BRANCH_RE = re.compile(
     r"^(?:feat|fix|ticket)/local-(?:([1-9][0-9]*)(?:-|$)|.+$)"
 )
@@ -280,7 +280,7 @@ class WorkflowGatesScript(BaseScript):
             code="UNCLEAN_INTAKE_STATE",
             trigger=f"Leftover intermediate state file(s) in .workflow/state/: {', '.join(leftovers)}",
             rejected="Starting a new ticket while prior 10_..80_ state cards remain active.",
-            reflex="Archive or unlink 10_..80_ cards per state.completedCardAction before writing 10_ticket.md.",
+            reflex="Archive or unlink intermediate state files per state.completedCardAction before writing 10_ticket.md.",
         )
 
     return 0
