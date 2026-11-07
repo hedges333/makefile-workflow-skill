@@ -1170,5 +1170,27 @@
     "scars_earned": [
       "SCAR-PROC-108: Critic Observation Triage and Anti-Proliferation Protocol"
     ]
+  },
+  {
+    "id": "GH-70",
+    "issue_url": "https://github.com/hedges333/makeflow-skill/issues/70",
+    "title": "[FEAT] Investigate force-exit fallback and zombie child reaper for stuck workers upon repeated termination signals",
+    "request": "Enhance SCAR-SYS-07 to mandate a force-exit fallback when a worker receives repeated termination signals, and monitor/manage leftover zombie child processes during worker shutdown.",
+    "branch": "feat/70-worker-force-exit-zombie-reaper",
+    "subprojects": [
+      "scripts",
+      "skills",
+      "rules"
+    ],
+    "started_at": "2026-11-06T21:10:41-08:00",
+    "completed_at": "2026-11-06T21:50:25-08:00",
+    "commit_sha": "3e29697",
+    "pr_number": 110,
+    "pr_url": "https://github.com/hedges333/makeflow-skill/pull/110",
+    "closes_issue": true,
+    "tests_added": 4,
+    "scars_earned": [
+      "SCAR-SYS-07: POSIX Signal Trapping for Long-Running Workers (SIGTERM / SIGINT)"
+    ]
   }
 ]
