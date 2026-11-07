@@ -2012,20 +2012,31 @@ def validate_pre_push_conflict_and_rebase_invariants():
   return errors
 
 
-def validate_arbitrary_cwd_execution():
-  """Validates arbitrary cwd execution without breaking relative path lookups."""
+def validate_arbitrary_cwd_execution(timeout: float = 30.0):
+  """Validates arbitrary cwd execution without breaking relative path lookups (GH-62)."""
   if os.environ.get("_COMPAT_CHILD") == "1":
     return []
 
   child_env = os.environ.copy()
   child_env["_COMPAT_CHILD"] = "1"
-  proc = subprocess.run(
-      [sys.executable, os.path.abspath(__file__)],
-      cwd=tempfile.gettempdir(),
-      capture_output=True,
-      text=True,
-      env=child_env,
-  )
+  try:
+    proc = subprocess.run(
+        [sys.executable, os.path.abspath(__file__)],
+        cwd=tempfile.gettempdir(),
+        capture_output=True,
+        text=True,
+        env=child_env,
+        timeout=timeout,
+    )
+  except subprocess.TimeoutExpired as exc:
+    return [
+        f"Arbitrary CWD validation timed out after {timeout}s: {exc}"
+    ]
+  except (subprocess.SubprocessError, OSError) as exc:
+    return [
+        f"Arbitrary CWD validation execution error: {exc}"
+    ]
+
   if proc.returncode != 0:
     return [
         f"Arbitrary CWD validation failed (exit code {proc.returncode}):\n{proc.stderr or proc.stdout}"
