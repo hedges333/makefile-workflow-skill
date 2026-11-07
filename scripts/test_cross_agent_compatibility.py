@@ -2168,6 +2168,196 @@ def validate_target_42_nbo_summary_invariants():
   return errors
 
 
+def _check_critic_observation_triage_protocol(text: str, source_rel: str) -> list[str]:
+  """Checks that text defines the 4-step observation triage protocol."""
+  errors = []
+  text_lower = text.lower()
+
+  # Step 1: Existing Issue Deduplication
+  if "gh issue list" not in text:
+    errors.append(f"{source_rel} must mandate searching open issues with 'gh issue list'")
+  if "deduplication" not in text_lower and "duplicate" not in text_lower:
+    errors.append(f"{source_rel} must mandate deduplication against open issues")
+
+  # Step 2: Scope Relationship & Rollup
+  if "very related" not in text_lower:
+    errors.append(f"{source_rel} must define 'very related' scope relationship")
+  if "blocker" not in text_lower:
+    errors.append(f"{source_rel} must treat 'very related' observations as blockers")
+  if "somewhat related" not in text_lower:
+    errors.append(f"{source_rel} must define 'somewhat related' scope relationship")
+  if "roll up" not in text_lower and "rollup" not in text_lower:
+    errors.append(f"{source_rel} must offer rollup option for somewhat related observations")
+  if "totally unrelated" not in text_lower:
+    errors.append(f"{source_rel} must define 'totally unrelated' scope relationship")
+
+  # Step 3: Conscious Dismissal
+  if "conscious dismissal" not in text_lower and "dismiss" not in text_lower:
+    errors.append(f"{source_rel} must define conscious dismissal")
+  if "negligible risk" not in text_lower:
+    errors.append(f"{source_rel} must evaluate negligible risk for dismissal")
+  if "outsized complexity" not in text_lower:
+    errors.append(f"{source_rel} must evaluate outsized complexity for dismissal")
+  if "rationale" not in text_lower:
+    errors.append(f"{source_rel} must mandate documenting technical rationale when dismissing")
+
+  # Step 4: Human Escalation Gate
+  if "human escalation" not in text_lower and "human declaration" not in text_lower and "human confirmation" not in text_lower:
+    errors.append(f"{source_rel} must require human escalation gate before opening new tickets")
+  if "autonomous" not in text_lower:
+    errors.append(f"{source_rel} must prohibit autonomous ticket creation")
+
+  return errors
+
+
+def validate_critic_observation_triage_invariants():
+  """Validates Critic Observation Triage Protocol and SCAR-PROC-108 (GH-66)."""
+  errors = []
+
+  # a) skills/makeflow/references/04_six_pillars_adversarial_review.md
+  ref_04_rel = "skills/makeflow/references/04_six_pillars_adversarial_review.md"
+  ref_04_path = repo_path(ref_04_rel)
+  if not os.path.exists(ref_04_path):
+    errors.append(f"Missing {ref_04_rel}")
+  else:
+    with open(ref_04_path, "r", encoding="utf-8") as f:
+      r04_text = f.read()
+    errors.extend(_check_critic_observation_triage_protocol(r04_text, ref_04_rel))
+
+  # b) skills/makeflow/references/scars/process.md codifies SCAR-PROC-108
+  proc_rel = "skills/makeflow/references/scars/process.md"
+  proc_path = repo_path(proc_rel)
+  if not os.path.exists(proc_path):
+    errors.append(f"Missing {proc_rel}")
+  else:
+    with open(proc_path, "r", encoding="utf-8") as f:
+      proc_text = f.read()
+    if "### SCAR-PROC-108" not in proc_text:
+      errors.append(f"{proc_rel} must document SCAR-PROC-108")
+    else:
+      scar_section = (
+          proc_text.split("### SCAR-PROC-108")[1].split("### SCAR-")[0]
+          if "### SCAR-PROC-108" in proc_text
+          else ""
+      )
+      for field in ("Wound", "Trap", "Permanent Reflex", "Socratic Probe"):
+        field_match = re.search(
+            rf"\*\*{re.escape(field)}\*\*:\s*([^\n]+)", scar_section
+        )
+        if not field_match or not field_match.group(1).strip():
+          errors.append(f"{proc_rel} SCAR-PROC-108 missing non-empty '**{field}**:'")
+      if "critic observation triage" not in scar_section.lower() and "anti-proliferation" not in scar_section.lower():
+        errors.append(f"{proc_rel} SCAR-PROC-108 must title Critic Observation Triage and Anti-Proliferation Protocol")
+
+  # c) skills/makeflow/references/09_synthetic_scars_catalog.md lists SCAR-PROC-108
+  cat_rel = "skills/makeflow/references/09_synthetic_scars_catalog.md"
+  cat_path = repo_path(cat_rel)
+  if not os.path.exists(cat_path):
+    errors.append(f"Missing {cat_rel}")
+  else:
+    with open(cat_path, "r", encoding="utf-8") as f:
+      cat_text = f.read()
+    if "SCAR-PROC-108" not in cat_text:
+      errors.append(f"{cat_rel} must index SCAR-PROC-108")
+    if not check_scar_catalog_routing(cat_text, "SCAR-PROC-108", "process.md"):
+      errors.append(f"{cat_rel} must route SCAR-PROC-108 to scars/process.md")
+
+  # d) skills/makeflow/references/08_subagent_orchestration.md Section 5.3
+  ref_08_rel = "skills/makeflow/references/08_subagent_orchestration.md"
+  ref_08_path = repo_path(ref_08_rel)
+  if not os.path.exists(ref_08_path):
+    errors.append(f"Missing {ref_08_rel}")
+  else:
+    with open(ref_08_path, "r", encoding="utf-8") as f:
+      r08_text = f.read()
+    if "### 5.3" not in r08_text and "## 5.3" not in r08_text:
+      errors.append(f"{ref_08_rel} must document Section 5.3")
+    else:
+      sec_5_3 = r08_text.split("5.3")[1]
+      sec_5_3_lower = sec_5_3.lower()
+      if "triage" not in sec_5_3_lower:
+        errors.append(f"{ref_08_rel} Section 5.3 must document observation triage")
+      if "roll up" not in sec_5_3_lower and "rollup" not in sec_5_3_lower:
+        errors.append(f"{ref_08_rel} Section 5.3 must document relationship-based rollup")
+      if "scar-proc-108" not in sec_5_3_lower:
+        errors.append(f"{ref_08_rel} Section 5.3 must reference SCAR-PROC-108")
+
+  # e) rules/AGENTS.md codifies in Section 1.8
+  agents_rel = "rules/AGENTS.md"
+  agents_path = repo_path(agents_rel)
+  if not os.path.exists(agents_path):
+    errors.append(f"Missing {agents_rel}")
+  else:
+    with open(agents_path, "r", encoding="utf-8") as f:
+      agents_text = f.read()
+    if "1.8" not in agents_text:
+      errors.append(f"{agents_rel} must codify Section 1.8")
+    else:
+      sec_1_8 = agents_text.split("1.8")[1].split("## 2")[0] if "## 2" in agents_text else agents_text.split("1.8")[1]
+      sec_1_8_lower = sec_1_8.lower()
+      if "scar-proc-108" not in sec_1_8_lower:
+        errors.append(f"{agents_rel} Section 1.8 must reference SCAR-PROC-108")
+      if "gh issue list" not in sec_1_8:
+        errors.append(f"{agents_rel} Section 1.8 must mention 'gh issue list'")
+      if "roll up" not in sec_1_8_lower and "rollup" not in sec_1_8_lower:
+        errors.append(f"{agents_rel} Section 1.8 must mention rollup")
+      if "conscious dismissal" not in sec_1_8_lower and "dismiss" not in sec_1_8_lower:
+        errors.append(f"{agents_rel} Section 1.8 must mention conscious dismissal")
+      if "human" not in sec_1_8_lower:
+        errors.append(f"{agents_rel} Section 1.8 must mandate human escalation gate")
+
+  # f) agents/adversarial-critic.md instructs scope relationship evaluation
+  critic_rel = "agents/adversarial-critic.md"
+  critic_path = repo_path(critic_rel)
+  if not os.path.exists(critic_path):
+    errors.append(f"Missing {critic_rel}")
+  else:
+    with open(critic_path, "r", encoding="utf-8") as f:
+      critic_text = f.read()
+    critic_lower = critic_text.lower()
+    if "scope relationship" not in critic_lower:
+      errors.append(f"{critic_rel} must instruct critic on scope relationship evaluation")
+    if "scar-proc-108" not in critic_lower:
+      errors.append(f"{critic_rel} must reference SCAR-PROC-108")
+
+  # g) Negative falsification harness
+  valid_sample = (
+      "### 4-Step Observation Triage Protocol\n"
+      "1. **Existing Issue Deduplication**: Search open issues (`gh issue list`) before proposing new tickets to prevent duplicate backlog items.\n"
+      "2. **Scope Relationship & Rollup**: Very related observations become a blocker for tdd-worker. Somewhat related observations offer a choice to roll up into the current change or file a ticket. Totally unrelated observations propose filing a new ticket.\n"
+      "3. **Conscious Dismissal**: Conscious dismissal of observations with negligible risk or outsized complexity. Document technical rationale to skip without filing an issue.\n"
+      "4. **Human Escalation Gate**: Require explicit human escalation gate and human declaration before opening new tickets. Prohibit autonomous ticket creation.\n"
+  )
+  sample_errors = _check_critic_observation_triage_protocol(valid_sample, "sample.md")
+  if sample_errors:
+    errors.append(f"Critic observation triage falsification harness baseline failed: {sample_errors}")
+
+  negatives = [
+      ("omit_step1_gh_issue_list", valid_sample.replace("`gh issue list`", "issue tracker"), "gh issue list"),
+      ("omit_step1_dedup", re.sub(r"(?i)deduplication|duplicate", "untracked", valid_sample), "deduplication"),
+      ("omit_step2_very_related", re.sub(r"(?i)very related", "high priority", valid_sample), "very related"),
+      ("omit_step2_blocker", re.sub(r"(?i)blocker", "critical fix", valid_sample), "blocker"),
+      ("omit_step2_somewhat_related", re.sub(r"(?i)somewhat related", "medium priority", valid_sample), "somewhat related"),
+      ("omit_step2_rollup", re.sub(r"(?i)roll up|rollup", "bundle", valid_sample), "rollup"),
+      ("omit_step2_totally_unrelated", re.sub(r"(?i)totally unrelated", "low priority", valid_sample), "totally unrelated"),
+      ("omit_step3_dismissal", re.sub(r"(?i)dismissal|dismiss", "ignore", valid_sample), "dismissal"),
+      ("omit_step3_negligible_risk", re.sub(r"(?i)negligible risk", "low severity", valid_sample), "negligible risk"),
+      ("omit_step3_outsized_complexity", re.sub(r"(?i)outsized complexity", "high effort", valid_sample), "outsized complexity"),
+      ("omit_step3_rationale", re.sub(r"(?i)rationale", "notes", valid_sample), "rationale"),
+      ("omit_step4_human_gate", re.sub(r"(?i)human escalation|human declaration|human confirmation", "gate", valid_sample), "human escalation"),
+      ("omit_step4_autonomous", re.sub(r"(?i)autonomous", "unsupervised", valid_sample), "autonomous"),
+  ]
+
+  for tag, neg_text, expected_token in negatives:
+    neg_errs = _check_critic_observation_triage_protocol(neg_text, f"negative_{tag}.md")
+    if not any(expected_token.lower() in e.lower() for e in neg_errs):
+      errors.append(
+          f"Negative falsification failed: {tag} did not trigger expected error containing '{expected_token}'"
+      )
+
+  return errors
+
+
 def validate():
   errors = []
 
@@ -2534,8 +2724,8 @@ def validate():
       if r09_text and not check_scar_catalog_routing(r09_text, scar_id, sf):
         errors.append(f"{ref_09_rel} Master Routing Table must strictly route {scar_id} to scars/{sf}")
 
-  if total_scars_found != 38:
-    errors.append(f"Expected 38 synthetic scars across category spokes, found {total_scars_found}")
+  if total_scars_found != 39:
+    errors.append(f"Expected 39 synthetic scars across category spokes, found {total_scars_found}")
 
   testing_spoke_rel = os.path.join(scars_dir_rel, "testing.md")
   testing_spoke = repo_path(testing_spoke_rel)
@@ -3188,6 +3378,15 @@ def validate():
   if not pre_push_errors:
     print(
         "✔ Pre-push conflict and rebase invariants (GH-95, SCAR-GIT-20, SCAR-GIT-25)"
+        " verified."
+    )
+
+  # Critic Observation Triage and SCAR-PROC-108 Invariants (GH-66)
+  critic_triage_errors = validate_critic_observation_triage_invariants()
+  errors.extend(critic_triage_errors)
+  if not critic_triage_errors:
+    print(
+        "✔ Critic observation triage protocol and SCAR-PROC-108 invariants (GH-66)"
         " verified."
     )
 

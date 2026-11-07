@@ -72,4 +72,4 @@ Did this change touch sensitive runtime boundaries such as asynchronous streams,
          TRAP: <Root cause defect>
          DIAGNOSTIC_INVARIANT: <Invariant that must be satisfied>
      ```
-   - List non-blocking observations in a separate table with recommendations (`Apply` / `Skip` / `Defer to issue`).
+   - List non-blocking observations in a separate table evaluating scope relationship (very related -> blocker candidate, somewhat related -> rollup candidate, totally unrelated -> ticket candidate) with recommended dispositions (`Apply` / `Skip` / `Defer to issue`) per SCAR-PROC-108.

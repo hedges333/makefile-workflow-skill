@@ -15,6 +15,7 @@ This reference manual documents core process and workflow scars (`SCAR-PROC-*`).
 | `SCAR-PROC-105` | Explicit Critic Six Pillars Manual Path | Critic Subagent Dispatch |
 | `SCAR-PROC-106` | Predetermined Subagent Tool Mounting via options and tools Blocks | Subagent Tool Mounting |
 | `SCAR-PROC-107` | Full Discussion and Comment Thread Ingestion at Intake | Ticket Intake & Triage |
+| `SCAR-PROC-108` | Critic Observation Triage and Anti-Proliferation Protocol | Review Triage & Issue Management |
 | `SCAR-PROC-138` | Yield on Repeated Timer Conflicts | Schedule Conflict Handling |
 
 ---
@@ -81,6 +82,13 @@ This reference manual documents core process and workflow scars (`SCAR-PROC-*`).
 - **Trap**: Assuming the initial issue description contains all current project decisions, and running `gh issue view <number>` without fetching thread comments.
 - **Permanent Reflex**: At Target 10 intake, fetch the full issue discussion thread with `gh issue view <number> --comments` before creating `.workflow/state/10_ticket.md`. Consolidate all user updates, scope changes, and architectural constraints into the intake ticket.
 - **Socratic Probe**: Did you fetch all comments with `--comments` before drafting the ticket and plan? If you plan work from only the initial issue description, will you miss crucial human course corrections and updated requirements?
+
+### SCAR-PROC-108: Critic Observation Triage and Anti-Proliferation Protocol
+
+- **Wound**: Agents reflexively propose opening new GitHub issues for every non-blocking review observation, causing ticket inflation, duplicate backlog items, and fragmented changes.
+- **Trap**: Assuming all review observations warrant new standalone tickets instead of deduplicating against open issues, evaluating scope rollup, or consciously dismissing low-risk items.
+- **Permanent Reflex**: Apply the 4-step observation triage protocol: (1) search open issues with `gh issue list` for deduplication; (2) evaluate scope relationship: very related becomes a blocker for `tdd-worker`, somewhat related offers a choice to roll up into current changes, and totally unrelated proposes a ticket; (3) consciously dismiss negligible-risk or high-complexity observations with documented rationale; (4) enforce the human escalation gate prohibiting autonomous ticket creation without explicit human declaration.
+- **Socratic Probe**: Did you search `gh issue list` for duplicates and evaluate whether this observation is very related (blocker), somewhat related (rollup candidate), or consciously dismissible before proposing a new ticket? Did you obtain explicit human declaration before opening an issue?
 
 ### SCAR-PROC-138: Yield on Repeated Timer Conflicts
 

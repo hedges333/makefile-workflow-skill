@@ -213,7 +213,7 @@ Present a structured Blocker Digest directly in chat:
 1. **Blocker Manifest**: List every blocker ID, pillar, file location, wound, and trap.
 2. **Remediation Strategy**: Propose a failing reproduction test and surgical fix for each blocker.
 3. **Documentation Impact**: Note any documentation or changelog updates required.
-4. **Non-Blocking Observations (NBO) Summary**: If the critic identifies NBOs during a rejected review round, present an NBO summary table in chat. Include each observation's full technical description, `file:line` location, impact and rationale, and proposed disposition (`Apply` in the upcoming Target 30 remediation pass, `Skip` with justification, or `Defer to issue`).
+4. **Non-Blocking Observations (NBO) Summary**: If the critic identifies NBOs during a rejected review round, present an NBO summary table in chat applying the 4-step observation triage protocol (`SCAR-PROC-108`). Include each observation's full technical description, `file:line` location, impact and rationale, scope relationship evaluation, and proposed disposition (`Apply` in the upcoming Target 30 remediation pass, `Skip` with justification, or `Defer to issue`).
 
 ### 5.3 Sovereign Human Direction
 Halt and wait for explicit human steering:
@@ -239,16 +239,21 @@ test "$(git write-tree)" = "$(cat .workflow/state/approved_tree.txt)"
 ### 6.2 Canonical Prose Presentation
 Present the review in chat using the exact six canonical headings. Never compress findings into a summary table.
 
-### 6.3 Non-Blocking Observations (NBO) Matrix (`SCAR-REVIEW-12`, `SCAR-REVIEW-28`)
+### 6.3 Non-Blocking Observations (NBO) Matrix and 4-Step Triage Protocol (`SCAR-REVIEW-12`, `SCAR-REVIEW-28`, `SCAR-PROC-108`)
 If the critic identifies non-blocking observations, present a structured matrix:
-| # | Observation | Location | Recommendation |
-| :--- | :--- | :--- | :--- |
-| 1 | Brief summary | `file:line` | `Apply` / `Skip` / `Defer to issue` |
+| # | Observation | Location | Scope Relationship | Recommendation |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | Brief summary | `file:line` | `Very related` / `Somewhat related` / `Totally unrelated` | `Apply` / `Skip` / `Defer to issue` |
 
-Do not label observations as `"Acknowledged"`. For each observation, ask the human operator whether to:
-- **Apply**: Make the edit now.
-- **Skip**: Omit the edit.
-- **Defer**: Create a follow-up GitHub issue before Target 50.
+Do not label observations as `"Acknowledged"`. Evaluate and triage every observation using the **4-Step Observation Triage Protocol**:
+
+1. **Existing Issue Deduplication**: Before proposing a new ticket, search open issues with `gh issue list` (or tracker API) to avoid duplicate backlog entries. If an existing issue covers the finding, link to it instead of proposing a duplicate.
+2. **Scope Relationship and Rollup**: Interrogate the observation's relationship to current ticket scope:
+   - **Very related**: Triage as a blocker for `tdd-worker`. Return to Target 30 for immediate resolution.
+   - **Somewhat related**: Offer the human operator a choice to roll up the fix into the current change or file a new ticket.
+   - **Totally unrelated**: Propose filing a new ticket (subject to human escalation).
+3. **Conscious Dismissal**: If an observation presents negligible risk or outsized complexity, perform a conscious dismissal. Document the technical rationale to skip the observation without filing an issue.
+4. **Human Escalation Gate**: Prohibit autonomous ticket creation. Require explicit human declaration before opening any new tickets.
 
 ### 6.4 Single-Target Turn Airlock (`SCAR-PROC-84`, `SCAR-PROC-123`)
 Target 45 is an absolute turn-ending airlock:
