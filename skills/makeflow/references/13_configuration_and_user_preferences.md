@@ -101,7 +101,11 @@ If you want custom prompt rules for `adversarial-critic`, create `~/.gemini/conf
 
 ## 5. Interactive IDE Prompts (Cursor, Copilot, ChatGPT)
 
-Interactive chat IDEs cannot switch models through subagent API calls. The agent prints reminders in chat at review boundaries:
+Interactive chat IDEs cannot switch models through subagent API calls.
 
-1. At Target 40, prompt the user: "Switch the model picker to a deep-reasoning model for the Six-Pillar review."
+If `.workflow/config.json` specifies models or 'inherit', bypass the model picker prompt. The workflow respects your pre-configured model tier without user interruption.
+
+When model selection is unconfigured, the agent prints reminders in chat at review boundaries:
+
+1. At Target 40, prompt the user: "Switch the model picker to a deep-reasoning model for the Six-Pillar review." Stop tool calls (`tool_calls: []`) to pause for model selection before critic dispatch.
 2. At Target 45 (Review Sign-Off), prompt the user: "Review passed. You can switch back to your fast coding model for the remaining steps."

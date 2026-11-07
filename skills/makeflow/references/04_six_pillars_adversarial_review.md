@@ -83,7 +83,12 @@ git add -A && git write-tree > .workflow/state/approved_tree.txt
 ```
 Verify that zero untracked files remain (`git status --porcelain` is clean). The tree hash provides an immutable cryptographic anchor.
 
-### 3.2 Compute Direct Merkle Tree Diff
+### 3.2 Model Picker Configuration Bypass and Interactive Turn Pause (GH-81)
+If `.workflow/config.json` specifies models or "inherit", bypass the model picker prompt. The workflow honors configured model tiers automatically.
+When model selection is unconfigured in interactive IDE environments, prompt the human user to switch to a deep-reasoning model.
+Stop tool calls (`tool_calls: []`) to pause the turn before critic dispatch. Never dispatch `adversarial-critic` in the same turn as the model picker prompt.
+
+### 3.3 Compute Direct Merkle Tree Diff
 The critic computes the diff directly from the Git object database:
 ```bash
 APPROVED_TREE=$(cat .workflow/state/approved_tree.txt)
@@ -91,7 +96,7 @@ git diff $(git merge-base HEAD origin/main) "$APPROVED_TREE"
 ```
 Do not serialize intermediate diff files to disk. Intermediate diff files risk truncated redirects and formatting errors.
 
-### 3.3 Mandatory Machine-Readable Binary Verdict Header (`SCAR-PROC-89`)
+### 3.4 Mandatory Machine-Readable Binary Verdict Header (`SCAR-PROC-89`)
 The critic report must conclude with an exact binary verdict header:
 ```text
 VERDICT: APPROVED (0 BLOCKERS)
@@ -109,7 +114,7 @@ BLOCKERS:
 ```
 Soft tokens (such as `REQUEST_CHANGES` or `NEEDS_WORK`) are prohibited. The critic must not supply copy-paste implementation code blocks.
 
-### 3.4 Single-Shot Subagent Lifecycle (`SCAR-PROC-89`)
+### 3.5 Single-Shot Subagent Lifecycle (`SCAR-PROC-89`)
 Never negotiate with, argue with, or send updated diffs to an existing critic subagent. Each review round requires a fresh, un-primed subagent instance.
 
 ---

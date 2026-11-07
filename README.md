@@ -275,7 +275,7 @@ export MAKEFILE_WORKFLOW_PROD_HOSTS="db.company.internal"
 
 ### 3. Interactive IDE Model Switch Reminders
 
-Interactive IDE tools (Cursor, GitHub Copilot, ChatGPT) cannot switch models automatically through subagent calls. At Target 40, the agent prompts you to select your deep-reasoning model in the UI picker. At Target 45, the agent tells you that you can switch back. Read [13. Configuration and User Preferences](./skills/makeflow/references/13_configuration_and_user_preferences.md) for full details.
+Interactive IDE tools (Cursor, GitHub Copilot, ChatGPT) cannot switch models automatically through subagent calls. If `.workflow/config.json` specifies models or "inherit", the agent bypasses the model picker prompt. When unconfigured, the agent prompts you at Target 40 to select your deep-reasoning model in the UI picker and pauses before starting review. At Target 45, the agent tells you that you can switch back. Read [13. Configuration and User Preferences](./skills/makeflow/references/13_configuration_and_user_preferences.md) for full details.
 
 ---
 

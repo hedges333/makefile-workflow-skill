@@ -2358,6 +2358,198 @@ def validate_critic_observation_triage_invariants():
   return errors
 
 
+def check_skill_target_40_model_picker(skill_text, source_rel="skills/makeflow/SKILL.md"):
+  errors = []
+  if "### Target 40" not in skill_text:
+    errors.append(f"{source_rel} missing '### Target 40' section")
+    return errors
+  t40_section = skill_text.split("### Target 40")[1].split("### Target 50")[0]
+  t40_lower = t40_section.lower()
+  has_bypass = (
+      "bypass" in t40_lower
+      and "config.json" in t40_section
+      and ("models" in t40_section or "inherit" in t40_section)
+  )
+  if not has_bypass:
+    errors.append(
+        f"{source_rel} Target 40 must specify bypassing model picker prompt when"
+        " .workflow/config.json specifies models or 'inherit'"
+    )
+  has_pause = (
+      ("pause" in t40_lower or "stop tool calls" in t40_lower or "tool_calls: []" in t40_section)
+      and ("unconfigured" in t40_lower or "prompt" in t40_lower)
+  )
+  if not has_pause:
+    errors.append(
+        f"{source_rel} Target 40 must specify pausing (stopping tool calls) before"
+        " critic dispatch when unconfigured"
+    )
+  return errors
+
+
+def check_ref_13_section_5_model_picker(ref13_text, source_rel="skills/makeflow/references/13_configuration_and_user_preferences.md"):
+  errors = []
+  if "## 5. Interactive IDE Prompts" not in ref13_text:
+    errors.append(f"{source_rel} missing Section 5 '## 5. Interactive IDE Prompts'")
+    return errors
+  sec5_text = ref13_text.split("## 5. Interactive IDE Prompts")[1]
+  sec5_lower = sec5_text.lower()
+  has_bypass = (
+      "bypass" in sec5_lower
+      and "config.json" in sec5_text
+      and ("models" in sec5_text or "inherit" in sec5_text)
+  )
+  if not has_bypass:
+    errors.append(
+        f"{source_rel} Section 5 must document that specifying models or 'inherit' in"
+        " .workflow/config.json bypasses the model picker prompt"
+    )
+  has_pause = (
+      ("pause" in sec5_lower or "stop tool calls" in sec5_lower or "tool_calls: []" in sec5_text)
+      and ("unconfigured" in sec5_lower or "dispatch" in sec5_lower)
+  )
+  if not has_pause:
+    errors.append(
+        f"{source_rel} Section 5 must document pausing (stopping tool calls) before"
+        " critic dispatch when unconfigured"
+    )
+  return errors
+
+
+def check_agents_rule_target_40_model_picker(agents_text, source_rel="rules/AGENTS.md"):
+  errors = []
+  has_t40 = "Target 40" in agents_text
+  has_bypass = (
+      "bypass" in agents_text.lower()
+      and "config.json" in agents_text
+      and ("models" in agents_text.lower() or "inherit" in agents_text.lower())
+  )
+  has_pause = (
+      "pause" in agents_text.lower()
+      or "stop tool calls" in agents_text.lower()
+      or "tool_calls: []" in agents_text
+  )
+  if not (has_t40 and has_bypass and has_pause):
+    errors.append(
+        f"{source_rel} must document Target 40 model picker configuration bypass and pause invariant"
+    )
+  return errors
+
+
+def validate_target_40_model_picker_invariants():
+  """Validates Target 40 model picker config bypass and pause invariants (GH-81).
+
+  Verifies:
+  1. skills/makeflow/SKILL.md Target 40 specifies bypassing the model picker
+     prompt when .workflow/config.json specifies models or 'inherit', and
+     pausing (stopping tool calls) before critic dispatch when unconfigured.
+  2. skills/makeflow/references/13_configuration_and_user_preferences.md Section 5
+     documents config bypass when models or 'inherit' are configured, and
+     pausing before critic dispatch when unconfigured.
+  3. rules/AGENTS.md documents Target 40 config bypass and pause invariant.
+  4. Negative falsification tests confirming that omission of bypass or pause
+     raises validation errors.
+  """
+  errors = []
+
+  # 1. skills/makeflow/SKILL.md
+  skill_rel = "skills/makeflow/SKILL.md"
+  skill_path = repo_path(skill_rel)
+  if not os.path.exists(skill_path):
+    errors.append(f"Missing {skill_rel}")
+  else:
+    with open(skill_path, "r", encoding="utf-8") as f:
+      skill_text = f.read()
+    errors.extend(check_skill_target_40_model_picker(skill_text, skill_rel))
+
+  # 2. references/13
+  ref13_rel = "skills/makeflow/references/13_configuration_and_user_preferences.md"
+  ref13_path = repo_path(ref13_rel)
+  if not os.path.exists(ref13_path):
+    errors.append(f"Missing {ref13_rel}")
+  else:
+    with open(ref13_path, "r", encoding="utf-8") as f:
+      ref13_text = f.read()
+    errors.extend(check_ref_13_section_5_model_picker(ref13_text, ref13_rel))
+
+  # 3. rules/AGENTS.md
+  agents_rel = "rules/AGENTS.md"
+  agents_path = repo_path(agents_rel)
+  if not os.path.exists(agents_path):
+    errors.append(f"Missing {agents_rel}")
+  else:
+    with open(agents_path, "r", encoding="utf-8") as f:
+      agents_text = f.read()
+    errors.extend(check_agents_rule_target_40_model_picker(agents_text, agents_rel))
+
+  # 4. Negative Falsification
+  valid_skill = (
+      "### Target 40: Review\n"
+      "1. Lock Merkle tree.\n"
+      "2. If .workflow/config.json specifies models or 'inherit', bypass the model picker prompt. "
+      "When unconfigured in interactive IDEs, prompt the user and pause (stop tool calls) before critic dispatch.\n"
+      "### Target 50: Commit"
+  )
+  if check_skill_target_40_model_picker(valid_skill, "valid_skill.md"):
+    errors.append("Negative falsification baseline failed for valid skill sample")
+
+  no_bypass_skill = (
+      "### Target 40: Review\n"
+      "1. Lock Merkle tree.\n"
+      "2. When unconfigured in interactive IDEs, prompt the user and pause (stop tool calls) before critic dispatch.\n"
+      "### Target 50: Commit"
+  )
+  nb_errors = check_skill_target_40_model_picker(no_bypass_skill, "no_bypass_skill.md")
+  if not any("bypass" in e.lower() for e in nb_errors):
+    errors.append("Negative falsification failed: SKILL.md missing bypass was not rejected")
+
+  no_pause_skill = (
+      "### Target 40: Review\n"
+      "1. Lock Merkle tree.\n"
+      "2. If .workflow/config.json specifies models or 'inherit', bypass the model picker prompt. Prompt the user.\n"
+      "### Target 50: Commit"
+  )
+  np_errors = check_skill_target_40_model_picker(no_pause_skill, "no_pause_skill.md")
+  if not any("pausing" in e.lower() for e in np_errors):
+    errors.append("Negative falsification failed: SKILL.md missing pause was not rejected")
+
+  valid_ref13 = (
+      "## 5. Interactive IDE Prompts (Cursor, Copilot, ChatGPT)\n"
+      "If .workflow/config.json specifies models or 'inherit', bypass the model picker prompt. "
+      "When unconfigured, prompt the user to switch models and pause (stop tool calls) before critic dispatch.\n"
+  )
+  if check_ref_13_section_5_model_picker(valid_ref13, "valid_ref13.md"):
+    errors.append("Negative falsification baseline failed for valid ref13 sample")
+
+  no_bypass_ref13 = (
+      "## 5. Interactive IDE Prompts (Cursor, Copilot, ChatGPT)\n"
+      "When unconfigured, prompt the user to switch models and pause before critic dispatch.\n"
+  )
+  nbr_errors = check_ref_13_section_5_model_picker(no_bypass_ref13, "no_bypass_ref13.md")
+  if not any("bypass" in e.lower() for e in nbr_errors):
+    errors.append("Negative falsification failed: references/13 missing bypass was not rejected")
+
+  no_pause_ref13 = (
+      "## 5. Interactive IDE Prompts (Cursor, Copilot, ChatGPT)\n"
+      "If .workflow/config.json specifies models or 'inherit', bypass the model picker prompt.\n"
+  )
+  npr_errors = check_ref_13_section_5_model_picker(no_pause_ref13, "no_pause_ref13.md")
+  if not any("pausing" in e.lower() for e in npr_errors):
+    errors.append("Negative falsification failed: references/13 missing pause was not rejected")
+
+  no_bypass_agents = "# Rules\nTarget 40 pause before critic dispatch.\n"
+  nba_errors = check_agents_rule_target_40_model_picker(no_bypass_agents, "no_bypass_agents.md")
+  if not nba_errors:
+    errors.append("Negative falsification failed: rules/AGENTS.md missing bypass was not rejected")
+
+  no_pause_agents = "# Rules\nTarget 40 bypass model picker when .workflow/config.json specifies models or inherit.\n"
+  npa_errors = check_agents_rule_target_40_model_picker(no_pause_agents, "no_pause_agents.md")
+  if not npa_errors:
+    errors.append("Negative falsification failed: rules/AGENTS.md missing pause was not rejected")
+
+  return errors
+
+
 def validate():
   errors = []
 
@@ -3387,6 +3579,15 @@ def validate():
   if not critic_triage_errors:
     print(
         "✔ Critic observation triage protocol and SCAR-PROC-108 invariants (GH-66)"
+        " verified."
+    )
+
+  # Target 40 Model Picker Invariants (GH-81)
+  t40_model_errors = validate_target_40_model_picker_invariants()
+  errors.extend(t40_model_errors)
+  if not t40_model_errors:
+    print(
+        "✔ Target 40 model picker config bypass and pause invariants (GH-81)"
         " verified."
     )
 

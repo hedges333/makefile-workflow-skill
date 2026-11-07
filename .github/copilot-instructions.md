@@ -19,7 +19,7 @@ Follow the Makefile Workflow lifecycle when assisting in this repository:
 
 ## Interactive Model Switch Reminder
 
-Prompt the user in Copilot Chat at review boundaries:
+If `.workflow/config.json` specifies models or "inherit", bypass the model picker prompt. When unconfigured, prompt the user in Copilot Chat at review boundaries:
 
-1. At Target 40, prompt the user: "Select a deep-reasoning model in Copilot Chat for the Six Pillars review."
+1. At Target 40, prompt the user: "Select a deep-reasoning model in Copilot Chat for the Six Pillars review." Pause (stop tool calls) before dispatching the review.
 2. At Target 45, tell the user: "Review passed. You can switch back to your default coding model."

@@ -100,6 +100,14 @@ To prevent ticket backlog inflation from review observations:
 7. Wait for explicit human confirmation at the human escalation gate before creating any issue.
 8. Autonomous ticket creation is strictly prohibited.
 
+### 1.9 Target 40 Model Picker Configuration Bypass and Turn Pause Invariant (GH-81)
+
+When entering Target 40 adversarial review:
+
+1. If `.workflow/config.json` specifies models or "inherit", bypass the interactive model picker prompt.
+2. When model selection is unconfigured in interactive IDEs, prompt the user to switch the model picker to a deep-reasoning model.
+3. Stop tool calls (`tool_calls: []`) to pause before dispatching `adversarial-critic`. Never dispatch the critic subagent in the same turn as the model picker prompt.
+
 ## 2. Production Data Protection Rules
 
 Never connect tests or agent commands to live systems.
