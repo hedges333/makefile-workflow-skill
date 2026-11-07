@@ -31,7 +31,7 @@ When a session starts or `workflow_get_config` runs, the plugin resolves configu
    - `triage-worker`: `inherit`
    - `ci.quiescenceSeconds`: `180`
    - `ci.pollIntervalSeconds`: `30`
-   - `state.completedCardAction`: `unlink` (removes intermediate cards `10_` through `80_` at Target 90; set to `archive` to preserve them in `.workflow/archive/<ticket-id>/`).
+   - `state.completedCardAction`: `unlink` (removes intermediate cards `10_` through `80_` and `approved_tree.txt` at Target 90; set to `archive` to preserve them in `.workflow/archive/<ticket-id>/`).
    - Database guard: blocks standalone `prod` and `production` names automatically.
 
 ## 3. Configuration File Schema
