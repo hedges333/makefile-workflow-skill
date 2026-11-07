@@ -52,7 +52,7 @@ This reference manual documents testing and verification scars (`SCAR-TEST-*`). 
 
 ### SCAR-TEST-12: Cryptographically Anchored TDD Receipts
 
-- **Wound**: An agent passes the Green test gate by swapping `TEST_CMD`, dropping an untracked `conftest.py` file, or committing mid-phase.
+- **Wound**: An agent passes the Green test gate by swapping `TEST_CMD`, dropping an untracked fixture, citing uncommitted scratch files, or committing mid-phase.
 - **Trap**: Unanchored test runs trust conversational compliance, and `git write-tree` ignores untracked fixtures inside test directories.
-- **Permanent Reflex**: Run `witness-red` to write a cryptographic seal (a tamper-detection hash) over `HEAD`, `test_cmd`, and all test files in `30_tdd_receipt.json`. Run `verify-green` to make sure that the receipt matches and to replay the sealed command. If tampering occurs, emit exit code `2` and record the event in `forensic_log` inside `30_tdd_receipt.json`.
-- **Socratic Probe**: Did production code fix the bug, or did a test file, fixture, command, or commit change after `witness-red`?
+- **Permanent Reflex**: Run `witness-red` to write a cryptographic seal (a tamper-detection hash) over Git `HEAD`, `test_cmd`, and all test files in `30_tdd_receipt.json`. Run `verify-green` to confirm that the receipt matches and to replay the sealed command. Run `verify-citation` to verify line citations against immutable Git blobs in witnessed `HEAD`. If a cited file is uncommitted or missing, emit `UNCOMMITTED_WITNESS_FILE` with exit code `2` and record the collision in `forensic_log`. If a citation is blank or a comment line, emit `TRIVIAL_WITNESS_LINE` with exit code `2` and record the collision in `forensic_log`.
+- **Socratic Probe**: Did production code fix the bug, or did a test file, fixture, command, citation, or commit change after `witness-red`?

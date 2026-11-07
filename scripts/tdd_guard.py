@@ -15,6 +15,7 @@ import hmac
 import json
 import math
 import os
+import re
 import signal
 import subprocess
 import sys
@@ -262,6 +263,7 @@ class TddGuardScript(BaseScript):
     self.test_dir: str = ""
     self.cmd: str = ""
     self.allow_head_move: bool = False
+    self.citations: List[str] = []
 
   def parse_args(self, args: Optional[List[str]] = None) -> None:
     super().parse_args(args)
@@ -272,12 +274,18 @@ class TddGuardScript(BaseScript):
     parser.add_argument(
         "--timeout", type=float, default=DEFAULT_TIMEOUT_SECONDS
     )
+    parser.add_argument(
+        "--cite", action="append", default=[], dest="root_cites"
+    )
+    parser.add_argument(
+        "--allow-head-move", action="store_true", dest="root_allow_head_move"
+    )
 
     subparsers = parser.add_subparsers(
         dest="subcommand", parser_class=SilentArgumentParser
     )
 
-    for sub_name in ("witness-red", "verify-green"):
+    for sub_name in ("witness-red", "verify-green", "verify-citation"):
       sub = subparsers.add_parser(sub_name, add_help=False)
       sub.add_argument("--repo-root", default=argparse.SUPPRESS)
       sub.add_argument("--receipt", default=argparse.SUPPRESS)
@@ -288,12 +296,17 @@ class TddGuardScript(BaseScript):
       sub.add_argument("--test-dir", default=None)
       sub.add_argument("--cmd", default=None)
       sub.add_argument("--make-env", action="store_true", dest="make_env")
-      if sub_name == "verify-green":
+      if sub_name in ("verify-green", "verify-citation"):
         sub.add_argument("--allow-head-move", action="store_true")
+        sub.add_argument(
+            "--cite", action="append", default=[], dest="cite_args"
+        )
 
     ns = parser.parse_args(self.raw_args)
     if not ns.subcommand:
-      parser.error("Specify a subcommand: witness-red or verify-green.")
+      parser.error(
+          "Specify a subcommand: witness-red, verify-green, or verify-citation."
+      )
     if not math.isfinite(ns.timeout) or ns.timeout <= 0:
       parser.error("--timeout must be a finite positive number.")
 
@@ -323,11 +336,24 @@ class TddGuardScript(BaseScript):
       raw_cmd = os.environ.get("TEST_CMD", "")
     self.cmd = raw_cmd or ""
 
+    raw_cites = list(getattr(ns, "cite_args", []) or []) + list(
+        getattr(ns, "root_cites", []) or []
+    )
+    if not raw_cites and use_make_env:
+      env_cite = os.environ.get("CITE", "")
+      if env_cite.strip():
+        raw_cites = [
+            e.strip() for e in re.split(r"[\n,;]+", env_cite) if e.strip()
+        ]
+    self.citations = [c.strip() for c in raw_cites]
+
     env_allow_head = use_make_env and os.environ.get(
         "ALLOW_HEAD_MOVE", ""
     ).strip().lower() in ("1", "true", "yes")
     self.allow_head_move = bool(
-        getattr(ns, "allow_head_move", False) or env_allow_head
+        getattr(ns, "allow_head_move", False)
+        or getattr(ns, "root_allow_head_move", False)
+        or env_allow_head
     )
 
   def _fail(
@@ -348,7 +374,7 @@ class TddGuardScript(BaseScript):
       return None, f"Repository root does not exist: {self.repo_root}"
     try:
       proc = subprocess.run(
-          ["git", "rev-parse", "HEAD"],
+          ["git", "rev-parse", "--verify", "HEAD"],
           cwd=self.repo_root,
           capture_output=True,
           text=True,
@@ -359,9 +385,15 @@ class TddGuardScript(BaseScript):
     except (subprocess.SubprocessError, OSError) as exc:
       return None, str(exc)
     if proc.returncode != 0:
-      return None, (proc.stderr or proc.stdout or "git rev-parse HEAD failed").strip()
+      return None, (
+          proc.stderr or proc.stdout or "git rev-parse --verify HEAD failed"
+      ).strip()
     sha = (proc.stdout or "").strip()
-    return (sha, "") if sha else (None, "git rev-parse HEAD returned empty SHA")
+    return (
+        (sha, "")
+        if sha
+        else (None, "git rev-parse --verify HEAD returned empty SHA")
+    )
 
   def _terminate_process_tree(self, proc: subprocess.Popen) -> None:
     """Terminates the spawned shell process group on POSIX (or process on Windows)."""
@@ -769,6 +801,11 @@ class TddGuardScript(BaseScript):
           reflex="Do not commit during the Red-Green TDD loop; keep HEAD at witnessed_head_sha until Target 50 (or pass --allow-head-move only if explicitly authorized by the human operator).",
       )
 
+    if self.citations:
+      cite_rc = self._verify_citations(receipt, sealed_head)
+      if cite_rc != 0:
+        return cite_rc
+
     # Exploit Vector 2: Untracked Fixture Injection / Test File Modification
     resolved_sealed = _resolve_test_dir(self.repo_root, sealed_dir)
     if resolved_sealed is None:
@@ -880,11 +917,251 @@ class TddGuardScript(BaseScript):
       )
     return 0
 
+  def _verify_citations(
+      self, receipt: Dict[str, Any], sealed_head: str
+  ) -> int:
+    comment_prefixes = ("#", "//", "/*", "*", "*/", "--", "<!--")
+    for raw_cite in self.citations:
+      cleaned_cite = raw_cite.strip()
+      if not cleaned_cite or ":" not in cleaned_cite:
+        details = (
+            f"Citation '{cleaned_cite}' is malformed (missing colon separator)."
+        )
+        rb_note = self._record_collision(
+            receipt, "TRIVIAL_WITNESS_LINE", details
+        )
+        return self._fail(
+            code="TRIVIAL_WITNESS_LINE",
+            trigger=f"{details}{rb_note}",
+            rejected="Citing invalid or malformed specification line references.",
+            reflex="Pass citations in the format <rel_path>:<line>.",
+        )
+
+      rel_path, _, line_str = cleaned_cite.rpartition(":")
+      rel_path = rel_path.strip().replace(os.sep, "/")
+      line_str = line_str.strip()
+
+      norm_parts = [p for p in rel_path.split("/") if p and p != "."]
+      if (
+          not rel_path
+          or rel_path.startswith("/")
+          or ".." in norm_parts
+          or os.path.isabs(rel_path)
+      ):
+        details = f"Citation path '{rel_path}' is an absolute path or path traversal."
+        rb_note = self._record_collision(
+            receipt, "UNCOMMITTED_WITNESS_FILE", details
+        )
+        return self._fail(
+            code="UNCOMMITTED_WITNESS_FILE",
+            trigger=f"{details}{rb_note}",
+            rejected="Citing absolute or traversal paths outside the repository Git tree.",
+            reflex="Pass a relative path to a regular file blob committed in witnessed_head_sha.",
+        )
+
+      try:
+        line_no = int(line_str)
+      except ValueError:
+        details = f"Citation line '{line_str}' in '{cleaned_cite}' is not a valid integer."
+        rb_note = self._record_collision(
+            receipt, "TRIVIAL_WITNESS_LINE", details
+        )
+        return self._fail(
+            code="TRIVIAL_WITNESS_LINE",
+            trigger=f"{details}{rb_note}",
+            rejected="Citing non-integer line numbers.",
+            reflex="Pass a positive 1-based line number in <rel_path>:<line>.",
+        )
+
+      if line_no <= 0:
+        details = f"Citation line {line_no} in '{cleaned_cite}' is not positive."
+        rb_note = self._record_collision(
+            receipt, "TRIVIAL_WITNESS_LINE", details
+        )
+        return self._fail(
+            code="TRIVIAL_WITNESS_LINE",
+            trigger=f"{details}{rb_note}",
+            rejected="Citing non-positive line numbers.",
+            reflex="Pass a positive 1-based line number in <rel_path>:<line>.",
+        )
+
+      try:
+        type_proc = subprocess.run(
+            ["git", "cat-file", "-t", f"{sealed_head}:{rel_path}"],
+            cwd=self.repo_root,
+            capture_output=True,
+            text=True,
+            errors="replace",
+            check=False,
+            timeout=15,
+        )
+      except (subprocess.SubprocessError, OSError) as exc:
+        rb_note = self._persist_rollback(receipt, green_exit_code=None)
+        return self._fail(
+            code="GIT_HEAD_UNAVAILABLE",
+            trigger=f"Failed to inspect Git blob for '{rel_path}': {exc}{rb_note}",
+            rejected="Verifying citations when Git metadata is unreadable.",
+            reflex="Ensure Git repository metadata is intact and retry.",
+        )
+
+      if type_proc.returncode != 0 or type_proc.stdout.strip() != "blob":
+        obj_type = type_proc.stdout.strip() or "nonexistent"
+        details = (
+            f"Cited path '{rel_path}' is not a committed regular file blob in "
+            f"witnessed HEAD '{sealed_head}' (git cat-file -t returned '{obj_type}')."
+        )
+        rb_note = self._record_collision(
+            receipt, "UNCOMMITTED_WITNESS_FILE", details
+        )
+        return self._fail(
+            code="UNCOMMITTED_WITNESS_FILE",
+            trigger=f"{details}{rb_note}",
+            rejected="Citing uncommitted working-tree files, trees, or non-blob objects as specification witnesses.",
+            reflex="Commit the specification file before running witness-red so it exists in witnessed_head_sha.",
+        )
+
+      try:
+        show_proc = subprocess.run(
+            [
+                "git",
+                "-c",
+                "core.quotepath=false",
+                "show",
+                f"{sealed_head}:{rel_path}",
+            ],
+            cwd=self.repo_root,
+            capture_output=True,
+            text=True,
+            errors="replace",
+            check=False,
+            timeout=15,
+        )
+      except (subprocess.SubprocessError, OSError) as exc:
+        rb_note = self._persist_rollback(receipt, green_exit_code=None)
+        return self._fail(
+            code="GIT_HEAD_UNAVAILABLE",
+            trigger=f"Failed to stream Git blob for '{rel_path}': {exc}{rb_note}",
+            rejected="Verifying citations when Git blob streaming fails.",
+            reflex="Ensure Git repository metadata is intact and retry.",
+        )
+
+      if show_proc.returncode != 0:
+        details = (
+            f"Failed to stream blob '{sealed_head}:{rel_path}': "
+            f"{(show_proc.stderr or show_proc.stdout).strip()}"
+        )
+        rb_note = self._record_collision(
+            receipt, "UNCOMMITTED_WITNESS_FILE", details
+        )
+        return self._fail(
+            code="UNCOMMITTED_WITNESS_FILE",
+            trigger=f"{details}{rb_note}",
+            rejected="Citing unreadable Git blobs.",
+            reflex="Verify the blob exists in witnessed_head_sha and retry.",
+        )
+
+      blob_lines = show_proc.stdout.splitlines()
+      total_lines = len(blob_lines)
+      if line_no > total_lines:
+        details = (
+            f"Cited line {line_no} exceeds total line count ({total_lines}) "
+            f"in '{rel_path}' at witnessed HEAD '{sealed_head}'."
+        )
+        rb_note = self._record_collision(
+            receipt, "TRIVIAL_WITNESS_LINE", details
+        )
+        return self._fail(
+            code="TRIVIAL_WITNESS_LINE",
+            trigger=f"{details}{rb_note}",
+            rejected="Citing out-of-range line numbers.",
+            reflex=f"Cite a valid line number between 1 and {total_lines}.",
+        )
+
+      target_line = blob_lines[line_no - 1]
+      stripped_line = target_line.strip()
+      if not stripped_line:
+        details = (
+            f"Cited line {line_no} in '{rel_path}' is blank or whitespace only."
+        )
+        rb_note = self._record_collision(
+            receipt, "TRIVIAL_WITNESS_LINE", details
+        )
+        return self._fail(
+            code="TRIVIAL_WITNESS_LINE",
+            trigger=f"{details}{rb_note}",
+            rejected="Citing blank lines as specification witnesses.",
+            reflex="Cite an active code statement line in the specification file.",
+        )
+
+      if stripped_line.startswith(comment_prefixes):
+        details = (
+            f"Cited line {line_no} in '{rel_path}' is a pure comment: '{stripped_line[:40]}'."
+        )
+        rb_note = self._record_collision(
+            receipt, "TRIVIAL_WITNESS_LINE", details
+        )
+        return self._fail(
+            code="TRIVIAL_WITNESS_LINE",
+            trigger=f"{details}{rb_note}",
+            rejected="Citing comment lines as specification witnesses.",
+            reflex="Cite an active code statement line in the specification file.",
+        )
+
+    return 0
+
+  def _verify_citation(self) -> int:
+    receipt, err_code = self._load_and_verify_receipt()
+    if err_code is not None or receipt is None:
+      return err_code if err_code is not None else 2
+
+    sealed_head: str = receipt["witnessed_head_sha"]
+
+    current_head, git_err = self._git_head()
+    if not current_head:
+      rb_note = self._persist_rollback(receipt, green_exit_code=None)
+      return self._fail(
+          code="GIT_HEAD_UNAVAILABLE",
+          trigger=f"Cannot resolve Git HEAD in {self.repo_root}: {git_err}{rb_note}",
+          rejected="Running verify-citation when Git HEAD cannot be verified.",
+          reflex="Ensure the repository .git metadata is intact and re-run verify-citation.",
+      )
+
+    if current_head != sealed_head and not self.allow_head_move:
+      details = (
+          f"Git HEAD moved from witnessed '{sealed_head}' to '{current_head}' "
+          "between witness-red and verify-citation."
+      )
+      rb_note = self._record_collision(
+          receipt, "HEAD_MOVED_DURING_RED_PHASE", details
+      )
+      return self._fail(
+          code="HEAD_MOVED_DURING_RED_PHASE",
+          trigger=f"{details}{rb_note}",
+          rejected="Committing mid-phase between witness-red and verify-citation to re-baseline working-tree history.",
+          reflex="Do not commit during the Red-Green TDD loop; keep HEAD at witnessed_head_sha until Target 50 (or pass --allow-head-move only if explicitly authorized by the human operator).",
+      )
+
+    if not self.citations:
+      details = "Missing citation specification for verify-citation."
+      rb_note = self._record_collision(
+          receipt, "TRIVIAL_WITNESS_LINE", details
+      )
+      return self._fail(
+          code="TRIVIAL_WITNESS_LINE",
+          trigger=f"{details}{rb_note}",
+          rejected="Running verify-citation without providing at least one specification citation via --cite or CITE.",
+          reflex="Provide an active code statement line citation via --cite <rel_path>:<line> or CITE environment variable.",
+      )
+
+    return self._verify_citations(receipt, sealed_head)
+
   def run(self) -> int:
     if self.subcommand == "witness-red":
       return self._witness_red()
     if self.subcommand == "verify-green":
       return self._verify_green()
+    if self.subcommand == "verify-citation":
+      return self._verify_citation()
     raise ValueError(f"Unsupported subcommand: {self.subcommand}")
 
 
