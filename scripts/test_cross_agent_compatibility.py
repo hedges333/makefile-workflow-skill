@@ -721,6 +721,217 @@ def _check_scar_test_12_section(scar_section, source_rel):
   return sec_errors
 
 
+def validate_scar_lifecycle_and_two_tier_discovery(
+    catalog_text: str, skill_text: str
+) -> list[str]:
+  """Validates Two-Tier scar architecture and Target 90 lifecycle rules (GH-93)."""
+  errors = []
+
+  # 1a. Tier 1 and Tier 2 definitions in catalog_text
+  if "Tier 1" not in catalog_text or "skills/makeflow/references/scars/" not in catalog_text:
+    errors.append(
+        "09_synthetic_scars_catalog.md must define Tier 1 Core Built-In Scars in"
+        " skills/makeflow/references/scars/"
+    )
+  if "Tier 2" not in catalog_text or ".workflow/scars/" not in catalog_text:
+    errors.append(
+        "09_synthetic_scars_catalog.md must define Tier 2 Project-Local Scars in"
+        " .workflow/scars/"
+    )
+
+  # 1b. Ticket-scoped core scar lifecycle (T15, T20, T30 feature branch, T40) and T90 rule
+  for required_stage in ("Target 15", "Target 20", "Target 30", "Target 40", "tdd-worker", "feature branch"):
+    if required_stage not in catalog_text:
+      errors.append(
+          f"09_synthetic_scars_catalog.md must require '{required_stage}' for"
+          " ticket-scoped core scars"
+      )
+
+  cat_lower = catalog_text.lower()
+  if (
+      "never creates or modifies core catalog files on `main`" not in cat_lower
+      and "never create or modify core catalog files on `main`" not in cat_lower
+  ):
+    errors.append(
+        "09_synthetic_scars_catalog.md must state that Target 90 never creates"
+        " or modifies core catalog files on main"
+    )
+  if ".workflow/history.json" not in catalog_text or ".workflow/history.md" not in catalog_text:
+    errors.append(
+        "09_synthetic_scars_catalog.md must state that Target 90 records merged"
+        " scar IDs in .workflow/history.json and .workflow/history.md"
+    )
+
+  # 1c. Prohibit legacy defective instruction to open references/scars/ and append at Target 90
+  forbidden_patterns = (
+      "open the matching domain spoke in `skills/makeflow/references/scars/`",
+      "append the new scar at the end of the file",
+      "add the new entry to the master routing table in this index",
+  )
+  for pat in forbidden_patterns:
+    if pat in cat_lower:
+      errors.append(
+          "09_synthetic_scars_catalog.md must not instruct agents to"
+          f" '{pat}' during Target 90 cleanup"
+      )
+
+  # 1d. Incidental retrospective lessons in makeflow-skill vs external user projects
+  if "makeflow-skill" not in catalog_text or "ticket notes" not in cat_lower:
+    errors.append(
+        "09_synthetic_scars_catalog.md must explain noting incidental lessons"
+        " in ticket notes inside makeflow-skill"
+    )
+  if ".workflow/scars/local.md" not in catalog_text:
+    errors.append(
+        "09_synthetic_scars_catalog.md must explain recording project-specific"
+        " lessons in .workflow/scars/local.md for external projects"
+    )
+
+  # 1e. SKILL.md Target 90 clarification
+  skill_lower = skill_text.lower()
+  if ".workflow/scars/" not in skill_text:
+    errors.append(
+        "skills/makeflow/SKILL.md must reference .workflow/scars/ at Target 90"
+    )
+  if (
+      "without editing core catalog files on `main`" not in skill_lower
+      and "never edit core catalog files on `main`" not in skill_lower
+      and "never modify core catalog files on `main`" not in skill_lower
+  ):
+    errors.append(
+        "skills/makeflow/SKILL.md must prohibit editing core catalog files on"
+        " main at Target 90"
+    )
+
+  return errors
+
+
+def test_two_tier_scar_lifecycle_and_discovery() -> list[str]:
+  """Runs hermetic unit tests and repository checks for GH-93 scar lifecycle."""
+  errors = []
+
+  # 1. Hermetic unit tests for validate_scar_lifecycle_and_two_tier_discovery
+  valid_catalog = (
+      "Tier 1 Core Built-In Scars live in skills/makeflow/references/scars/.\n"
+      "Tier 2 Project-Local Scars live in .workflow/scars/.\n"
+      "Scope in Target 15, plan in Target 20, implement with tdd-worker in"
+      " Target 30 on a feature branch, and audit in Target 40.\n"
+      "Target 90 never creates or modifies core catalog files on `main`.\n"
+      "Record merged scar IDs in .workflow/history.json and .workflow/history.md.\n"
+      "In makeflow-skill, record incidental lessons in ticket notes.\n"
+      "In external projects, record lessons in .workflow/scars/local.md.\n"
+  )
+  valid_skill = (
+      "At Target 90, record merged scar IDs in .workflow/history.* and"
+      " project-local scars in .workflow/scars/ without editing core catalog"
+      " files on `main`."
+  )
+  unit_ok = validate_scar_lifecycle_and_two_tier_discovery(valid_catalog, valid_skill)
+  if unit_ok:
+    errors.append(f"Hermetic validator rejected valid input: {unit_ok}")
+
+  defective_catalog_legacy = (
+      valid_catalog
+      + "\nOpen the matching domain spoke in `skills/makeflow/references/scars/`"
+      " and append the new scar at the end of the file."
+  )
+  unit_legacy = validate_scar_lifecycle_and_two_tier_discovery(
+      defective_catalog_legacy, valid_skill
+  )
+  if not unit_legacy:
+    errors.append("Hermetic validator failed to reject legacy Target 90 spoke edit instruction")
+
+  defective_catalog_missing_tier2 = "Tier 1 in skills/makeflow/references/scars/ only."
+  unit_missing_tier2 = validate_scar_lifecycle_and_two_tier_discovery(
+      defective_catalog_missing_tier2, valid_skill
+  )
+  if not any("Tier 2" in e for e in unit_missing_tier2):
+    errors.append("Hermetic validator failed to detect missing Tier 2 definition")
+
+  defective_skill = "At Target 90, record Synthetic Scars and update .workflow/history.json."
+  unit_bad_skill = validate_scar_lifecycle_and_two_tier_discovery(
+      valid_catalog, defective_skill
+  )
+  if not unit_bad_skill:
+    errors.append("Hermetic validator failed to reject ambiguous SKILL.md Target 90 text")
+
+  # 2. Validate repository 09_synthetic_scars_catalog.md and SKILL.md
+  cat_rel = "skills/makeflow/references/09_synthetic_scars_catalog.md"
+  skill_rel = "skills/makeflow/SKILL.md"
+  cat_path = repo_path(cat_rel)
+  skill_path = repo_path(skill_rel)
+  if not os.path.exists(cat_path):
+    errors.append(f"Missing {cat_rel}")
+  if not os.path.exists(skill_path):
+    errors.append(f"Missing {skill_rel}")
+  if os.path.exists(cat_path) and os.path.exists(skill_path):
+    with open(cat_path, "r", encoding="utf-8") as f:
+      cat_text = f.read()
+    with open(skill_path, "r", encoding="utf-8") as f:
+      skill_text = f.read()
+    errors.extend(
+        validate_scar_lifecycle_and_two_tier_discovery(cat_text, skill_text)
+    )
+
+  # 3. Validate 12_request_history_ledger.md
+  ledger_rel = "skills/makeflow/references/12_request_history_ledger.md"
+  ledger_path = repo_path(ledger_rel)
+  if not os.path.exists(ledger_path):
+    errors.append(f"Missing {ledger_rel}")
+  else:
+    with open(ledger_path, "r", encoding="utf-8") as f:
+      ledger_text = f.read()
+    if ".workflow/scars/" not in ledger_text:
+      errors.append(f"{ledger_rel} must reference project-local .workflow/scars/")
+    if "merged" not in ledger_text.lower() or "scars_earned" not in ledger_text:
+      errors.append(
+          f"{ledger_rel} must clarify that scars_earned records merged scar IDs"
+          " and project-local scars"
+      )
+
+  # 4. Validate Two-Tier Scar Discovery across agents, references, and rules
+  discovery_files = (
+      "agents/archaeology-worker.md",
+      "agents/tdd-worker.md",
+      "agents/adversarial-critic.md",
+      "skills/makeflow/references/02_archaeology_and_planning.md",
+      "skills/makeflow/references/03_tdd_and_code_quality.md",
+      "skills/makeflow/references/04_six_pillars_adversarial_review.md",
+      "skills/makeflow/references/08_subagent_orchestration.md",
+      "rules/AGENTS.md",
+  )
+  for rel_path in discovery_files:
+    full_path = repo_path(rel_path)
+    if not os.path.exists(full_path):
+      errors.append(f"Missing {rel_path}")
+      continue
+    with open(full_path, "r", encoding="utf-8") as f:
+      content = f.read()
+    if "skills/makeflow/references/scars/" not in content:
+      errors.append(
+          f"{rel_path} must document Tier 1 core scars path"
+          " 'skills/makeflow/references/scars/'"
+      )
+    if ".workflow/scars/" not in content:
+      errors.append(
+          f"{rel_path} must document Tier 2 project-local scars path"
+          " '.workflow/scars/'"
+      )
+
+  agents_rel = "rules/AGENTS.md"
+  agents_path = repo_path(agents_rel)
+  if os.path.exists(agents_path):
+    with open(agents_path, "r", encoding="utf-8") as f:
+      agents_content = f.read()
+    if "1.6 Synthetic Scar Creation Lifecycle and Two-Tier Discovery" not in agents_content:
+      errors.append(
+          f"{agents_rel} must include section '1.6 Synthetic Scar Creation"
+          " Lifecycle and Two-Tier Discovery'"
+      )
+
+  return errors
+
+
 def validate_tdd_guard_scar():
   """Validates cryptographically anchored TDD receipts and SCAR-TEST-12 (GH-53)."""
   errors = []
@@ -2542,6 +2753,15 @@ def validate():
   errors.extend(anti_speculation_errors)
   if not anti_speculation_errors:
     print("✔ Anti-speculative defenses and caller grounding (GH-85, SCAR-ARCH-07) verified.")
+
+  # Two-Tier Scar Creation Lifecycle and Discovery Invariants (GH-93)
+  scar_lifecycle_errors = test_two_tier_scar_lifecycle_and_discovery()
+  errors.extend(scar_lifecycle_errors)
+  if not scar_lifecycle_errors:
+    print(
+        "✔ Two-Tier scar creation lifecycle and discovery invariants (GH-93)"
+        " verified."
+    )
 
   if errors:
     print(f"\n❌ Validation failed with {len(errors)} error(s):")
