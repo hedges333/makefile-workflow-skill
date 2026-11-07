@@ -10,6 +10,7 @@ import argparse
 import logging
 import os
 import signal
+import subprocess
 import sys
 import time
 from types import FrameType
@@ -28,6 +29,8 @@ class SignalTrap:
       signals: Sequence[int] = DEFAULT_SIGNALS,
       exit_on_signal: bool = True,
       cleanup_on_exit: bool = True,
+      force_exit_on_repeated: bool = True,
+      exit_func: Callable[[int], None] = os._exit,
   ) -> None:
     """Initialize SignalTrap.
 
@@ -35,15 +38,20 @@ class SignalTrap:
         signals: Sequence of POSIX signal integers to trap (default SIGTERM, SIGINT).
         exit_on_signal: If True, invoke sys.exit(128 + sig) after handling signal.
         cleanup_on_exit: If True, execute cleanups upon normal context exit.
+        force_exit_on_repeated: If True, immediately force-exit on repeated signal during shutdown.
+        exit_func: Callable invoked on force-exit (default os._exit).
     """
     self.signals: Tuple[int, ...] = tuple(signals)
     self.exit_on_signal: bool = exit_on_signal
     self.cleanup_on_exit: bool = cleanup_on_exit
+    self.force_exit_on_repeated: bool = force_exit_on_repeated
+    self._exit_func: Callable[[int], None] = exit_func
 
     self._original_handlers: Dict[int, Any] = {}
     self._cleanups: List[Tuple[Callable[..., Any], Tuple[Any, ...], Dict[str, Any]]] = []
     self._lockfiles: Set[str] = set()
     self._lock_dirs: Set[str] = set()
+    self._subprocesses: Dict[subprocess.Popen, float] = {}
 
     self._installed: bool = False
     self._handling_signal: bool = False
@@ -133,6 +141,47 @@ class SignalTrap:
     self._lock_dirs.add(norm_path)
     return norm_path
 
+  def register_subprocess(
+      self, proc: subprocess.Popen, timeout: float = 2.0
+  ) -> subprocess.Popen:
+    """Register a child subprocess to be terminated and reaped upon cleanup.
+
+    Args:
+        proc: Subprocess instance to monitor and manage.
+        timeout: Seconds to wait after terminate before escalating to kill.
+
+    Returns:
+        The registered subprocess instance.
+    """
+    self._subprocesses[proc] = timeout
+    return proc
+
+  def unregister_subprocess(self, proc: subprocess.Popen) -> None:
+    """Unregister a child subprocess from termination management.
+
+    Args:
+        proc: Subprocess instance to unregister.
+    """
+    self._subprocesses.pop(proc, None)
+
+  @staticmethod
+  def reap_zombies() -> List[Tuple[int, int]]:
+    """Reap dead child processes non-blockingly using waitpid(WNOHANG).
+
+    Returns:
+        List of (pid, status) tuples for all reaped zombie children.
+    """
+    reaped: List[Tuple[int, int]] = []
+    while True:
+      try:
+        pid, status = os.waitpid(-1, os.WNOHANG)
+        if pid == 0:
+          break
+        reaped.append((pid, status))
+      except (ChildProcessError, OSError):
+        break
+    return reaped
+
   def remove_lockfiles(self) -> List[Tuple[str, Exception]]:
     """Remove all registered lockfiles and lock directories if they exist.
 
@@ -188,6 +237,22 @@ class SignalTrap:
         self.caught_exceptions.append((callback, exc))
         logger.warning("Error in cleanup callback %s: %s", callback, exc)
 
+    # Terminate and reap registered child subprocesses
+    subprocs = list(self._subprocesses.items())
+    self._subprocesses.clear()
+    for proc, timeout in subprocs:
+      if proc.poll() is None:
+        try:
+          proc.terminate()
+          try:
+            proc.wait(timeout=timeout)
+          except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait(timeout=timeout)
+        except OSError as exc:
+          logger.warning("Error terminating subprocess %s: %s", proc, exc)
+
+    self.reap_zombies()
     self.remove_lockfiles()
     self._cleanups_executed = True
     return errors
@@ -203,13 +268,20 @@ class SignalTrap:
     self.last_signal = sig
 
     if self._handling_signal:
-      # Idempotency guard against repeated re-entrant signals
+      if self.force_exit_on_repeated and self.signal_count >= 2:
+        sys.stderr.write(
+            f"\n[SignalTrap] Caught repeated signal {sig} during shutdown. Force exiting immediately.\n"
+        )
+        sys.stderr.flush()
+        self.restore()
+        self._exit_func(128 + sig)
       return
 
     self._handling_signal = True
     try:
       self.execute_cleanups()
     finally:
+      self._handling_signal = False
       self.restore()
       if self.exit_on_signal:
         sys.exit(128 + sig)

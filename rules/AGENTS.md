@@ -87,7 +87,20 @@ When ingesting an assigned issue at Target 10:
 3. Consolidate discussion updates into `.workflow/state/10_ticket.md` before drafting the Target 20 plan.
 4. If comments exist on the issue, do not rely on the initial issue description alone.
 
-### 1.8 Target 40 Model Picker Configuration Bypass and Turn Pause Invariant (GH-81)
+### 1.8 Critic Observation Triage and Anti-Proliferation Protocol (SCAR-PROC-108)
+
+To prevent ticket backlog inflation from review observations:
+
+1. Before proposing a new ticket, search open issues with `gh issue list`.
+2. Link the observation to any existing issue to prevent duplicate tickets.
+3. If an observation is very related to active ticket scope, treat it as a blocker for `tdd-worker`.
+4. If an observation is somewhat related, offer the user a choice to roll up or file a ticket.
+5. If an observation is totally unrelated, propose a new ticket after deduplication.
+6. If an observation has negligible risk or outsized complexity, perform conscious dismissal and document technical rationale without filing an issue.
+7. Wait for explicit human confirmation at the human escalation gate before creating any issue.
+8. Autonomous ticket creation is strictly prohibited.
+
+### 1.9 Target 40 Model Picker Configuration Bypass and Turn Pause Invariant (GH-81)
 
 When entering Target 40 adversarial review:
 
@@ -105,7 +118,7 @@ Never connect tests or agent commands to live systems.
 4. Partition tests into two tiers (`SCAR-TEST-08`): Run pure unit tests in memory with zero external socket or daemon dependencies. Isolate integration tests behind explicit markers, and never connect live sockets or database DDL inside global autouse session fixtures. Tests may use self-contained ephemeral loopback sockets (`127.0.0.1:0` or temporary Unix domain sockets) for protocol or daemon verification.
 5. Use safe file promotion (`SCAR-SYS-05`): When copying files across system users or service accounts, use `shutil.copyfile` to stream content bytes. Do not use `shutil.copy2` or `copystat` across user boundaries. Create destination directories with caller permissions.
 6. Native runtime environment path pre-flight (`SCAR-SYS-06`): Before launching processes that initialize native compiled extensions, verify that temporary directories (`TMPDIR`) exist and are writable using `validate_runtime_path`. If an environment path is missing or unwritable, sanitize the environment with a verified safe fallback path.
-7. POSIX signal trapping for long-running workers (`SCAR-SYS-07`): Intercept `SIGTERM` and `SIGINT` in worker processes and test daemons using `SignalTrap`. Register cleanup callbacks in reverse order (LIFO) and unlink lockfiles automatically to prevent orphaned processes and stale locks.
+7. POSIX signal trapping for long-running workers (`SCAR-SYS-07`): Intercept `SIGTERM` and `SIGINT` in worker processes and test daemons using `SignalTrap`. Register cleanup callbacks in reverse order (LIFO) and unlink lockfiles automatically. Terminate registered child subprocesses with kill escalation, reap zombies non-blockingly, and force-exit immediately if repeated signals arrive during shutdown.
 8. Atomic directory-based mutual exclusion locks (`SCAR-SYS-08`): Use atomic directory creation (`os.mkdir` / `mkdir`) for process mutual exclusion instead of non-atomic lockfiles. Catch `FileExistsError` to detect contention, and remove lock directories with `os.rmdir` upon process exit or signal trapping. Catch `FileNotFoundError` silently during cleanup to handle concurrent removal safely.
 
 ## 3. Code Edit and Architecture Rules (`SCAR-PROC-104`)

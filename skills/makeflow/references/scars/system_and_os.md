@@ -43,10 +43,10 @@ This reference manual documents operating system, filesystem, and runtime enviro
 
 ### SCAR-SYS-07: POSIX Signal Trapping for Long-Running Workers (SIGTERM / SIGINT)
 
-- **Wound**: Background worker processes, daemons, and test harnesses leave orphaned lockfiles, unclosed sockets, corrupt database connections, and zombie child processes when killed by SIGTERM or SIGINT.
-- **Trap**: Assuming processes always terminate through normal language exit handlers (`atexit` or `finally` blocks). Operating system signals (`SIGTERM`, `SIGINT`) terminate processes immediately without executing `finally` blocks unless explicitly intercepted.
-- **Permanent Reflex**: Intercept POSIX termination signals (`SIGTERM`, `SIGINT`) in long-running workers using `SignalTrap`. Register cleanup callbacks in reverse order (LIFO), unlink lockfiles, and ensure exception isolation across cleanup handlers before exiting.
-- **Socratic Probe**: If this worker receives an asynchronous SIGTERM or SIGINT from the OS or orchestrator, will it leave orphaned lockfiles or dangling resources on disk? Have you trapped POSIX signals and registered LIFO cleanup routines to ensure clean termination?
+- **Wound**: Background worker processes, daemons, and test harnesses leave orphaned lockfiles, unclosed sockets, and zombie child processes when killed by SIGTERM or SIGINT. Workers deadlock during shutdown if cleanup hangs on child processes.
+- **Trap**: Assuming processes always terminate through normal language exit handlers (`atexit` or `finally` blocks). Signals bypass `finally` blocks unless intercepted. Cleanup handlers can also deadlock if child processes ignore termination or become zombies.
+- **Permanent Reflex**: Intercept POSIX termination signals (`SIGTERM`, `SIGINT`) in long-running workers using `SignalTrap`. Register cleanup callbacks in reverse order (LIFO), unlink lockfiles, terminate child processes with timeout escalation to kill, reap zombies with non-blocking waitpid, and force-exit immediately if repeated signals arrive during shutdown.
+- **Socratic Probe**: If this worker receives an asynchronous SIGTERM or SIGINT, will it leave orphaned lockfiles, deadlocked child processes, or zombie processes? Have you trapped POSIX signals, registered LIFO cleanup routines, added child process escalation, reaped zombies, and enabled repeated-signal force-exit fallbacks?
 
 ---
 

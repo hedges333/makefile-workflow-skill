@@ -389,6 +389,79 @@ class TestSignalTrap(unittest.TestCase):
     self.assertIn("SCAR-SYS-07", result.stdout)
     self.assertIn("SCAR-SYS-08", result.stdout)
 
+  def test_repeated_signal_force_exit(self):
+    """TestCase 17: Second signal during cleanup triggers immediate force-exit."""
+    import io
+    mock_exit = unittest.mock.MagicMock()
+    trap = SignalTrap(
+        exit_on_signal=False,
+        exit_func=mock_exit,
+        force_exit_on_repeated=True,
+    )
+    trap.install()
+
+    # Simulate cleanup already in progress
+    trap._handling_signal = True
+    trap.signal_count = 1
+
+    fake_stderr = io.StringIO()
+    with unittest.mock.patch("sys.stderr", fake_stderr):
+      trap.handle_signal(signal.SIGINT, None)
+
+    self.assertEqual(trap.signal_count, 2)
+    self.assertEqual(trap.last_signal, signal.SIGINT)
+    mock_exit.assert_called_once_with(128 + signal.SIGINT)
+    self.assertFalse(trap.is_installed)
+    self.assertIn("Caught repeated signal 2 during shutdown. Force exiting immediately.", fake_stderr.getvalue())
+
+  def test_register_subprocess_graceful_termination(self):
+    """TestCase 18: Registered subprocess is gracefully terminated and reaped."""
+    mock_proc = unittest.mock.MagicMock()
+    mock_proc.poll.return_value = None
+    mock_proc.wait.return_value = 0
+
+    trap = SignalTrap(exit_on_signal=False)
+    ret = trap.register_subprocess(mock_proc, timeout=1.0)
+    self.assertIs(ret, mock_proc)
+
+    errors = trap.execute_cleanups()
+    self.assertEqual(errors, [])
+    mock_proc.terminate.assert_called_once()
+    mock_proc.wait.assert_called_once_with(timeout=1.0)
+    mock_proc.kill.assert_not_called()
+
+  def test_register_subprocess_kill_escalation(self):
+    """TestCase 19: Registered subprocess escalates to kill when terminate times out."""
+    mock_proc = unittest.mock.MagicMock()
+    mock_proc.poll.return_value = None
+    mock_proc.wait.side_effect = [
+        subprocess.TimeoutExpired(cmd="dummy", timeout=0.1),
+        0,
+    ]
+
+    trap = SignalTrap(exit_on_signal=False)
+    trap.register_subprocess(mock_proc, timeout=0.1)
+
+    errors = trap.execute_cleanups()
+    self.assertEqual(errors, [])
+    mock_proc.terminate.assert_called_once()
+    mock_proc.kill.assert_called_once()
+    self.assertEqual(mock_proc.wait.call_count, 2)
+
+  def test_reap_zombies_static_method(self):
+    """TestCase 20: reap_zombies drains dead child processes without blocking."""
+    with unittest.mock.patch(
+        "os.waitpid", side_effect=[(1001, 0), (1002, 0), (0, 0)]
+    ) as mock_waitpid:
+      reaped = SignalTrap.reap_zombies()
+      self.assertEqual(reaped, [(1001, 0), (1002, 0)])
+      self.assertEqual(mock_waitpid.call_count, 3)
+
+    with unittest.mock.patch("os.waitpid", side_effect=ChildProcessError):
+      reaped = SignalTrap.reap_zombies()
+      self.assertEqual(reaped, [])
+
+
 
 if __name__ == "__main__":
   unittest.main()
