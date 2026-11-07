@@ -1044,5 +1044,24 @@
     "closes_issue": true,
     "tests_added": 1,
     "scars_earned": []
+  },
+  {
+    "id": "GH-95",
+    "issue_url": "https://github.com/hedges333/makeflow-skill/issues/95",
+    "title": "[FEAT] Prohibit autonomous git rebase during pre-push checks and require human pause gate",
+    "request": "Prohibit autonomous git rebase during Target 60 pre-push merge checks, harmonize SCAR-GIT-20 with SCAR-GIT-25, and establish a mandatory human pause gate whenever git merge-tree detects upstream conflict markers.",
+    "branch": "feat/95-prohibit-autonomous-rebase",
+    "subprojects": [
+      "skills",
+      "scripts"
+    ],
+    "started_at": "2026-11-06T19:10:49-08:00",
+    "completed_at": "2026-11-06T19:49:38-08:00",
+    "commit_sha": "8d122dc",
+    "pr_number": 102,
+    "pr_url": "https://github.com/hedges333/makeflow-skill/pull/102",
+    "closes_issue": true,
+    "tests_added": 1,
+    "scars_earned": []
   }
 ]
