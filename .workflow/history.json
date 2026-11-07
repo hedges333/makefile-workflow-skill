@@ -1147,5 +1147,28 @@
     "scars_earned": [
       "SCAR-SYS-08: Atomic Directory-Based Mutual Exclusion Locks (mkdir over lockfile)"
     ]
+  },
+  {
+    "id": "GH-66",
+    "issue_url": "https://github.com/hedges333/makeflow-skill/issues/66",
+    "title": "[ENHANCEMENT] Codify critic observation triage protocol to prevent ticket proliferation",
+    "request": "Codify a 4-step observation triage protocol and SCAR-PROC-108 across the documentation and rule ring to eliminate the anti-pattern ticket trap where non-blocking observations trigger reflexive ticket proliferation.",
+    "branch": "feat/66-critic-observation-triage",
+    "subprojects": [
+      "scripts",
+      "skills",
+      "rules",
+      "agents"
+    ],
+    "started_at": "2026-11-06T21:10:50-08:00",
+    "completed_at": "2026-11-06T21:50:00-08:00",
+    "commit_sha": "5df38f6",
+    "pr_number": 109,
+    "pr_url": "https://github.com/hedges333/makeflow-skill/pull/109",
+    "closes_issue": true,
+    "tests_added": 1,
+    "scars_earned": [
+      "SCAR-PROC-108: Critic Observation Triage and Anti-Proliferation Protocol"
+    ]
   }
 ]
