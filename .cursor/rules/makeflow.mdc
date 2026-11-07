@@ -24,7 +24,7 @@ Follow these steps in order for every coding task:
 
 ## Model Switch Reminder
 
-Prompt the user in chat when entering and leaving the review gate:
+If `.workflow/config.json` specifies models or "inherit", bypass the model picker prompt. When unconfigured, prompt the user in chat when entering and leaving the review gate:
 
-1. At Target 40, prompt the user: "Switch the model picker to a deep-reasoning model for the Six-Pillar review."
+1. At Target 40, prompt the user: "Switch the model picker to a deep-reasoning model for the Six-Pillar review." Pause (stop tool calls) before dispatching the review.
 2. At Target 45, tell the user: "Review passed. You can switch back to your fast coding model."

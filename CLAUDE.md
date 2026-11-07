@@ -27,8 +27,9 @@ This repository uses the Makefile Workflow. Follow these rules for every coding 
 ## Model Selection and Configuration
 
 Read `.workflow/config.json` or `~/.gemini/config/makeflow.json` when present to load user model preferences.
+If `.workflow/config.json` specifies models or "inherit", bypass the model switch prompt.
 Use your session model for standard implementation tasks.
-At Target 40, run the Six-Pillar review with a high-reasoning model:
+When unconfigured in interactive sessions, prompt the user to switch models and pause before review. At Target 40, run the Six-Pillar review with a high-reasoning model:
 
 ```bash
 claude -p --model claude-3-opus-20240229 "Run Six-Pillar review on $(git merge-base HEAD origin/main)..$(cat .workflow/state/approved_tree.txt)"

@@ -21,6 +21,10 @@ Four subagent roles handle isolated phases of the workflow:
 
 Read [13. Configuration and User Preferences](13_configuration_and_user_preferences.md) to override model tiers per role.
 
+When dispatching `adversarial-critic` at Target 40:
+1. If `.workflow/config.json` specifies models or "inherit", bypass the model picker prompt.
+2. When model selection is unconfigured in interactive IDEs, prompt the user to select a deep-reasoning model. Stop tool calls (`tool_calls: []`) to pause before critic dispatch.
+
 ## 3. Subagent Tool Permissions (GH-83)
 
 Antigravity CLI (agy 1.5.2+) provisions subagents with tools declared in `agents/*.md`.

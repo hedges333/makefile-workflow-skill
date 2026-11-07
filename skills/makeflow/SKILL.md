@@ -131,7 +131,7 @@ Read `references/03`, `references/04_testing_isolation.md`, and `references/14` 
 Read `references/04_six_pillars_adversarial_review.md` and `references/13`.
 
 1. Lock the Git Merkle tree (staged file hash) via `git add -A && git write-tree > .workflow/state/approved_tree.txt`.
-2. In interactive IDEs, prompt the user to select a deep-reasoning model.
+2. If `.workflow/config.json` specifies models or 'inherit', bypass the model picker prompt. When unconfigured in interactive IDEs, prompt the user to select a deep-reasoning model. Stop tool calls (`tool_calls: []`) to pause for model selection before critic dispatch.
 3. In Antigravity, fork `adversarial-critic` using `agyModelTiers["adversarial-critic"]` (default `inherit`) with explicit path `skills/makeflow/references/04_six_pillars_adversarial_review.md` (`SCAR-PROC-105`), then write `40_critic_review.md`.
 4. At Target 42 (`BLOCKERS > 0`), print Blocker Digest and NBO summary with dispositions, then pause for `human-blocker-triage-approval`. After triage approval, return to Target 30.
 5. At Target 45 (`0 BLOCKERS`), run `make -f .workflow/state/Makefile check-approved-tree` and print the review with a `file://` link. Pause for `human-review-approval`, then write `45_review_approved.md`.

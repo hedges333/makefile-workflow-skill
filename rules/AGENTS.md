@@ -87,6 +87,14 @@ When ingesting an assigned issue at Target 10:
 3. Consolidate discussion updates into `.workflow/state/10_ticket.md` before drafting the Target 20 plan.
 4. If comments exist on the issue, do not rely on the initial issue description alone.
 
+### 1.8 Target 40 Model Picker Configuration Bypass and Turn Pause Invariant (GH-81)
+
+When entering Target 40 adversarial review:
+
+1. If `.workflow/config.json` specifies models or "inherit", bypass the interactive model picker prompt.
+2. When model selection is unconfigured in interactive IDEs, prompt the user to switch the model picker to a deep-reasoning model.
+3. Stop tool calls (`tool_calls: []`) to pause before dispatching `adversarial-critic`. Never dispatch the critic subagent in the same turn as the model picker prompt.
+
 ## 2. Production Data Protection Rules
 
 Never connect tests or agent commands to live systems.
