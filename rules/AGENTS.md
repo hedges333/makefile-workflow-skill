@@ -78,6 +78,15 @@ Synthetic Scars use a two-tier storage and discovery lifecycle:
 8. Inside external user projects, offer to record project-specific lessons in `.workflow/scars/local.md` at Target 90.
 9. During Target 15, Target 20, Target 30, and Target 40, inspect both `skills/makeflow/references/scars/` and `.workflow/scars/`.
 
+### 1.7 Full Discussion and Comment Thread Ingestion at Intake (SCAR-PROC-107)
+
+When ingesting an assigned issue at Target 10:
+
+1. Fetch the full discussion thread with `gh issue view <number> --comments` (or platform API equivalent).
+2. Review all thread comments for course corrections, design updates, and architectural constraints.
+3. Consolidate discussion updates into `.workflow/state/10_ticket.md` before drafting the Target 20 plan.
+4. If comments exist on the issue, do not rely on the initial issue description alone.
+
 ## 2. Production Data Protection Rules
 
 Never connect tests or agent commands to live systems.

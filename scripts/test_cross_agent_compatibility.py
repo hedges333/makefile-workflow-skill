@@ -367,6 +367,72 @@ def validate_adversarial_critic_manual_reference():
   return errors
 
 
+def validate_comment_thread_ingestion_scar_proc_107():
+  """Validates full discussion and comment thread ingestion at intake (GH-78, SCAR-PROC-107).
+
+  Verifies:
+  1. skills/makeflow/references/scars/process.md documents SCAR-PROC-107 with
+     all Four-Part Anatomy sections non-empty (**Wound**, **Trap**, **Permanent Reflex**, **Socratic Probe**).
+  2. skills/makeflow/references/09_synthetic_scars_catalog.md routes SCAR-PROC-107 to scars/process.md.
+  3. rules/AGENTS.md references SCAR-PROC-107 and mandates '--comments'.
+  """
+  errors = []
+
+  # 1. skills/makeflow/references/scars/process.md
+  proc_rel = "skills/makeflow/references/scars/process.md"
+  proc_path = repo_path(proc_rel)
+  if not os.path.exists(proc_path):
+    errors.append(f"Missing {proc_rel}")
+  else:
+    with open(proc_path, "r", encoding="utf-8") as f:
+      proc_text = f.read()
+    if "### SCAR-PROC-107" not in proc_text:
+      errors.append(f"{proc_rel} must document SCAR-PROC-107")
+    else:
+      scar_section = (
+          proc_text.split("### SCAR-PROC-107")[1].split("### SCAR-")[0]
+          if "### SCAR-PROC-107" in proc_text
+          else ""
+      )
+      for field in ("Wound", "Trap", "Permanent Reflex", "Socratic Probe"):
+        field_match = re.search(
+            rf"\*\*{re.escape(field)}\*\*:\s*([^\n]+)", scar_section
+        )
+        if not field_match or not field_match.group(1).strip():
+          errors.append(f"{proc_rel} SCAR-PROC-107 missing non-empty '**{field}**:'")
+      for invariant in ("--comments", "intake", "thread"):
+        if invariant.lower() not in scar_section.lower():
+          errors.append(f"{proc_rel} SCAR-PROC-107 missing invariant '{invariant}'")
+
+  # 2. skills/makeflow/references/09_synthetic_scars_catalog.md
+  cat_rel = "skills/makeflow/references/09_synthetic_scars_catalog.md"
+  cat_path = repo_path(cat_rel)
+  if not os.path.exists(cat_path):
+    errors.append(f"Missing {cat_rel}")
+  else:
+    with open(cat_path, "r", encoding="utf-8") as f:
+      cat_text = f.read()
+    if "SCAR-PROC-107" not in cat_text:
+      errors.append(f"{cat_rel} must index SCAR-PROC-107")
+    if not check_scar_catalog_routing(cat_text, "SCAR-PROC-107", "process.md"):
+      errors.append(f"{cat_rel} must route SCAR-PROC-107 to scars/process.md")
+
+  # 3. rules/AGENTS.md
+  agents_rel = "rules/AGENTS.md"
+  agents_path = repo_path(agents_rel)
+  if not os.path.exists(agents_path):
+    errors.append(f"Missing {agents_rel}")
+  else:
+    with open(agents_path, "r", encoding="utf-8") as f:
+      agents_text = f.read()
+    if "SCAR-PROC-107" not in agents_text:
+      errors.append(f"{agents_rel} must reference SCAR-PROC-107")
+    if "--comments" not in agents_text:
+      errors.append(f"{agents_rel} must reference '--comments'")
+
+  return errors
+
+
 def validate_temporary_script_quoting_scar():
   """Validates temporary script quoting scar invariants (GH-25, SCAR-SH-01).
 
@@ -2138,8 +2204,8 @@ def validate():
       if r09_text and not check_scar_catalog_routing(r09_text, scar_id, sf):
         errors.append(f"{ref_09_rel} Master Routing Table must strictly route {scar_id} to scars/{sf}")
 
-  if total_scars_found != 36:
-    errors.append(f"Expected 36 synthetic scars across category spokes, found {total_scars_found}")
+  if total_scars_found != 37:
+    errors.append(f"Expected 37 synthetic scars across category spokes, found {total_scars_found}")
 
   testing_spoke_rel = os.path.join(scars_dir_rel, "testing.md")
   testing_spoke = repo_path(testing_spoke_rel)
@@ -2687,6 +2753,12 @@ def validate():
   errors.extend(critic_ref_errors)
   if not critic_ref_errors:
     print("✔ Explicit Six Pillars manual reference in critic dispatch (GH-23, SCAR-PROC-105) verified.")
+
+  # Full Discussion and Comment Thread Ingestion at Intake (GH-78, SCAR-PROC-107)
+  comment_ingest_errors = validate_comment_thread_ingestion_scar_proc_107()
+  errors.extend(comment_ingest_errors)
+  if not comment_ingest_errors:
+    print("✔ Full comment thread ingestion at intake (SCAR-PROC-107) verified.")
 
   # POSIX Signal Trapping Invariants (GH-24, SCAR-SYS-07)
   signal_trap_errors = validate_posix_signal_trapping()

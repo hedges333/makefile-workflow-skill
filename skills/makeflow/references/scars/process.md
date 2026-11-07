@@ -14,6 +14,7 @@ This reference manual documents core process and workflow scars (`SCAR-PROC-*`).
 | `SCAR-PROC-104` | Review Before Edit and Targeted Loops | Code Modification Discipline |
 | `SCAR-PROC-105` | Explicit Critic Six Pillars Manual Path | Critic Subagent Dispatch |
 | `SCAR-PROC-106` | Predetermined Subagent Tool Mounting via options and tools Blocks | Subagent Tool Mounting |
+| `SCAR-PROC-107` | Full Discussion and Comment Thread Ingestion at Intake | Ticket Intake & Triage |
 | `SCAR-PROC-138` | Yield on Repeated Timer Conflicts | Schedule Conflict Handling |
 
 ---
@@ -73,6 +74,13 @@ This reference manual documents core process and workflow scars (`SCAR-PROC-*`).
 - **Trap**: Relying on unverified YAML frontmatter keys or assuming dynamic `define_subagent` calls can override existing registered subagent names without naming collisions.
 - **Permanent Reflex**: Structure subagent markdown files in `agents/*.md` with an `options:` block using unmutated PascalCase keys (`EnableWriteTools`, `EnableMCPTools`, `EnableSubagentTools`) alongside native `tools:` lists. Provide a deterministic `subagent-def` CLI gate in `scripts/workflow_gates.py` to extract and emit validated JSON argument dictionaries.
 - **Socratic Probe**: Before dispatching a subagent that requires shell commands or file edits, what concrete runtime mechanism guarantees that mutating tools are mounted in its child session?
+
+### SCAR-PROC-107: Full Discussion and Comment Thread Ingestion at Intake
+
+- **Wound**: An agent plans work from the initial issue body alone, misses critical course corrections in discussion comments, and implements obsolete or conflicting designs.
+- **Trap**: Assuming the initial issue description contains all current project decisions, and running `gh issue view <number>` without fetching thread comments.
+- **Permanent Reflex**: At Target 10 intake, fetch the full issue discussion thread with `gh issue view <number> --comments` before creating `.workflow/state/10_ticket.md`. Consolidate all user updates, scope changes, and architectural constraints into the intake ticket.
+- **Socratic Probe**: Did you fetch all comments with `--comments` before drafting the ticket and plan? If you plan work from only the initial issue description, will you miss crucial human course corrections and updated requirements?
 
 ### SCAR-PROC-138: Yield on Repeated Timer Conflicts
 

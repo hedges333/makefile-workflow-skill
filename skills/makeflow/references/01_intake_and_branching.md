@@ -17,7 +17,7 @@ At the start of every turn, inspect `<workspace>/.workflow/state/`:
 
 When the user provides a task description, issue number, or issue URL, run these steps:
 
-1. Extract the ticket ID and scope from the request.
+1. Extract the ticket ID and scope from the request. When an issue number or URL is provided, fetch the full discussion thread with `gh issue view <number> --comments` (or API equivalent). Consolidate latest course corrections, design decisions, and scope changes into the ticket description (`SCAR-PROC-107`).
 2. Make sure that `git status --short` is clean on the current branch. If uncommitted edits exist, stop and ask the user how to handle them.
 3. Switch to the default branch (`main` or `master`) and pull the latest commits:
    ```bash
@@ -36,7 +36,7 @@ When the user provides a task description, issue number, or issue URL, run these
    - Jira or Linear Issue (`<PROJECT>-<NUMBER>`): `feat/<project>-<number>-<slug>` or `fix/<project>-<number>-<slug>`.
    - Ad-hoc Chat Task / Pure Git Session (no external tracker): Determine next local count `N` from the highest `LOCAL-<N>` in `.workflow/history.json`. Use `feat/local-<N+1>-<slug>` or `fix/local-<N+1>-<slug>`. Ticket ID is `LOCAL-<N+1>`. Never use bare integers for local branches.
 7. Format `<slug>` with lowercase letters, digits, and single hyphens (`[a-z0-9-]`), up to 40 characters.
-8. Write the ticket details to `<workspace>/.workflow/state/10_ticket.md` and advance to Target 15.
+8. Write the consolidated ticket and comment details to `<workspace>/.workflow/state/10_ticket.md` and advance to Target 15.
 
 ### Mode B: Open Backlog Discovery
 
