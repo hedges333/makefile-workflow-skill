@@ -34,7 +34,7 @@ Move through these targets in dependency order:
 - Apply small edits that solve the active ticket.
 - Do not fix unrelated issues during a ticket. Note them for a separate task.
 - Intercept POSIX signals (SIGTERM / SIGINT) in long-running workers and clean up lockfiles under SCAR-SYS-07.
-- If shell commands require complex string escaping or multiple quoting layers, write the script to a file in a temporary directory under SCAR-SH-01.
+- If shell commands require complex string escaping or multiple quoting layers, write the script to a file in a temporary directory. Pass the path to the runtime interpreter under SCAR-SH-01.
 - Encapsulate script and entry-point logic in testable classes using the BaseScript Template Method pattern under SCAR-ARCH-05.
 
 4. SIMPLE ENGLISH
