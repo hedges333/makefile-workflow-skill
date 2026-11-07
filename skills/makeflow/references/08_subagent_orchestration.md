@@ -23,18 +23,23 @@ Read [13. Configuration and User Preferences](13_configuration_and_user_preferen
 
 ## 3. Subagent Tool Permissions (GH-83)
 
-Antigravity CLI (agy 1.5.2+) provisions subagents with read-only tools by default.
-Declare tool permissions explicitly in `agents/*.md` YAML frontmatter:
+Antigravity CLI (agy 1.5.2+) provisions subagents with tools declared in `agents/*.md`.
+Declare tool permissions deterministically in `agents/*.md` with an `options:` block and `tools:` list:
 
-| Subagent Role | `enable_write_tools` | `enable_mcp_tools` | `enable_subagent_tools` | Reason |
+| Subagent Role | `EnableWriteTools` | `EnableMCPTools` | `EnableSubagentTools` | Reason |
 | :--- | :--- | :--- | :--- | :--- |
 | `archaeology-worker` | `false` | `true` | `false` | Safe read-only inspection with MCP state tools. |
 | `tdd-worker` | `true` | `false` | `false` | Requires `write_file`, `edit_file`, and `run_command` for test loops. |
 | `adversarial-critic` | `true` | `false` | `false` | Requires `run_command` for git diff checks. File edits remain prohibited by prompt. |
 | `triage-worker` | `true` | `true` | `false` | Requires `run_command` for git checks and `call_mcp_tool` for CI polling. |
 
-If a runtime build ignores plugin agent frontmatter, use supervisor fallback:
-Spawn subagents using `define_subagent(..., EnableWriteTools=True)` before dispatch.
+To extract the predetermined tool call payload for any worker role, run:
+
+```bash
+python3 scripts/workflow_gates.py subagent-def --role <role> --json
+```
+
+If you register a subagent dynamically, pass the emitted parameters to `define_subagent`.
 
 ## 4. Subagent Lifecycle and Timers
 

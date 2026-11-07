@@ -831,65 +831,187 @@ def parse_frontmatter(content):
     return {}
   frontmatter_str = parts[1]
   result = {}
+  current_dict = None
+  current_list = None
+  current_section = None
   for line in frontmatter_str.splitlines():
-    line = line.strip()
-    if not line or line.startswith("#"):
+    raw = line
+    s = line.strip()
+    if not s or s.startswith("#"):
       continue
-    if ":" in line:
-      key, val = line.split(":", 1)
-      key = key.strip()
-      val_lower = val.strip().lower()
-      if val_lower == "true":
-        result[key] = True
-      elif val_lower == "false":
-        result[key] = False
+    if raw.startswith("  ") or raw.startswith("\t"):
+      if current_section:
+        if s.startswith("- "):
+          if current_list is None:
+            current_list = []
+            result[current_section] = current_list
+          current_list.append(s[2:].strip())
+        elif ":" in s:
+          if current_dict is None:
+            current_dict = {}
+            result[current_section] = current_dict
+          k, v = s.split(":", 1)
+          k = k.strip()
+          vl = v.strip().lower()
+          if vl == "true":
+            current_dict[k] = True
+          elif vl == "false":
+            current_dict[k] = False
+          else:
+            current_dict[k] = v.strip()
+      continue
+    current_dict = None
+    current_list = None
+    current_section = None
+    if ":" in s:
+      k, v = s.split(":", 1)
+      k = k.strip()
+      v = v.strip()
+      if not v:
+        current_section = k
       else:
-        result[key] = val.strip()
+        vl = v.lower()
+        if vl == "true":
+          result[k] = True
+        elif vl == "false":
+          result[k] = False
+        else:
+          result[k] = v
   return result
 
 
 def validate_subagent_tool_mounting_permissions():
-  """Validates subagent YAML frontmatter tool mounting permissions (GH-83)."""
+  """Validates subagent options, tools lists, and subagent-def CLI gate (GH-83)."""
   errors = []
 
   expected_perms = {
       "agents/tdd-worker.md": {
-          "enable_write_tools": True,
-          "enable_mcp_tools": False,
-          "enable_subagent_tools": False,
+          "options": {
+              "EnableWriteTools": True,
+              "EnableMCPTools": False,
+              "EnableSubagentTools": False,
+          },
+          "required_tools": ["write_file", "edit_file", "run_command"],
+          "prohibited_tools": [],
       },
       "agents/adversarial-critic.md": {
-          "enable_write_tools": True,
-          "enable_mcp_tools": False,
-          "enable_subagent_tools": False,
+          "options": {
+              "EnableWriteTools": True,
+              "EnableMCPTools": False,
+              "EnableSubagentTools": False,
+          },
+          "required_tools": ["run_command"],
+          "prohibited_tools": [],
       },
       "agents/triage-worker.md": {
-          "enable_write_tools": True,
-          "enable_mcp_tools": True,
-          "enable_subagent_tools": False,
+          "options": {
+              "EnableWriteTools": True,
+              "EnableMCPTools": True,
+              "EnableSubagentTools": False,
+          },
+          "required_tools": ["run_command"],
+          "prohibited_tools": [],
       },
       "agents/archaeology-worker.md": {
-          "enable_write_tools": False,
-          "enable_mcp_tools": True,
-          "enable_subagent_tools": False,
+          "options": {
+              "EnableWriteTools": False,
+              "EnableMCPTools": True,
+              "EnableSubagentTools": False,
+          },
+          "required_tools": ["send_message"],
+          "prohibited_tools": ["write_file", "edit_file"],
       },
   }
 
-  for rel_path, expected in expected_perms.items():
+  for rel_path, spec in expected_perms.items():
     full_path = repo_path(rel_path)
     if not os.path.exists(full_path):
       errors.append(f"Missing {rel_path}")
       continue
     with open(full_path, "r", encoding="utf-8") as f:
       content = f.read()
+
+    # Reject obsolete top-level snake_case flags
+    for bad_flag in ("enable_write_tools", "enable_mcp_tools", "enable_subagent_tools"):
+      if re.search(rf"^{bad_flag}:", content, re.MULTILINE):
+        errors.append(f"{rel_path} must not contain top-level snake_case '{bad_flag}'")
+
     fm = parse_frontmatter(content)
-    for flag, exp_val in expected.items():
-      if flag not in fm:
-        errors.append(f"{rel_path} frontmatter missing '{flag}: {str(exp_val).lower()}'")
-      elif fm[flag] is not exp_val:
-        errors.append(
-            f"{rel_path} frontmatter '{flag}' must be {str(exp_val).lower()}, got {str(fm[flag]).lower()}"
-        )
+
+    # Validate options block
+    options = fm.get("options")
+    if not isinstance(options, dict):
+      errors.append(f"{rel_path} frontmatter missing 'options:' dictionary")
+    else:
+      for opt_key, exp_val in spec["options"].items():
+        if opt_key not in options:
+          errors.append(f"{rel_path} options missing '{opt_key}'")
+        elif options[opt_key] is not exp_val:
+          errors.append(
+              f"{rel_path} options '{opt_key}' must be {exp_val}, got {options[opt_key]}"
+          )
+
+    # Validate tools list
+    tools_list = fm.get("tools")
+    if not isinstance(tools_list, list):
+      errors.append(f"{rel_path} frontmatter missing 'tools:' list")
+    else:
+      for req_t in spec["required_tools"]:
+        if req_t not in tools_list:
+          errors.append(f"{rel_path} tools list missing required tool '{req_t}'")
+      for pro_t in spec["prohibited_tools"]:
+        if pro_t in tools_list:
+          errors.append(f"{rel_path} tools list must not contain prohibited tool '{pro_t}'")
+
+  # Validate scripts/workflow_gates.py subagent-def CLI gate
+  gates_script = repo_path("scripts/workflow_gates.py")
+  role_map = {
+      "tdd-worker": expected_perms["agents/tdd-worker.md"]["options"],
+      "adversarial-critic": expected_perms["agents/adversarial-critic.md"]["options"],
+      "triage-worker": expected_perms["agents/triage-worker.md"]["options"],
+      "archaeology-worker": expected_perms["agents/archaeology-worker.md"]["options"],
+  }
+
+  for role_name, exp_opts in role_map.items():
+    res = subprocess.run(
+        [sys.executable, gates_script, "subagent-def", "--role", role_name, "--json"],
+        capture_output=True,
+        text=True,
+    )
+    if res.returncode != 0:
+      errors.append(
+          f"workflow_gates.py subagent-def --role {role_name} failed (exit {res.returncode}): {res.stderr.strip()}"
+      )
+    else:
+      try:
+        data = json.loads(res.stdout)
+        if data.get("Name") != role_name:
+          errors.append(f"subagent-def for {role_name} emitted Name '{data.get('Name')}'")
+        if not data.get("Description"):
+          errors.append(f"subagent-def for {role_name} missing non-empty Description")
+        if not data.get("SystemPrompt"):
+          errors.append(f"subagent-def for {role_name} missing non-empty SystemPrompt")
+        for k, v in exp_opts.items():
+          if data.get(k) is not v:
+            errors.append(f"subagent-def for {role_name} emitted {k}={data.get(k)}, expected {v}")
+      except json.JSONDecodeError as e:
+        errors.append(f"subagent-def for {role_name} emitted invalid JSON: {e}")
+
+  # Negative Falsification on missing or invalid role
+  res_neg = subprocess.run(
+      [sys.executable, gates_script, "subagent-def", "--role", "nonexistent-role"],
+      capture_output=True,
+      text=True,
+  )
+  if res_neg.returncode != 2:
+    errors.append(
+        f"subagent-def with invalid role must exit 2, got {res_neg.returncode}"
+    )
+  if "SUBAGENT_DEFINITION_INVALID" not in res_neg.stderr:
+    errors.append("subagent-def negative falsification missing 'SUBAGENT_DEFINITION_INVALID' on stderr")
+  for reflex_field in ("TRIGGER", "REJECTED", "REFLEX"):
+    if reflex_field not in res_neg.stderr:
+      errors.append(f"subagent-def negative falsification missing '{reflex_field}' on stderr")
 
   # Check reference manual 08_subagent_orchestration.md
   ref_08_rel = "skills/makeflow/references/08_subagent_orchestration.md"
@@ -900,9 +1022,11 @@ def validate_subagent_tool_mounting_permissions():
     with open(ref_08_path, "r", encoding="utf-8") as f:
       text = f.read()
     for req_term in (
-        "enable_write_tools",
-        "enable_mcp_tools",
-        "enable_subagent_tools",
+        "define_subagent",
+        "subagent-def",
+        "EnableWriteTools",
+        "EnableMCPTools",
+        "EnableSubagentTools",
         "tdd-worker",
         "adversarial-critic",
         "triage-worker",
@@ -920,23 +1044,14 @@ def validate_subagent_tool_mounting_permissions():
     with open(agents_path, "r", encoding="utf-8") as f:
       text = f.read()
     for req_term in (
-        "enable_write_tools",
-        "enable_mcp_tools",
-        "enable_subagent_tools",
+        "define_subagent",
+        "EnableWriteTools",
+        "EnableMCPTools",
+        "EnableSubagentTools",
+        "subagent-def",
     ):
       if req_term.lower() not in text.lower():
         errors.append(f"{agents_rel} must document '{req_term}'")
-
-  # Negative Falsification Checks:
-  mock_missing = "---\nname: tdd-worker\ndescription: test\n---\nbody"
-  fm_mock = parse_frontmatter(mock_missing)
-  if "enable_write_tools" in fm_mock:
-    errors.append("Falsification failed: parsed enable_write_tools from frontmatter lacking it")
-
-  mock_inverted = "---\nname: tdd-worker\nenable_write_tools: false\n---\nbody"
-  fm_inv = parse_frontmatter(mock_inverted)
-  if fm_inv.get("enable_write_tools") is not False:
-    errors.append("Falsification failed: enable_write_tools false was not parsed as False")
 
   return errors
 

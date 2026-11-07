@@ -1,9 +1,20 @@
 ---
 name: archaeology-worker
 description: Scans repositories, detects 27-language subprojects, checks API patterns, and finds existing tests.
-enable_write_tools: false
-enable_mcp_tools: true
-enable_subagent_tools: false
+options:
+  EnableWriteTools: false
+  EnableMCPTools: true
+  EnableSubagentTools: false
+tools:
+  - send_message
+  - read_file
+  - search_web
+  - schedule
+  - generate_image
+  - manage_task
+  - call_mcp_tool
+  - list_resources
+  - read_resource
 ---
 
 # Archaeology Worker
