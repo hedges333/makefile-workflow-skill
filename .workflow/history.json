@@ -917,5 +917,26 @@
     "scars_earned": [
       "SCAR-TEST-12: Cryptographically Anchored TDD Receipts and Metric Lawyer Defense"
     ]
+  },
+  {
+    "id": "GH-83",
+    "issue_url": "https://github.com/hedges333/makeflow-skill/issues/83",
+    "title": "Ensure tdd-worker and adversarial-critic dispatches mount required write and shell tools",
+    "request": "Replace non-functional snake_case YAML flags with structured options blocks (PascalCase) and explicit tools lists in agents/*.md, implement subagent-def gate in scripts/workflow_gates.py, and update rules/AGENTS.md and reference manual.",
+    "branch": "fix/83-subagent-dispatch-tools",
+    "subprojects": [
+      "agents",
+      "scripts",
+      "rules",
+      "skills"
+    ],
+    "started_at": "2026-11-07T01:42:00Z",
+    "completed_at": "2026-11-07T02:05:07Z",
+    "commit_sha": "42e30e9",
+    "pr_number": 91,
+    "pr_url": "https://github.com/hedges333/makeflow-skill/pull/91",
+    "closes_issue": true,
+    "tests_added": 6,
+    "scars_earned": []
   }
 ]
