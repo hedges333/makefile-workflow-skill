@@ -1192,5 +1192,26 @@
     "scars_earned": [
       "SCAR-SYS-07: POSIX Signal Trapping for Long-Running Workers (SIGTERM / SIGINT)"
     ]
+  },
+  {
+    "id": "GH-81",
+    "issue_url": "https://github.com/hedges333/makeflow-skill/issues/81",
+    "title": "[BUG] Target 40 prompts user to switch model picker but dispatches adversarial-critic without pausing",
+    "request": "Bypass model picker prompt when .workflow/config.json specifies models or inherit, and pause before critic dispatch when unconfigured in interactive IDEs.",
+    "branch": "fix/81-target-40-model-picker-pause",
+    "subprojects": [
+      "scripts",
+      "skills",
+      "rules",
+      "adapters"
+    ],
+    "started_at": "2026-11-06T21:10:58-08:00",
+    "completed_at": "2026-11-06T22:08:45-08:00",
+    "commit_sha": "85745a4",
+    "pr_number": 111,
+    "pr_url": "https://github.com/hedges333/makeflow-skill/pull/111",
+    "closes_issue": true,
+    "tests_added": 1,
+    "scars_earned": []
   }
 ]
