@@ -25,25 +25,20 @@ When dispatching `adversarial-critic` at Target 40:
 1. If `.workflow/config.json` specifies models or "inherit", bypass the model picker prompt.
 2. When model selection is unconfigured in interactive IDEs, prompt the user to select a deep-reasoning model. Stop tool calls (`tool_calls: []`) to pause before critic dispatch.
 
-## 3. Subagent Tool Permissions (GH-83)
+## 3. Subagent Tool Permissions (GH-83, GH-108)
 
-Antigravity CLI (agy 1.5.2+) provisions subagents with tools declared in `agents/*.md`.
-Declare tool permissions deterministically in `agents/*.md` with an `options:` block and `tools:` list:
+Antigravity CLI pre-registers `agents/*.md` at startup so the supervisor calls `invoke_subagent` directly.
+Each `agents/*.md` file declares `name`, `description`, and a `tools:` list of built-in component tools:
 
-| Subagent Role | `EnableWriteTools` | `EnableMCPTools` | `EnableSubagentTools` | Reason |
-| :--- | :--- | :--- | :--- | :--- |
-| `archaeology-worker` | `false` | `true` | `false` | Safe read-only inspection with MCP state tools. |
-| `tdd-worker` | `true` | `false` | `false` | Requires `write_file`, `edit_file`, and `run_command` for test loops. |
-| `adversarial-critic` | `true` | `false` | `false` | Requires `run_command` for git diff checks. File edits remain prohibited by prompt. |
-| `triage-worker` | `true` | `true` | `false` | Requires `run_command` for git checks and `call_mcp_tool` for CI polling. |
+| Subagent Role | Mutating / Shell Tools in `tools:` | Reason |
+| :--- | :--- | :--- |
+| `archaeology-worker` | None (read-only) | Safe read-only inspection with automatically mounted MCP tools. |
+| `tdd-worker` | `write_file`, `edit_file`, `run_command` | Writes tests and production code and runs targeted test loops. |
+| `adversarial-critic` | `run_command` | Runs git diff checks while file edits remain unmounted. |
+| `triage-worker` | `run_command` | Runs git checks and uses automatically mounted MCP tools for CI polling. |
 
-To extract the predetermined tool call payload for any worker role, run:
-
-```bash
-python3 scripts/workflow_gates.py subagent-def --role <role> --json
-```
-
-If you register a subagent dynamically, pass the emitted parameters to `define_subagent`.
+The runtime attaches `call_mcp_tool`, `list_resources`, and `read_resource` to subagents automatically outside the component registry.
+Never list `call_mcp_tool`, `list_resources`, or `read_resource` under `tools:` in `agents/*.md`.
 
 ## 4. Subagent Lifecycle and Timers
 

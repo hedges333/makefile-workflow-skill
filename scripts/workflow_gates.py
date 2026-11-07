@@ -6,7 +6,6 @@ that exit 0 when invariants hold or emit a structured Vector 4 Reflex on stderr
 and exit 2 when violated.
 """
 
-import json
 import os
 import re
 import shlex
@@ -53,7 +52,6 @@ class WorkflowGatesScript(BaseScript):
     self.gate: str = ""
     self.max_bytes: int = DEFAULT_SKILL_MAX_BYTES
     self.commit_msg_file: Optional[str] = None
-    self.subagent_role: Optional[str] = None
     self.ticket: Optional[str] = None
     self.project: Optional[str] = None
     self.title: Optional[str] = None
@@ -90,10 +88,6 @@ class WorkflowGatesScript(BaseScript):
     p_msg.add_argument("--file", dest="commit_msg_file", default=None)
     p_msg.add_argument("--json", action="store_true", dest="sub_json")
 
-    p_sub = subparsers.add_parser("subagent-def", add_help=False)
-    p_sub.add_argument("--role", dest="subagent_role", default=None)
-    p_sub.add_argument("--json", action="store_true", dest="sub_json")
-
     p_title = subparsers.add_parser("terminal-title", add_help=False)
     p_title.add_argument("--ticket", default=None)
     p_title.add_argument("--project", default=None)
@@ -104,7 +98,7 @@ class WorkflowGatesScript(BaseScript):
     if not ns.gate:
       parser.error(
           "Specify a gate subcommand: init-makefile, plugin-files, skill-budget, "
-          "intake, approved-tree, commit-msg, subagent-def, or terminal-title."
+          "intake, approved-tree, commit-msg, or terminal-title."
       )
 
     self.repo_root = os.path.abspath(ns.repo_root)
@@ -116,8 +110,6 @@ class WorkflowGatesScript(BaseScript):
       self.max_bytes = ns.max_bytes
     elif ns.gate == "commit-msg":
       self.commit_msg_file = ns.commit_msg_file
-    elif ns.gate == "subagent-def":
-      self.subagent_role = getattr(ns, "subagent_role", None)
     elif ns.gate == "terminal-title":
       self.ticket = getattr(ns, "ticket", None)
       self.project = getattr(ns, "project", None)
@@ -449,131 +441,6 @@ class WorkflowGatesScript(BaseScript):
 
     return 0
 
-  def _gate_subagent_def(self) -> int:
-    if not self.subagent_role:
-      return self._fail(
-          scar_id="PROC-106",
-          code="SUBAGENT_DEFINITION_INVALID",
-          trigger="Missing required --role argument for subagent-def gate.",
-          rejected="Querying subagent definition without specifying target role.",
-          reflex="Specify --role <role_name> when executing subagent-def.",
-      )
-
-    agent_path = os.path.join(self.repo_root, "agents", f"{self.subagent_role}.md")
-    if not os.path.exists(agent_path):
-      return self._fail(
-          scar_id="PROC-106",
-          code="SUBAGENT_DEFINITION_INVALID",
-          trigger=f"Subagent role file does not exist: agents/{self.subagent_role}.md",
-          rejected=f"Dispatching unregistered subagent role '{self.subagent_role}' without valid specification.",
-          reflex=f"Ensure agents/{self.subagent_role}.md exists with valid YAML frontmatter and options block.",
-      )
-
-    try:
-      with open(agent_path, "r", encoding="utf-8") as f:
-        content = f.read()
-    except OSError as err:
-      return self._fail(
-          scar_id="PROC-106",
-          code="SUBAGENT_DEFINITION_INVALID",
-          trigger=f"Failed to read subagent file agents/{self.subagent_role}.md: {err}",
-          rejected="Reading inaccessible subagent markdown definition.",
-          reflex=f"Verify read permissions on agents/{self.subagent_role}.md.",
-      )
-
-    if not content.startswith("---"):
-      return self._fail(
-          scar_id="PROC-106",
-          code="SUBAGENT_DEFINITION_INVALID",
-          trigger=f"agents/{self.subagent_role}.md does not start with YAML frontmatter delimiter '---'.",
-          rejected="Parsing markdown agent lacking YAML frontmatter.",
-          reflex=f"Add YAML frontmatter delimiters '---' to agents/{self.subagent_role}.md.",
-      )
-
-    parts = content.split("---", 2)
-    if len(parts) < 3:
-      return self._fail(
-          scar_id="PROC-106",
-          code="SUBAGENT_DEFINITION_INVALID",
-          trigger=f"agents/{self.subagent_role}.md has unclosed YAML frontmatter.",
-          rejected="Parsing malformed frontmatter block.",
-          reflex=f"Ensure YAML frontmatter is properly enclosed by '---' delimiters in agents/{self.subagent_role}.md.",
-      )
-
-    fm_str, body = parts[1], parts[2]
-    name = None
-    description = None
-    options = {}
-    tools = []
-    current_section = None
-
-    for line in fm_str.splitlines():
-      raw = line
-      s = line.strip()
-      if not s or s.startswith("#"):
-        continue
-      if raw.startswith("  ") or raw.startswith("\t"):
-        if current_section == "options" and ":" in s:
-          k, v = s.split(":", 1)
-          k = k.strip()
-          vl = v.strip().lower()
-          if vl == "true":
-            options[k] = True
-          elif vl == "false":
-            options[k] = False
-          else:
-            options[k] = v.strip()
-        elif current_section == "tools" and s.startswith("- "):
-          tools.append(s[2:].strip())
-        continue
-      current_section = None
-      if ":" in s:
-        k, v = s.split(":", 1)
-        k = k.strip()
-        v = v.strip()
-        if not v:
-          current_section = k
-        else:
-          if k == "name":
-            name = v
-          elif k == "description":
-            description = v
-
-    required_options = ("EnableWriteTools", "EnableMCPTools", "EnableSubagentTools")
-    missing_opts = [
-        opt for opt in required_options
-        if opt not in options or not isinstance(options[opt], bool)
-    ]
-    if missing_opts:
-      return self._fail(
-          scar_id="PROC-106",
-          code="SUBAGENT_DEFINITION_INVALID",
-          trigger=f"agents/{self.subagent_role}.md missing valid boolean options: {', '.join(missing_opts)}.",
-          rejected=f"Dispatching subagent '{self.subagent_role}' without deterministic PascalCase tool mounting options.",
-          reflex=f"Define 'options:' with EnableWriteTools, EnableMCPTools, and EnableSubagentTools in agents/{self.subagent_role}.md.",
-      )
-
-    payload = {
-        "Name": name or self.subagent_role,
-        "Description": description or "",
-        "SystemPrompt": body.strip(),
-        "EnableWriteTools": options["EnableWriteTools"],
-        "EnableMCPTools": options["EnableMCPTools"],
-        "EnableSubagentTools": options["EnableSubagentTools"],
-    }
-
-    if self.as_json:
-      self.stdout.write(json.dumps(payload, indent=2) + "\n")
-    else:
-      self.stdout.write(f"Subagent Definition for {payload['Name']}:\n")
-      self.stdout.write(f"  Description: {payload['Description']}\n")
-      self.stdout.write(f"  EnableWriteTools: {payload['EnableWriteTools']}\n")
-      self.stdout.write(f"  EnableMCPTools: {payload['EnableMCPTools']}\n")
-      self.stdout.write(f"  EnableSubagentTools: {payload['EnableSubagentTools']}\n")
-      self.stdout.write(f"  Prompt Length: {len(payload['SystemPrompt'])} chars\n")
-
-    return 0
-
   def _gate_terminal_title(self) -> int:
     try:
       from terminal_title import TerminalTitleScript
@@ -607,8 +474,6 @@ class WorkflowGatesScript(BaseScript):
       return self._check_approved_tree()
     if self.gate == "commit-msg":
       return self._check_commit_msg()
-    if self.gate == "subagent-def":
-      return self._gate_subagent_def()
     if self.gate == "terminal-title":
       return self._gate_terminal_title()
     raise ValueError(f"Unsupported gate: {self.gate}")

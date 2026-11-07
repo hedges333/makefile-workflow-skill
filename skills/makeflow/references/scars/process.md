@@ -13,7 +13,7 @@ This reference manual documents core process and workflow scars (`SCAR-PROC-*`).
 | `SCAR-PROC-103` | Single Plan Artifact Lifecycle and Demotion | Antigravity Artifact Management |
 | `SCAR-PROC-104` | Review Before Edit and Targeted Loops | Code Modification Discipline |
 | `SCAR-PROC-105` | Explicit Critic Six Pillars Manual Path | Critic Subagent Dispatch |
-| `SCAR-PROC-106` | Predetermined Subagent Tool Mounting via options and tools Blocks | Subagent Tool Mounting |
+| `SCAR-PROC-106` | Predetermined Subagent Tool Mounting via tools Lists | Subagent Tool Mounting |
 | `SCAR-PROC-107` | Full Discussion and Comment Thread Ingestion at Intake | Ticket Intake & Triage |
 | `SCAR-PROC-108` | Critic Observation Triage and Anti-Proliferation Protocol | Review Triage & Issue Management |
 | `SCAR-PROC-138` | Yield on Repeated Timer Conflicts | Schedule Conflict Handling |
@@ -69,12 +69,12 @@ This reference manual documents core process and workflow scars (`SCAR-PROC-*`).
 - **Permanent Reflex**: When launching the `adversarial-critic` subagent at Target 40, the supervisor must explicitly include the full relative workspace path `skills/makeflow/references/04_six_pillars_adversarial_review.md` in the dispatch prompt, instructing the critic to audit the diff against that manual and structure its report with the canonical six headings and binary verdict header.
 - **Socratic Probe**: Does the adversarial-critic dispatch prompt explicitly supply the path `skills/makeflow/references/04_six_pillars_adversarial_review.md`? If you omit this explicit manual path, will the critic rely on shallow heuristics and overlook crucial verification, blast radius, or crash antibody invariants?
 
-### SCAR-PROC-106: Predetermined Subagent Tool Mounting via options and tools Blocks
+### SCAR-PROC-106: Predetermined Subagent Tool Mounting via tools Lists
 
-- **Wound**: In Antigravity CLI 1.5.2, plugin subagents loaded via `agents/*.md` receive read-only tools by default. Declaring snake_case frontmatter keys (`enable_write_tools`) fails silently because the runtime ignores them, causing spawned `tdd-worker` and `adversarial-critic` subagents to lack file-write and shell tools.
-- **Trap**: Relying on unverified YAML frontmatter keys or assuming dynamic `define_subagent` calls can override existing registered subagent names without naming collisions.
-- **Permanent Reflex**: Structure subagent markdown files in `agents/*.md` with an `options:` block using unmutated PascalCase keys (`EnableWriteTools`, `EnableMCPTools`, `EnableSubagentTools`) alongside native `tools:` lists. Provide a deterministic `subagent-def` CLI gate in `scripts/workflow_gates.py` to extract and emit validated JSON argument dictionaries.
-- **Socratic Probe**: Before dispatching a subagent that requires shell commands or file edits, what concrete runtime mechanism guarantees that mutating tools are mounted in its child session?
+- **Wound**: In Antigravity CLI, plugin subagents loaded from `agents/*.md` resolve each entry in `tools:` against the built-in component registry. Omitting `write_file`, `edit_file`, or `run_command` leaves workers without needed tools, while listing `call_mcp_tool`, `list_resources`, or `read_resource` in `tools:` fails component lookup.
+- **Trap**: Adding unverified YAML frontmatter blocks or listing automatically mounted MCP meta-tools (`call_mcp_tool`, `list_resources`, `read_resource`) inside the `tools:` component list.
+- **Permanent Reflex**: Declare `name`, `description`, and the exact component `tools:` list in `agents/*.md` for `invoke_subagent`. Grant `write_file`, `edit_file`, and `run_command` only to roles that require them, and never list `call_mcp_tool`, `list_resources`, or `read_resource` in `tools:`.
+- **Socratic Probe**: Does `tools:` in `agents/*.md` list only valid built-in component tools and exclude automatically mounted MCP tools (`call_mcp_tool`, `list_resources`, `read_resource`)?
 
 ### SCAR-PROC-107: Full Discussion and Comment Thread Ingestion at Intake
 

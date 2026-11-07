@@ -53,16 +53,15 @@ When launching the `adversarial-critic` subagent at Target 40:
 2. Instruct the subagent to audit the diff against that manual and format findings under the canonical six headings.
 3. Never substitute an informal prompt summary for the explicit manual reference.
 
-### 1.5 Predetermined Subagent Tool Mounting (GH-83)
+### 1.5 Predetermined Subagent Tool Mounting (GH-83, GH-108)
 
-In Antigravity CLI (agy 1.5.2+), subagents require explicit tool mounting.
+In Antigravity CLI, `agents/*.md` files declare `name`, `description`, and `tools:` for `invoke_subagent`.
 
-1. Declare deterministic tool permissions in `agents/*.md` using an `options:` block and a `tools:` list.
-2. Grant `EnableWriteTools: true` to `tdd-worker`, `adversarial-critic`, and `triage-worker`.
-3. Set `EnableMCPTools: true` for `triage-worker` and `archaeology-worker`.
-4. Set `EnableSubagentTools: false` for all worker roles to prevent nested subagent loops.
-5. If you need the exact tool argument dictionary, execute `python3 scripts/workflow_gates.py subagent-def --role <role> --json`.
-6. If you register a subagent dynamically, call `define_subagent` with the arguments emitted by `subagent-def`.
+1. Declare component permissions in `agents/*.md` using only `name`, `description`, and a `tools:` list.
+2. Grant `write_file`, `edit_file`, and `run_command` to `tdd-worker` in `tools:`.
+3. Grant `run_command` without `write_file` or `edit_file` to `adversarial-critic` and `triage-worker` in `tools:`.
+4. Omit `write_file`, `edit_file`, and `run_command` from `archaeology-worker` so it stays read-only.
+5. Never list `call_mcp_tool`, `list_resources`, or `read_resource` in `tools:` because the runtime mounts MCP tools automatically.
 
 ### 1.6 Synthetic Scar Creation Lifecycle and Two-Tier Discovery
 

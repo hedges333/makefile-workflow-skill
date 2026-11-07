@@ -29,8 +29,8 @@ The review invariant is universal across all agent runtimes. The execution mecha
 
 ### Tier 3: Dedicated Subagent (Antigravity Orchestrator)
 When running in an orchestrator that supports subagents, launch `adversarial-critic` with `Model: "pro"` (Asymmetric Cognitive Tiering).
-- **Tool Permissions**: `enable_write_tools: true` (prompt-restricted strictly to read-only Git commands: `git diff`, `git log`, `git status`). Mutating commands and file edits are strictly prohibited.
-- **Tool Restrictions**: `enable_mcp_tools: false`, `enable_subagent_tools: false`.
+- **Tool Permissions**: `agents/adversarial-critic.md` mounts `run_command` via `tools:` (prompt-restricted strictly to read-only Git commands: `git diff`, `git log`, `git status`). Mutating commands and file edits are strictly prohibited.
+- **Tool Restrictions**: `write_file`, `edit_file`, and subagent creation tools remain unmounted.
 - **Cognitive Tiering**: Always assign high-capacity reasoning compute (`Model: "pro"`) so the critic catches subtle concurrency and logic defects.
 
 #### The Six Subagent Invariants:
