@@ -1063,5 +1063,28 @@
     "closes_issue": true,
     "tests_added": 1,
     "scars_earned": []
+  },
+  {
+    "id": "GH-72",
+    "issue_url": "https://github.com/hedges333/makeflow-skill/issues/72",
+    "title": "Explicit runtime interpreter invocation for temporary scripts (prefer Dart over Python)",
+    "request": "Explicitly recommend and enforce runtime interpreter invocation over direct file path execution for temporary and scratch scripts (SCAR-SH-01), placing Dart in precedence over Python when Dart is installed.",
+    "branch": "feat/72-interpreter-invocation",
+    "subprojects": [
+      "skills",
+      "rules",
+      "adapters",
+      "scripts"
+    ],
+    "started_at": "2026-11-06T19:53:39-08:00",
+    "completed_at": "2026-11-06T21:01:21-08:00",
+    "commit_sha": "d86c68b",
+    "pr_number": 104,
+    "pr_url": "https://github.com/hedges333/makeflow-skill/pull/104",
+    "closes_issue": true,
+    "tests_added": 5,
+    "scars_earned": [
+      "SCAR-SH-01: Prefer Temporary Script Files Over Complex Shell Quoting"
+    ]
   }
 ]
