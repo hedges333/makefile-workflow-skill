@@ -1840,6 +1840,137 @@ def validate_arbitrary_cwd_execution():
   return []
 
 
+def _check_target_42_nbo_summary_section(section_text, source_rel):
+  """Checks that Section 5.2 text satisfies all Target 42 NBO summary mandates (GH-89)."""
+  errors = []
+
+  # 1. Non-Blocking Observations (NBO) Summary heading or item
+  nbo_match = re.search(
+      r"(?:non-blocking observations|\bnbo\b).*?summary",
+      section_text,
+      re.IGNORECASE,
+  )
+  if not nbo_match:
+    errors.append(
+        f"{source_rel} Section 5.2 must require a Non-Blocking Observations (NBO) Summary"
+    )
+    return errors
+
+  nbo_text = section_text[nbo_match.start():]
+  nbo_lower = nbo_text.lower()
+
+  # 2. Conditioned on rejected review round
+  if "rejected" not in nbo_lower:
+    errors.append(
+        f"{source_rel} Section 5.2 must condition NBO Summary on rejected review rounds"
+    )
+
+  # 3. Full technical description
+  if "technical description" not in nbo_lower:
+    errors.append(
+        f"{source_rel} Section 5.2 must mandate full technical description for each observation"
+    )
+
+  # 4. file:line location
+  if "file:line" not in nbo_lower:
+    errors.append(
+        f"{source_rel} Section 5.2 must mandate file:line location for each observation"
+    )
+
+  # 5. Impact and rationale
+  if "impact" not in nbo_lower:
+    errors.append(
+        f"{source_rel} Section 5.2 must mandate impact for each observation"
+    )
+  if "rationale" not in nbo_lower:
+    errors.append(
+        f"{source_rel} Section 5.2 must mandate rationale for each observation"
+    )
+
+  # 6. Proposed disposition (Apply, Skip, Defer to issue)
+  if "disposition" not in nbo_lower:
+    errors.append(
+        f"{source_rel} Section 5.2 must mandate proposed disposition for each observation"
+    )
+  for disp in ("apply", "skip", "defer"):
+    if disp not in nbo_lower:
+      errors.append(
+          f"{source_rel} Section 5.2 must specify '{disp}' disposition option"
+      )
+
+  return errors
+
+
+def validate_target_42_nbo_summary_invariants():
+  """Validates Target 42 Non-Blocking Observations (NBO) summary invariants (GH-89).
+
+  Verifies:
+  1. skills/makeflow/references/04_six_pillars_adversarial_review.md Section 5.2
+     ('The Blocker Digest') mandates item 4: Non-Blocking Observations (NBO) Summary
+     whenever the critic identifies NBOs during a rejected review round.
+  2. Mandates for each observation:
+     - full technical description
+     - file:line location
+     - impact / rationale
+     - proposed disposition (Apply, Skip, Defer to issue)
+  3. Negative falsification: omissions of any required field in synthetic Section 5.2
+     structures trigger explicit validation errors.
+  """
+  errors = []
+  ref_04_rel = "skills/makeflow/references/04_six_pillars_adversarial_review.md"
+  ref_04_path = repo_path(ref_04_rel)
+  if not os.path.exists(ref_04_path):
+    errors.append(f"Missing {ref_04_rel}")
+    return errors
+
+  with open(ref_04_path, "r", encoding="utf-8") as f:
+    r04_text = f.read()
+
+  if "### 5.2 The Blocker Digest" not in r04_text:
+    errors.append(f"{ref_04_rel} missing '### 5.2 The Blocker Digest'")
+  else:
+    sec_5_2 = r04_text.split("### 5.2 The Blocker Digest")[1].split("### 5.3")[0]
+    errors.extend(_check_target_42_nbo_summary_section(sec_5_2, ref_04_rel))
+
+  # Negative Falsification Checks
+  valid_sample = (
+      "### 5.2 The Blocker Digest\n"
+      "Present a structured Blocker Digest directly in chat:\n"
+      "1. **Blocker Manifest**: List every blocker ID, pillar, file location, wound, and trap.\n"
+      "2. **Remediation Strategy**: Propose a failing reproduction test and surgical fix for each blocker.\n"
+      "3. **Documentation Impact**: Note any documentation or changelog updates required.\n"
+      "4. **Non-Blocking Observations (NBO) Summary**: Whenever the critic identifies "
+      "NBOs during a rejected review round, include each observation's full technical "
+      "description, file:line location, impact and rationale, and proposed disposition "
+      "(Apply in the upcoming Target 30 remediation pass, Skip with justification, or Defer to issue).\n"
+  )
+  sample_errors = _check_target_42_nbo_summary_section(valid_sample, "sample.md")
+  if sample_errors:
+    errors.append(f"Falsification harness baseline failed: {sample_errors}")
+
+  negatives = [
+      ("missing_nbo", valid_sample.replace("Non-Blocking Observations (NBO) Summary", "Observations"), "Non-Blocking Observations (NBO) Summary"),
+      ("missing_rejected", valid_sample.replace("rejected", "completed"), "rejected review rounds"),
+      ("missing_desc", valid_sample.replace("technical description", "details"), "technical description"),
+      ("missing_loc", valid_sample.replace("file:line", "path"), "file:line location"),
+      ("missing_impact", valid_sample.replace("impact and rationale", "rationale"), "impact"),
+      ("missing_rationale", valid_sample.replace("impact and rationale", "impact"), "rationale"),
+      ("missing_disposition", valid_sample.replace("proposed disposition", "action"), "disposition"),
+      ("missing_apply", valid_sample.replace("Apply", "Execute"), "'apply' disposition"),
+      ("missing_skip", valid_sample.replace("Skip", "Ignore"), "'skip' disposition"),
+      ("missing_defer", valid_sample.replace("Defer to issue", "Create issue"), "'defer' disposition"),
+  ]
+
+  for tag, neg_text, expected_err_token in negatives:
+    neg_errs = _check_target_42_nbo_summary_section(neg_text, "negative.md")
+    if not any(expected_err_token.lower() in e.lower() for e in neg_errs):
+      errors.append(
+          f"Negative falsification failed: {tag} did not trigger expected error containing '{expected_err_token}'"
+      )
+
+  return errors
+
+
 def validate():
   errors = []
 
@@ -2832,6 +2963,15 @@ def validate():
   if not scar_lifecycle_errors:
     print(
         "✔ Two-Tier scar creation lifecycle and discovery invariants (GH-93)"
+        " verified."
+    )
+
+  # Target 42 Non-Blocking Observations Summary Invariants (GH-89)
+  nbo_errors = validate_target_42_nbo_summary_invariants()
+  errors.extend(nbo_errors)
+  if not nbo_errors:
+    print(
+        "✔ Target 42 Non-Blocking Observations summary invariants (GH-89)"
         " verified."
     )
 

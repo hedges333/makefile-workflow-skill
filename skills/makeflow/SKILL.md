@@ -73,7 +73,7 @@ At turn start or after context compaction (automatic chat history compression), 
 | `20` | No `20_plan_approved.md` | `approved-plan` | Write `20_plan.md` and pause for `human-plan-approval`. |
 | `30` | Plan approved, diff incomplete | `implementation-diff` | Fork `tdd-worker` and run Red-Green-Refactor TDD. |
 | `40` | Diff lacks `40_critic_review.md` | `adversarial-review` | Lock `approved_tree.txt`, fork `adversarial-critic`, write review. |
-| `42` | Review has `BLOCKERS > 0` | `triaged-blockers` | Print blockers, pause for `human-blocker-triage-approval`, return to T30. |
+| `42` | Review has `BLOCKERS > 0` | `triaged-blockers` | Print blockers and NBO summary, pause for `human-blocker-triage-approval`, return to T30. |
 | `45` | Review has `0 BLOCKERS` | `approved-review` | Run `make -f .workflow/state/Makefile check-approved-tree` and pause for `human-review-approval`. |
 | `50` | Approved review, uncommitted | `commit` | Run full tests and `.workflow/state/Makefile` gates, pause for `human-commit-approval`. |
 | `60` | Committed, unpushed | `push` | Test `git merge-tree`, pause for `human-push-approval`, push, open PR. |
@@ -133,7 +133,7 @@ Read `references/04_six_pillars_adversarial_review.md` and `references/13`.
 1. Lock the Git Merkle tree (staged file hash) via `git add -A && git write-tree > .workflow/state/approved_tree.txt`.
 2. In interactive IDEs, prompt the user to select a deep-reasoning model.
 3. In Antigravity, fork `adversarial-critic` using `agyModelTiers["adversarial-critic"]` (default `inherit`) with explicit path `skills/makeflow/references/04_six_pillars_adversarial_review.md` (`SCAR-PROC-105`), then write `40_critic_review.md`.
-4. At Target 42 (`BLOCKERS > 0`), print blockers and fix plans, then pause for `human-blocker-triage-approval`. After triage approval, return to Target 30.
+4. At Target 42 (`BLOCKERS > 0`), print Blocker Digest and NBO summary with dispositions, then pause for `human-blocker-triage-approval`. After triage approval, return to Target 30.
 5. At Target 45 (`0 BLOCKERS`), run `make -f .workflow/state/Makefile check-approved-tree` and print the review with a `file://` link. Pause for `human-review-approval`, then write `45_review_approved.md`.
 
 ### Target 50 and Target 60: Commit and Push Gates

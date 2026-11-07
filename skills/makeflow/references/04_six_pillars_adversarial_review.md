@@ -213,12 +213,14 @@ Present a structured Blocker Digest directly in chat:
 1. **Blocker Manifest**: List every blocker ID, pillar, file location, wound, and trap.
 2. **Remediation Strategy**: Propose a failing reproduction test and surgical fix for each blocker.
 3. **Documentation Impact**: Note any documentation or changelog updates required.
+4. **Non-Blocking Observations (NBO) Summary**: If the critic identifies NBOs during a rejected review round, present an NBO summary table in chat. Include each observation's full technical description, `file:line` location, impact and rationale, and proposed disposition (`Apply` in the upcoming Target 30 remediation pass, `Skip` with justification, or `Defer to issue`).
 
 ### 5.3 Sovereign Human Direction
 Halt and wait for explicit human steering:
 - *"Proceed with remediation."*
 - *"Update documentation per the proposed strategy."*
 - *"Reject blocker as counterfeit per SCAR-INV-03."*
+- Confirm or adjust proposed NBO dispositions (`Apply`, `Skip`, or `Defer to issue`).
 
 After human authorization, return to Target 30 to implement reproduction tests and fixes, then dispatch a fresh critic for Round $N+1$.
 
