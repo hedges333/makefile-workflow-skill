@@ -1003,5 +1003,27 @@
     "closes_issue": true,
     "tests_added": 2,
     "scars_earned": []
+  },
+  {
+    "id": "GH-78",
+    "issue_url": "https://github.com/hedges333/makeflow-skill/issues/78",
+    "title": "Codify SCAR-PROC-107: Full Discussion and Comment Thread Ingestion at Intake",
+    "request": "Codify a new synthetic scar SCAR-PROC-107 that directs the agent to always read all comments on an existing GitHub issue or task when beginning work at Target 10, not just the opening description.",
+    "branch": "feat/78-codify-scar-proc-106",
+    "subprojects": [
+      "skills",
+      "rules",
+      "scripts"
+    ],
+    "started_at": "2026-11-06T18:49:26-08:00",
+    "completed_at": "2026-11-06T19:21:00-08:00",
+    "commit_sha": "9a8eeda",
+    "pr_number": 99,
+    "pr_url": "https://github.com/hedges333/makeflow-skill/pull/99",
+    "closes_issue": true,
+    "tests_added": 1,
+    "scars_earned": [
+      "SCAR-PROC-107: Full Discussion and Comment Thread Ingestion at Intake"
+    ]
   }
 ]
