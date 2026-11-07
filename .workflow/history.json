@@ -959,5 +959,28 @@
     "scars_earned": [
       "SCAR-PROC-106: Predetermined Subagent Tool Mounting via options and tools Blocks"
     ]
+  },
+  {
+    "id": "GH-85",
+    "issue_url": "https://github.com/hedges333/makeflow-skill/issues/85",
+    "title": "Codify anti-speculation Synthetic Scar against hypothetical problem-hunting",
+    "request": "Codify SCAR-ARCH-07 to stop builders and critics from adding speculative defenses for non-existent callers or hypothetical inputs.",
+    "branch": "feat/85-anti-speculation-scar",
+    "subprojects": [
+      "skills",
+      "agents",
+      "rules",
+      "scripts"
+    ],
+    "started_at": "2026-11-06T15:50:30-08:00",
+    "completed_at": "2026-11-06T19:06:40-08:00",
+    "commit_sha": "7616bd1",
+    "pr_number": 96,
+    "pr_url": "https://github.com/hedges333/makeflow-skill/pull/96",
+    "closes_issue": true,
+    "tests_added": 1,
+    "scars_earned": [
+      "SCAR-ARCH-07: Anti-Speculative Defenses and Caller Grounding"
+    ]
   }
 ]
