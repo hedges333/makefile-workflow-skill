@@ -1105,5 +1105,24 @@
     "closes_issue": true,
     "tests_added": 33,
     "scars_earned": []
+  },
+  {
+    "id": "GH-84",
+    "issue_url": "https://github.com/hedges333/makeflow-skill/issues/84",
+    "title": "[BUG] Clean leftover .workflow/state/approved_tree.txt at Target 90 and Target 10 intake",
+    "request": "Clean or archive .workflow/state/approved_tree.txt alongside 10_ through 80_ state cards at Target 90, check for leftover approved_tree.txt during Target 10 intake pre-flight checks, and add hermetic unit tests.",
+    "branch": "fix/84-clean-approved-tree",
+    "subprojects": [
+      "scripts",
+      "skills"
+    ],
+    "started_at": "2026-11-06T20:01:56-08:00",
+    "completed_at": "2026-11-06T21:05:11-08:00",
+    "commit_sha": "743d56a",
+    "pr_number": 106,
+    "pr_url": "https://github.com/hedges333/makeflow-skill/pull/106",
+    "closes_issue": true,
+    "tests_added": 1,
+    "scars_earned": []
   }
 ]
