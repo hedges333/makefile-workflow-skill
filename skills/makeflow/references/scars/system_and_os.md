@@ -10,6 +10,7 @@ This reference manual documents operating system, filesystem, and runtime enviro
 | `SCAR-SYS-05` | Cross-User File Promotion | Multi-User File System Operations |
 | `SCAR-SYS-06` | Native Runtime Environment Path Pre-Flight | Native Compiled Extensions & Temp Directories |
 | `SCAR-SYS-07` | POSIX Signal Trapping for Long-Running Workers | Signal Handling, Worker Cleanup & Lockfiles |
+| `SCAR-SYS-08` | Atomic Directory-Based Mutual Exclusion Locks | Inter-Process Concurrency & Mutual Exclusion |
 
 ---
 
@@ -46,3 +47,12 @@ This reference manual documents operating system, filesystem, and runtime enviro
 - **Trap**: Assuming processes always terminate through normal language exit handlers (`atexit` or `finally` blocks). Operating system signals (`SIGTERM`, `SIGINT`) terminate processes immediately without executing `finally` blocks unless explicitly intercepted.
 - **Permanent Reflex**: Intercept POSIX termination signals (`SIGTERM`, `SIGINT`) in long-running workers using `SignalTrap`. Register cleanup callbacks in reverse order (LIFO), unlink lockfiles, and ensure exception isolation across cleanup handlers before exiting.
 - **Socratic Probe**: If this worker receives an asynchronous SIGTERM or SIGINT from the OS or orchestrator, will it leave orphaned lockfiles or dangling resources on disk? Have you trapped POSIX signals and registered LIFO cleanup routines to ensure clean termination?
+
+---
+
+### SCAR-SYS-08: Atomic Directory-Based Mutual Exclusion Locks (`mkdir` over lockfile)
+
+- **Wound**: Concurrent worker processes enter critical sections simultaneously or corrupt state because lockfile existence checks race with creation.
+- **Trap**: Using regular file checks like `os.path.exists` followed by `open(..., "w")`. Non-atomic lockfile creation allows race conditions across processes.
+- **Permanent Reflex**: Use atomic directory creation with `os.mkdir` for mutual exclusion locks. Catch `FileExistsError` to detect lock contention. Clean up the lock directory with `os.rmdir` on exit or signal.
+- **Socratic Probe**: If multiple workers check and create a lockfile simultaneously, will race conditions cause state corruption? Would atomic directory creation with `os.mkdir` guarantee exclusive mutual exclusion?

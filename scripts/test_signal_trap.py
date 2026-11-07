@@ -8,6 +8,7 @@ import sys
 import tempfile
 import time
 import unittest
+import unittest.mock
 
 # Ensure scripts directory is on sys.path for direct execution
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -265,6 +266,128 @@ class TestSignalTrap(unittest.TestCase):
       if proc.poll() is None:
         proc.kill()
         proc.wait()
+
+  def test_lock_dir_registration_and_removal_on_exit(self):
+    """TestCase 12: Directory lock registration, collision check, and removal on exit."""
+    lock_dir = os.path.join(self.test_root, "worker.lock.d")
+    with SignalTrap() as trap:
+      registered = trap.register_lock_dir(lock_dir)
+      self.assertEqual(registered, lock_dir)
+      os.mkdir(lock_dir)
+      self.assertTrue(os.path.isdir(lock_dir))
+
+      # Atomic collision check: another mkdir must fail with FileExistsError
+      with self.assertRaises(FileExistsError):
+        os.mkdir(lock_dir)
+
+    # Lock directory must be removed on context exit
+    self.assertFalse(os.path.exists(lock_dir))
+
+  def test_lock_dir_removal_on_signal(self):
+    """TestCase 13: Lock directory removal on signal delivery."""
+    lock_dir = os.path.join(self.test_root, "sig_worker.lock.d")
+    os.mkdir(lock_dir)
+    self.assertTrue(os.path.isdir(lock_dir))
+
+    trap = SignalTrap(exit_on_signal=False)
+    trap.install()
+    trap.register_lock_dir(lock_dir)
+
+    # Deliver simulated SIGTERM
+    trap.handle_signal(signal.SIGTERM, None)
+    self.assertFalse(os.path.exists(lock_dir))
+    self.assertEqual(trap.signal_count, 1)
+    self.assertEqual(trap.last_signal, signal.SIGTERM)
+    trap.restore()
+
+  def test_concurrent_or_pre_removed_lock_graceful(self):
+    """TestCase 14: Pre-removed or concurrently removed lock file or dir cleans up gracefully."""
+    lock_dir = os.path.join(self.test_root, "pre_removed.lock.d")
+    lock_file = os.path.join(self.test_root, "pre_removed.lock")
+    trap = SignalTrap(exit_on_signal=False)
+    trap.register_lock_dir(lock_dir)
+    trap.register_lockfile(lock_file)
+
+    # Neither exists on disk; remove_lockfiles() must catch FileNotFoundError silently
+    with unittest.mock.patch("signal_trap.logger.warning") as mock_warn:
+      errors = trap.remove_lockfiles()
+      self.assertEqual(errors, [])
+      mock_warn.assert_not_called()
+
+    # Also verify when unlink / rmdir explicitly raises FileNotFoundError during cleanup
+    trap.register_lockfile(lock_file)
+    trap.register_lock_dir(lock_dir)
+    with unittest.mock.patch("os.unlink", side_effect=FileNotFoundError("No such file")), \
+         unittest.mock.patch("os.rmdir", side_effect=FileNotFoundError("No such directory")), \
+         unittest.mock.patch("signal_trap.logger.warning") as mock_warn:
+      errors = trap.remove_lockfiles()
+      self.assertEqual(errors, [])
+      mock_warn.assert_not_called()
+
+  def test_subprocess_end_to_end_dir_lock(self):
+    """TestCase 15: End-to-end subprocess signal trapping with --lock-dir and SIGTERM."""
+    lock_dir_path = os.path.join(self.test_root, "subproc_dir.lock.d")
+    ready_file_path = os.path.join(self.test_root, "subproc_dir.ready")
+    script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "signal_trap.py")
+
+    cmd = [
+        sys.executable,
+        script_path,
+        "--lock-dir",
+        lock_dir_path,
+        "--ready-file",
+        ready_file_path,
+    ]
+
+    proc = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    try:
+      # Wait for ready sentinel file
+      for _ in range(50):
+        if os.path.exists(ready_file_path) and os.path.isdir(lock_dir_path):
+          break
+        time.sleep(0.1)
+
+      self.assertTrue(os.path.exists(ready_file_path), "Subprocess did not signal readiness")
+      self.assertTrue(os.path.isdir(lock_dir_path), "Lock dir was not created")
+      self.assertIsNone(proc.poll(), "Subprocess exited prematurely")
+
+      # Send SIGTERM to child process
+      proc.send_signal(signal.SIGTERM)
+
+      # Wait for child process to terminate cleanly
+      retcode = proc.wait(timeout=5)
+      self.assertIn(retcode, (143, -signal.SIGTERM, 0))
+
+      # Verify lock directory was removed by SignalTrap handler
+      self.assertFalse(
+          os.path.exists(lock_dir_path),
+          "Lock directory must be rmdir'd upon SIGTERM",
+      )
+    finally:
+      if proc.stdout:
+        proc.stdout.close()
+      if proc.stderr:
+        proc.stderr.close()
+      if proc.poll() is None:
+        proc.kill()
+        proc.wait()
+
+  def test_cli_description_contains_both_scars(self):
+    """TestCase 16: CLI help description references both SCAR-SYS-07 and SCAR-SYS-08."""
+    script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "signal_trap.py")
+    result = subprocess.run(
+        [sys.executable, script_path, "--help"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    self.assertIn("SCAR-SYS-07", result.stdout)
+    self.assertIn("SCAR-SYS-08", result.stdout)
 
 
 if __name__ == "__main__":

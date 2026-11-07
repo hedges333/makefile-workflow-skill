@@ -98,6 +98,7 @@ Never connect tests or agent commands to live systems.
 5. Use safe file promotion (`SCAR-SYS-05`): When copying files across system users or service accounts, use `shutil.copyfile` to stream content bytes. Do not use `shutil.copy2` or `copystat` across user boundaries. Create destination directories with caller permissions.
 6. Native runtime environment path pre-flight (`SCAR-SYS-06`): Before launching processes that initialize native compiled extensions, verify that temporary directories (`TMPDIR`) exist and are writable using `validate_runtime_path`. If an environment path is missing or unwritable, sanitize the environment with a verified safe fallback path.
 7. POSIX signal trapping for long-running workers (`SCAR-SYS-07`): Intercept `SIGTERM` and `SIGINT` in worker processes and test daemons using `SignalTrap`. Register cleanup callbacks in reverse order (LIFO) and unlink lockfiles automatically to prevent orphaned processes and stale locks.
+8. Atomic directory-based mutual exclusion locks (`SCAR-SYS-08`): Use atomic directory creation (`os.mkdir` / `mkdir`) for process mutual exclusion instead of non-atomic lockfiles. Catch `FileExistsError` to detect contention, and remove lock directories with `os.rmdir` upon process exit or signal trapping. Catch `FileNotFoundError` silently during cleanup to handle concurrent removal safely.
 
 ## 3. Code Edit and Architecture Rules (`SCAR-PROC-104`)
 

@@ -1612,6 +1612,8 @@ def validate_posix_signal_trapping():
         adapter_text = f.read()
       if "SCAR-SYS-07" not in adapter_text:
         errors.append(f"{adapter_rel} must document SCAR-SYS-07")
+      if "SCAR-SYS-08" not in adapter_text:
+        errors.append(f"{adapter_rel} must document SCAR-SYS-08")
 
   mk_rel = "Makefile"
   mk_path = repo_path(mk_rel)
@@ -2478,6 +2480,8 @@ def validate():
       errors.append(f"{ref_09_rel} must document SCAR-SYS-06")
     if "SCAR-SYS-07" not in r09_text:
       errors.append(f"{ref_09_rel} must document SCAR-SYS-07")
+    if "SCAR-SYS-08" not in r09_text:
+      errors.append(f"{ref_09_rel} must document SCAR-SYS-08")
     if "SCAR-TEST-11" not in r09_text:
       errors.append(f"{ref_09_rel} must document SCAR-TEST-11")
     if "Hub-and-Spoke" not in r09_text and "Master Routing" not in r09_text and "Master Index" not in r09_text:
@@ -2530,8 +2534,8 @@ def validate():
       if r09_text and not check_scar_catalog_routing(r09_text, scar_id, sf):
         errors.append(f"{ref_09_rel} Master Routing Table must strictly route {scar_id} to scars/{sf}")
 
-  if total_scars_found != 37:
-    errors.append(f"Expected 37 synthetic scars across category spokes, found {total_scars_found}")
+  if total_scars_found != 38:
+    errors.append(f"Expected 38 synthetic scars across category spokes, found {total_scars_found}")
 
   testing_spoke_rel = os.path.join(scars_dir_rel, "testing.md")
   testing_spoke = repo_path(testing_spoke_rel)
@@ -2562,6 +2566,10 @@ def validate():
       errors.append(f"{system_spoke_rel} must document SCAR-SYS-07")
     if "SIGTERM" not in sys_text or "SignalTrap" not in sys_text:
       errors.append(f"{system_spoke_rel} must document SIGTERM and SignalTrap for SCAR-SYS-07")
+    if "SCAR-SYS-08" not in sys_text:
+      errors.append(f"{system_spoke_rel} must document SCAR-SYS-08")
+    if "mkdir" not in sys_text or "FileExistsError" not in sys_text:
+      errors.append(f"{system_spoke_rel} must document mkdir and FileExistsError for SCAR-SYS-08")
 
   # 11c. Full Language Name Polyglot Scars (dart_flutter.md)
   dart_guide_rel = "skills/makeflow/references/polyglot/dart_flutter.md"
@@ -2771,6 +2779,8 @@ def validate():
       errors.append(f"{ref_10_rel} Section 6 must document SCAR-SYS-06 and native runtime environment path pre-flight")
     if "SCAR-SYS-07" not in r10_text or "SignalTrap" not in r10_text:
       errors.append(f"{ref_10_rel} Section 7 must document SCAR-SYS-07 and POSIX signal trapping")
+    if "SCAR-SYS-08" not in r10_text or "mkdir" not in r10_text:
+      errors.append(f"{ref_10_rel} Section 8 must document SCAR-SYS-08 and atomic directory-based locks")
 
   # 12. SKILL.md Single-Page Size Ceiling (SCAR-PROC-99)
   skill_rel = "skills/makeflow/SKILL.md"
@@ -2836,6 +2846,8 @@ def validate():
       errors.append(f"{agents_rel} Section 2 must document SCAR-SYS-06 native runtime environment path pre-flight")
     if "SCAR-SYS-07" not in a_text or "SignalTrap" not in a_text:
       errors.append(f"{agents_rel} Section 2 must document SCAR-SYS-07 POSIX signal trapping")
+    if "SCAR-SYS-08" not in a_text or "mkdir" not in a_text:
+      errors.append(f"{agents_rel} Section 2 must document SCAR-SYS-08 atomic directory locks")
     if "SCAR-TEST-11" not in a_text or "burden-balance" not in a_text.lower() and "burden balance" not in a_text.lower():
       errors.append(f"{agents_rel} Section 1.1 must document SCAR-TEST-11 testing strategy and burden-balance analysis")
     if "socratic" not in a_text.lower() or "invariant audit" not in a_text.lower():
