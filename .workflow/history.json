@@ -1063,5 +1063,24 @@
     "closes_issue": true,
     "tests_added": 1,
     "scars_earned": []
+  },
+  {
+    "id": "GH-103",
+    "issue_url": "https://github.com/hedges333/makeflow-skill/issues/103",
+    "title": "[FEAT] Dynamically set terminal title to ticket and project name on ticket start",
+    "request": "Detect if running in a terminal where the terminal window or tab title can be changed, determine the name of the current project and active ticket number, and change the terminal title to '{ticket_name} {project_name}'.",
+    "branch": "feat/103-terminal-title",
+    "subprojects": [
+      "scripts",
+      "skills"
+    ],
+    "started_at": "2026-11-06T19:51:50-08:00",
+    "completed_at": "2026-11-06T21:01:00-08:00",
+    "commit_sha": "b91a02f",
+    "pr_number": 105,
+    "pr_url": "https://github.com/hedges333/makeflow-skill/pull/105",
+    "closes_issue": true,
+    "tests_added": 33,
+    "scars_earned": []
   }
 ]
