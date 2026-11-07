@@ -982,5 +982,26 @@
     "scars_earned": [
       "SCAR-ARCH-07: Anti-Speculative Defenses and Caller Grounding"
     ]
+  },
+  {
+    "id": "GH-93",
+    "issue_url": "https://github.com/hedges333/makeflow-skill/issues/93",
+    "title": "Enforce scar creation lifecycle and support project-local scars in .workflow/scars",
+    "request": "Clarify Target 90 rules to prohibit editing core catalog files on main, and establish the Two-Tier synthetic scar architecture supporting project-local scars in .workflow/scars/.",
+    "branch": "feat/93-enforce-scar-lifecycle",
+    "subprojects": [
+      "skills",
+      "agents",
+      "rules",
+      "scripts"
+    ],
+    "started_at": "2026-11-06T18:42:44-08:00",
+    "completed_at": "2026-11-06T19:14:47-08:00",
+    "commit_sha": "c8490fa",
+    "pr_number": 97,
+    "pr_url": "https://github.com/hedges333/makeflow-skill/pull/97",
+    "closes_issue": true,
+    "tests_added": 2,
+    "scars_earned": []
   }
 ]
