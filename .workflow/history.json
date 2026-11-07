@@ -1213,5 +1213,28 @@
     "closes_issue": true,
     "tests_added": 1,
     "scars_earned": []
+  },
+  {
+    "id": "GH-108",
+    "issue_url": "https://github.com/hedges333/makeflow-skill/issues/108",
+    "title": "[BUG] Simplify subagent tool mounting and remove unresolvable MCP meta-tools from agent configs",
+    "request": "Remove unresolvable MCP meta-tools (call_mcp_tool, list_resources, read_resource) and obsolete options blocks from agents/*.md, delete workflow_gates.py subagent-def, and update cross-agent compatibility tests, rules, and SCAR-PROC-106.",
+    "branch": "fix/108-simplify-subagent-tools",
+    "subprojects": [
+      "agents",
+      "rules",
+      "scripts",
+      "skills"
+    ],
+    "started_at": "2026-11-06T22:15:25-08:00",
+    "completed_at": "2026-11-06T23:10:00-08:00",
+    "commit_sha": "444b154",
+    "pr_number": 114,
+    "pr_url": "https://github.com/hedges333/makeflow-skill/pull/114",
+    "closes_issue": true,
+    "tests_added": 1,
+    "scars_earned": [
+      "SCAR-PROC-106: Predetermined Subagent Tool Mounting via tools Lists"
+    ]
   }
 ]
