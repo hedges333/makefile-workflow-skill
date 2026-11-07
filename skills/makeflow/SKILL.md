@@ -122,8 +122,8 @@ Read `references/02` for Socratic deliberation and plan disclosures.
 Read `references/03`, `references/04_testing_isolation.md`, and `references/14` for TDD, isolation, and design patterns.
 
 1. Fork `tdd-worker` using `agyModelTiers["tdd-worker"]` (default `inherit`).
-2. Red phase: Write failing tests first and witness a non-zero exit (`red_exit != 0`).
-3. Green phase: Write minimal production code so targeted subproject tests pass (`green_exit == 0`).
+2. Red phase: Write failing tests first and witness a non-zero exit (`red_exit != 0`). For dedicated test directories, seal `30_tdd_receipt.json` via `make -f .workflow/state/Makefile witness-red` (`SCAR-TEST-12`).
+3. Green phase: Write minimal production code so targeted subproject tests pass (`green_exit == 0`). If `30_tdd_receipt.json` exists, replay the sealed receipt via `make -f .workflow/state/Makefile verify-green`.
 4. Refactor phase: Run pre-flight static checks (`SCAR-TEST-10`), update docstrings, and advance to Target 40.
 
 ### Target 40, Target 42, and Target 45: Adversarial Review and Sign-Off

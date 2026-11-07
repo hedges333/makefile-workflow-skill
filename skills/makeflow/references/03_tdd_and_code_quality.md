@@ -20,6 +20,7 @@ Execute every code change in three ordered phases.
 2. If the subproject has no test files, create the smoke test approved in Target 20 first.
 3. Run the targeted subproject test command and make sure that the new test fails (`red_exit != 0`).
 4. Never write feature code before watching the test fail. A test that passes before code changes proves nothing.
+5. If tests live in a dedicated test directory, run `make -f .workflow/state/Makefile witness-red TEST_DIR=<dir> TEST_CMD="<cmd>"` (`SCAR-TEST-12`).
 
 ### Phase 2: Green (Minimal Production Code)
 
@@ -27,6 +28,11 @@ Execute every code change in three ordered phases.
 2. Follow [`14_design_patterns_and_architecture.md`](./14_design_patterns_and_architecture.md): favor object composition over deep inheritance, and apply Game Programming Patterns in game subprojects.
 3. Balance encapsulation with speed: use an ORM (a library that maps database rows to objects) by default, and place parameterized SQL or NoSQL queries inside repositories for large datasets.
 4. Run the targeted subproject test command and make sure that all targeted tests pass (`green_exit == 0`).
+5. If `.workflow/state/30_tdd_receipt.json` exists, run `make -f .workflow/state/Makefile verify-green` (`SCAR-TEST-12`). Keep sealed test files, commands, and commits unchanged.
+
+### Anchored TDD Receipts (`SCAR-TEST-12`)
+
+The `witness-red` gate writes `.workflow/state/30_tdd_receipt.json` with a cryptographic seal (a tamper-detection hash) over Git `HEAD`, `test_cmd`, and all test files. The tree hash covers untracked fixtures such as `conftest.py` and ignores cache folders such as `__pycache__` and `.pytest_cache`. The `verify-green` gate compares the receipt seal, Git `HEAD`, and test tree hash before it replays the sealed command. Tampering attempts return a Vector 4 Reflex (a runtime recovery directive) with exit code `2` and append to `forensic_log`.
 
 ### Phase 3: Refactor
 

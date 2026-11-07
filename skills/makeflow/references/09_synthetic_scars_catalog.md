@@ -63,6 +63,7 @@ Agents must use Socratic Probes during:
 | `SCAR-TEST-09` | Fail-Fast Targeted TDD Loop | Testing | [`scars/testing.md`](./scars/testing.md) |
 | `SCAR-TEST-10` | Pre-Flight Structural Static Analysis Gate | Testing | [`scars/testing.md`](./scars/testing.md) |
 | `SCAR-TEST-11` | Shift-Left Testing Burden Balance | Testing | [`scars/testing.md`](./scars/testing.md) |
+| `SCAR-TEST-12` | Cryptographically Anchored TDD Receipts | Testing | [`scars/testing.md`](./scars/testing.md) |
 | `SCAR-SH-01` | Prefer Temporary Script Files Over Complex Shell Quoting | Git & Shell | [`scars/git_and_shell.md`](./scars/git_and_shell.md) |
 | `SCAR-SH-03` | Shell Redirection and Comment Stripping | Git & Shell | [`scars/git_and_shell.md`](./scars/git_and_shell.md) |
 | `SCAR-GIT-20` | Pre-Push Merge Check | Git & Shell | [`scars/git_and_shell.md`](./scars/git_and_shell.md) |

@@ -11,6 +11,7 @@ This reference manual documents testing and verification scars (`SCAR-TEST-*`). 
 | `SCAR-TEST-09` | Fail-Fast Targeted TDD Loop | Red-Green Test Iteration (`-x -v`) |
 | `SCAR-TEST-10` | Pre-Flight Structural Static Analysis Gate | Fast Structural Syntax Pre-Flight Check |
 | `SCAR-TEST-11` | Shift-Left Testing Burden Balance | Up-Front Testing Feasibility & Burden Budget |
+| `SCAR-TEST-12` | Cryptographically Anchored TDD Receipts | Red-to-Green Receipt Sealing & Verification |
 
 ---
 
@@ -48,3 +49,10 @@ This reference manual documents testing and verification scars (`SCAR-TEST-*`). 
 - **Trap**: Postponing test comprehensiveness and burden balance evaluation to the Target 40 adversarial review causes delays and rework loops.
 - **Permanent Reflex**: Shift-left Pillar 2 evaluation into Target 15 and Target 20. In Target 15 archaeology receipts, classify the failure mechanism and evaluate test feasibility within hermetic fixtures (< 100 ms). In Target 20 plans, disclose the testing balance and prohibit surface-only testing when hermetic boundary testing is possible.
 - **Socratic Probe**: Are you settling for superficial assertions when hermetic boundary tests are fast and feasible? Does your test plan strike the right balance between rigorous contract coverage and fast execution without heavy dependencies, or do you need to interview the user to determine if heavy dependencies are necessary for some tests to be comprehensive?
+
+### SCAR-TEST-12: Cryptographically Anchored TDD Receipts
+
+- **Wound**: An agent passes the Green test gate by swapping `TEST_CMD`, dropping an untracked `conftest.py` file, or committing mid-phase.
+- **Trap**: Unanchored test runs trust conversational compliance, and `git write-tree` ignores untracked fixtures inside test directories.
+- **Permanent Reflex**: Run `witness-red` to write a cryptographic seal (a tamper-detection hash) over `HEAD`, `test_cmd`, and all test files in `30_tdd_receipt.json`. Run `verify-green` to make sure that the receipt matches and to replay the sealed command. If tampering occurs, emit exit code `2` and record the event in `forensic_log` inside `30_tdd_receipt.json`.
+- **Socratic Probe**: Did production code fix the bug, or did a test file, fixture, command, or commit change after `witness-red`?
