@@ -472,11 +472,24 @@ def validate_temporary_script_quoting_scar():
       for field in ("Wound", "Trap", "Permanent Reflex", "Socratic Probe"):
         if f"**{field}**:" not in scar_section:
           errors.append(f"{sh_spoke_rel} SCAR-SH-01 missing '**{field}**:'")
-      for invariant in ("temporary directory", "complex string escaping", "quotes", "Dart", "Python"):
+      for invariant in (
+          "temporary directory",
+          "complex string escaping",
+          "quotes",
+          "Dart",
+          "Python",
+          "noexec",
+          "chmod +x",
+          "interpreter",
+      ):
         if invariant.lower() not in scar_section.lower():
           errors.append(
               f"{sh_spoke_rel} SCAR-SH-01 missing invariant '{invariant}'"
           )
+      if "execute that file directly" in scar_section.lower():
+        errors.append(
+            f"{sh_spoke_rel} SCAR-SH-01 must not specify 'execute that file directly'"
+        )
 
   cat_rel = "skills/makeflow/references/09_synthetic_scars_catalog.md"
   cat_path = repo_path(cat_rel)
@@ -503,6 +516,10 @@ def validate_temporary_script_quoting_scar():
       sec_text = f.read()
     if "SCAR-SH-01" not in sec_text:
       errors.append(f"{sec_rel} must document SCAR-SH-01")
+    if "noexec" not in sec_text.lower():
+      errors.append(f"{sec_rel} must document noexec protection")
+    if "interpreter" not in sec_text.lower():
+      errors.append(f"{sec_rel} must mandate runtime interpreter invocation")
 
   agents_rel = "rules/AGENTS.md"
   agents_path = repo_path(agents_rel)
@@ -513,6 +530,15 @@ def validate_temporary_script_quoting_scar():
       agents_text = f.read()
     if "SCAR-SH-01" not in agents_text:
       errors.append(f"{agents_rel} Section 3.1 must reference SCAR-SH-01")
+    if "execute that file directly" in agents_text.lower():
+      errors.append(f"{agents_rel} must not instruct executing the file directly")
+    agents_sec31 = (
+        agents_text.split("### 3.1 Temporary Script and Automation Rules")[1].split("## 4.")[0]
+        if "### 3.1 Temporary Script and Automation Rules" in agents_text
+        else ""
+    )
+    if "interpreter" not in agents_sec31.lower():
+      errors.append(f"{agents_rel} Section 3.1 must mandate runtime interpreter invocation")
 
   for adapter_rel in [
       "CLAUDE.md",
@@ -529,6 +555,14 @@ def validate_temporary_script_quoting_scar():
         adapter_text = f.read()
       if "SCAR-SH-01" not in adapter_text:
         errors.append(f"{adapter_rel} must document SCAR-SH-01")
+      lines = [line for line in adapter_text.splitlines() if "SCAR-SH-01" in line]
+      for line in lines:
+        if "execute that file directly" in line.lower():
+          errors.append(f"{adapter_rel} must not specify 'execute that file directly'")
+        if "interpreter" not in line.lower() and "runtime" not in line.lower():
+          errors.append(
+              f"{adapter_rel} SCAR-SH-01 line must specify runtime interpreter invocation"
+          )
 
   # Negative Falsification Checks
   mock_corrupted_spoke = "### SCAR-SH-01: Broken\n**Wound**: Foo"
@@ -540,6 +574,9 @@ def validate_temporary_script_quoting_scar():
   )
   if check_scar_catalog_routing(mock_misrouted, "SCAR-SH-01", "git_and_shell.md"):
     errors.append("Falsification failed: misrouted catalog line was accepted")
+  mock_direct_exec = "Write script to temporary directory and execute that file directly."
+  if "execute that file directly" not in mock_direct_exec:
+    errors.append("Falsification failed: direct execution pattern not detected")
 
   return errors
 
