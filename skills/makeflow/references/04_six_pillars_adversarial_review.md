@@ -155,6 +155,7 @@ Test-Driven Development (TDD) is the core discipline of this workflow. The criti
 ### 3. Architecture
 - **Contract and Symmetry Compliance**: Does the diff follow established project patterns and type contracts?
 - **API Diamond Invariant (`SCAR-API-06`)**: Does the design maintain a minimal, stable core spine with rich compositional periphery?
+- **Anti-Speculative Defenses and Caller Grounding (`SCAR-ARCH-07`)**: Does the diff defend only against inputs and states reachable by verified, real callers? Prohibit speculative defense layers, multi-source prose regexes, or unrequested CLI flag-order permutation handling for internal scripts invoked only by deterministic targets. Balance "the problem could occur" against "the problem will occur": if an edge case is certain to occur for actual callers, it must be addressed; if it is merely hypothetical problem-hunting without observed failures, defer defense until a bug is observed or reported.
 - **Design Pattern Discipline**: Does the code use suitable Gang of Four or Game Programming Patterns (`14_design_patterns_and_architecture.md`) without introducing unnecessary abstraction layers?
 - **Persistence Boundaries**: Does the code use an ORM for standard entity relationships? If processing high-volume datasets, are parameterized queries cleanly encapsulated behind repository interfaces?
 - **Structural Decoupling**: Are user interfaces, business logic controllers, and runtime entry points cleanly separated?

@@ -822,6 +822,146 @@ def validate_tdd_guard_scar():
   return errors
 
 
+def validate_anti_speculation_scar():
+  """Validates Anti-Speculative Defenses and Caller Grounding (GH-85, SCAR-ARCH-07)."""
+  errors = []
+
+  # Helper to verify scar fields in a markdown document block
+  def _verify_scar_block_fields(text, scar_id):
+    field_errors = []
+    if scar_id not in text:
+      field_errors.append(f"missing {scar_id}")
+      return field_errors
+    section = (
+        text.split(f"### {scar_id}")[1].split("### SCAR-")[0]
+        if f"### {scar_id}" in text
+        else ""
+    )
+    for field in ("Wound", "Trap", "Permanent Reflex", "Socratic Probe"):
+      field_match = re.search(
+          rf"\*\*{re.escape(field)}\*\*:\s*([^\n]+)", section
+      )
+      if not field_match or not field_match.group(1).strip():
+        field_errors.append(f"missing non-empty '**{field}**:'")
+    return field_errors
+
+  # 1. Spoke verification: skills/makeflow/references/scars/architecture.md
+  arch_spoke_rel = "skills/makeflow/references/scars/architecture.md"
+  arch_spoke = repo_path(arch_spoke_rel)
+  if not os.path.exists(arch_spoke):
+    errors.append(f"Missing {arch_spoke_rel}")
+  else:
+    with open(arch_spoke, "r", encoding="utf-8") as f:
+      arch_text = f.read()
+    table_match = re.search(
+        r"## Scars in this Category.*?(?=\n###|\Z)", arch_text, re.DOTALL
+    )
+    table_section = table_match.group(0) if table_match else ""
+    if "SCAR-ARCH-07" not in table_section:
+      errors.append(f"{arch_spoke_rel} scars table must contain SCAR-ARCH-07")
+    for err in _verify_scar_block_fields(arch_text, "SCAR-ARCH-07"):
+      errors.append(f"{arch_spoke_rel} SCAR-ARCH-07 {err}")
+
+  # 2. Master routing catalog: skills/makeflow/references/09_synthetic_scars_catalog.md
+  cat_rel = "skills/makeflow/references/09_synthetic_scars_catalog.md"
+  cat_path = repo_path(cat_rel)
+  if not os.path.exists(cat_path):
+    errors.append(f"Missing {cat_rel}")
+  else:
+    with open(cat_path, "r", encoding="utf-8") as f:
+      cat_text = f.read()
+    if "SCAR-ARCH-07" not in cat_text:
+      errors.append(f"{cat_rel} must index SCAR-ARCH-07")
+    if not check_scar_catalog_routing(cat_text, "SCAR-ARCH-07", "architecture.md"):
+      errors.append(
+          f"{cat_rel} must route SCAR-ARCH-07 to scars/architecture.md"
+      )
+
+  # 3. Six pillars manual: skills/makeflow/references/04_six_pillars_adversarial_review.md
+  rev_rel = "skills/makeflow/references/04_six_pillars_adversarial_review.md"
+  rev_path = repo_path(rev_rel)
+  if not os.path.exists(rev_path):
+    errors.append(f"Missing {rev_rel}")
+  else:
+    with open(rev_path, "r", encoding="utf-8") as f:
+      rev_text = f.read()
+    pillar3_match = re.search(
+        r"(?m)^###\s+3\.\s+Architecture\b.*?(?=^###\s+4\b|\Z)",
+        rev_text,
+        re.DOTALL,
+    )
+    pillar3_section = pillar3_match.group(0) if pillar3_match else ""
+    if "SCAR-ARCH-07" not in pillar3_section:
+      errors.append(f"{rev_rel} Pillar 3 must include SCAR-ARCH-07")
+
+  # 4. Critic agent prompt: agents/adversarial-critic.md
+  critic_rel = "agents/adversarial-critic.md"
+  critic_path = repo_path(critic_rel)
+  if not os.path.exists(critic_path):
+    errors.append(f"Missing {critic_rel}")
+  else:
+    with open(critic_path, "r", encoding="utf-8") as f:
+      critic_text = f.read()
+    critic_p3_match = re.search(
+        r"(?m)^###\s+3\.\s+Architecture\b.*?(?=^###\s+4\b|\Z)",
+        critic_text,
+        re.DOTALL,
+    )
+    critic_p3 = critic_p3_match.group(0) if critic_p3_match else ""
+    if "SCAR-ARCH-07" not in critic_p3:
+      errors.append(f"{critic_rel} Pillar 3 must include SCAR-ARCH-07")
+
+  # 5. Antigravity rules: rules/AGENTS.md
+  agents_rel = "rules/AGENTS.md"
+  agents_path = repo_path(agents_rel)
+  if not os.path.exists(agents_path):
+    errors.append(f"Missing {agents_rel}")
+  else:
+    with open(agents_path, "r", encoding="utf-8") as f:
+      agents_text = f.read()
+    sec3_match = re.search(
+        r"(?m)^##\s+3\.\s+Code Edit and Architecture Rules\b.*?(?=^##\s+4\b|\Z)",
+        agents_text,
+        re.DOTALL,
+    )
+    sec3_text = sec3_match.group(0) if sec3_match else ""
+    if "SCAR-ARCH-07" not in sec3_text:
+      errors.append(f"{agents_rel} Section 3 must document SCAR-ARCH-07")
+
+  # 6. Negative Falsification
+  if not _verify_scar_block_fields("### SCAR-ARCH-06: Other", "SCAR-ARCH-07"):
+    errors.append("Negative falsification failed: missing SCAR-ARCH-07 was not detected")
+  for missing_field in ("Wound", "Trap", "Permanent Reflex", "Socratic Probe"):
+    all_fields = [
+        "**Wound**: W",
+        "**Trap**: T",
+        "**Permanent Reflex**: R",
+        "**Socratic Probe**: P",
+    ]
+    incomplete_fields = "\n".join(
+        [f for f in all_fields if not f.startswith(f"**{missing_field}**:")]
+    )
+    mock_incomplete = (
+        f"### SCAR-ARCH-07: Incomplete\n{incomplete_fields}\n### SCAR-ARCH-08:"
+        " Next"
+    )
+    if not _verify_scar_block_fields(mock_incomplete, "SCAR-ARCH-07"):
+      errors.append(
+          f"Negative falsification failed: missing {missing_field} was not"
+          " detected"
+      )
+  mock_misrouted = (
+      "| `SCAR-ARCH-07` | Anti-Speculation | Architecture |"
+      " [`scars/testing.md`](./scars/testing.md) |"
+  )
+  if check_scar_catalog_routing(mock_misrouted, "SCAR-ARCH-07", "architecture.md"):
+    errors.append("Negative falsification failed: misrouted SCAR-ARCH-07 was accepted")
+
+  return errors
+
+  return errors
+
+
 def parse_frontmatter(content):
   """Parses YAML frontmatter from markdown file content."""
   if not content.startswith("---"):
@@ -1787,8 +1927,8 @@ def validate():
       if r09_text and not check_scar_catalog_routing(r09_text, scar_id, sf):
         errors.append(f"{ref_09_rel} Master Routing Table must strictly route {scar_id} to scars/{sf}")
 
-  if total_scars_found != 35:
-    errors.append(f"Expected 35 synthetic scars across category spokes, found {total_scars_found}")
+  if total_scars_found != 36:
+    errors.append(f"Expected 36 synthetic scars across category spokes, found {total_scars_found}")
 
   testing_spoke_rel = os.path.join(scars_dir_rel, "testing.md")
   testing_spoke = repo_path(testing_spoke_rel)
@@ -2396,6 +2536,12 @@ def validate():
         "✔ Cryptographically anchored TDD receipts invariants (GH-53, SCAR-TEST-12)"
         " verified."
     )
+
+  # Anti-Speculative Defenses and Caller Grounding (GH-85, SCAR-ARCH-07)
+  anti_speculation_errors = validate_anti_speculation_scar()
+  errors.extend(anti_speculation_errors)
+  if not anti_speculation_errors:
+    print("✔ Anti-speculative defenses and caller grounding (GH-85, SCAR-ARCH-07) verified.")
 
   if errors:
     print(f"\n❌ Validation failed with {len(errors)} error(s):")

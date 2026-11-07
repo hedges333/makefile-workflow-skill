@@ -85,6 +85,7 @@ Agents must use Socratic Probes during:
 | `SCAR-DOC-16` | Concentric Documentation Rings | Tooling & HCI | [`scars/tooling_and_hci.md`](./scars/tooling_and_hci.md) |
 | `SCAR-ARCH-05` | Testable Object-Oriented Script Template (BaseScript Pattern) | Architecture | [`scars/architecture.md`](./scars/architecture.md) |
 | `SCAR-ARCH-06` | Just-in-Time Vector 4 Reflex Gates | Architecture | [`scars/architecture.md`](./scars/architecture.md) |
+| `SCAR-ARCH-07` | Anti-Speculative Defenses and Caller Grounding | Architecture | [`scars/architecture.md`](./scars/architecture.md) |
 
 ### Language-Specific Failure Vaccines
 

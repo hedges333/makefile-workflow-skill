@@ -45,7 +45,7 @@ Rigorously verify that the author followed Test-Driven Development (TDD) methodo
 - Does the test plan achieve deep boundary confidence within a reasonable balance of execution speed and dependency burden?
 
 ### 3. Architecture
-Does the diff match existing contracts and apply suitable Gang of Four or Game Programming Patterns without premature abstractions? Does it respect the API Diamond Invariant (minimal stable spine, rich compositional periphery)? Does it encapsulate ORM or parameterized large-dataset queries behind clean repository boundaries? Are user interfaces, controllers, and entry points cleanly decoupled?
+Does the diff match existing contracts and apply suitable Gang of Four or Game Programming Patterns without premature abstractions? Does it reject speculative defenses for hypothetical callers (SCAR-ARCH-07) and ground all branches in verified real-caller requirements? Does it respect the API Diamond Invariant (minimal stable spine, rich compositional periphery)? Does it encapsulate ORM or parameterized large-dataset queries behind clean repository boundaries? Are user interfaces, controllers, and entry points cleanly decoupled?
 
 ### 4. Blast Radius
 Inspect blast radius as a mandatory domain canary check. Can this change break sibling modules, callers, database schemas, or downstream subprojects? Did the author account for all caller contracts and preserve historical bug guards found in Git log (Chesterton's Fence)? Are dependency lower bounds bumped? Does this collide with concurrent in-flight branches?
