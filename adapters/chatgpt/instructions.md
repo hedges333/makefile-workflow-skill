@@ -36,6 +36,7 @@ Move through these targets in dependency order:
 - Intercept POSIX signals (SIGTERM / SIGINT) in long-running workers and clean up lockfiles under SCAR-SYS-07.
 - If shell commands require complex string escaping or multiple quoting layers, write the script to a file in a temporary directory under SCAR-SH-01.
 - Encapsulate script and entry-point logic in testable classes using the BaseScript Template Method pattern under SCAR-ARCH-05.
+- Use atomic directory creation (mkdir) for mutual exclusion locks under SCAR-SYS-08.
 
 4. SIMPLE ENGLISH
 - Write documentation, plans, and commit messages in Simple English: short sentences, active voice, terms defined at first use, and no filler words.

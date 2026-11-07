@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""POSIX Signal Trapping for Long-Running Workers (SCAR-SYS-07).
+"""POSIX Signal Trapping for Long-Running Workers (SCAR-SYS-07, SCAR-SYS-08).
 
 Provides SignalTrap context manager and cleanup registry to intercept SIGTERM
-and SIGINT, execute cleanup callbacks in LIFO order, safely unlink registered
-lockfiles, and exit cleanly.
+and SIGINT, execute cleanup callbacks in LIFO order, safely remove registered
+lockfiles and atomic directory locks, and exit cleanly.
 """
 
 import argparse
@@ -43,6 +43,7 @@ class SignalTrap:
     self._original_handlers: Dict[int, Any] = {}
     self._cleanups: List[Tuple[Callable[..., Any], Tuple[Any, ...], Dict[str, Any]]] = []
     self._lockfiles: Set[str] = set()
+    self._lock_dirs: Set[str] = set()
 
     self._installed: bool = False
     self._handling_signal: bool = False
@@ -119,8 +120,21 @@ class SignalTrap:
     self._lockfiles.add(norm_path)
     return norm_path
 
+  def register_lock_dir(self, path: Union[str, os.PathLike]) -> str:
+    """Register a directory lock path to be removed upon signal or exit.
+
+    Args:
+        path: Filesystem path to directory lock.
+
+    Returns:
+        Normalized absolute path string.
+    """
+    norm_path = os.path.abspath(os.fspath(path))
+    self._lock_dirs.add(norm_path)
+    return norm_path
+
   def remove_lockfiles(self) -> List[Tuple[str, Exception]]:
-    """Remove all registered lockfiles if they exist.
+    """Remove all registered lockfiles and lock directories if they exist.
 
     Returns:
         List of (path, exception) tuples for any removal errors.
@@ -128,14 +142,29 @@ class SignalTrap:
     errors: List[Tuple[str, Exception]] = []
     lockfiles_to_remove = list(self._lockfiles)
     self._lockfiles.clear()
+    lock_dirs_to_remove = list(self._lock_dirs)
+    self._lock_dirs.clear()
 
     for path in lockfiles_to_remove:
       try:
-        if os.path.exists(path):
+        try:
           os.unlink(path)
+        except IsADirectoryError:
+          os.rmdir(path)
+      except FileNotFoundError:
+        pass
       except OSError as exc:
         errors.append((path, exc))
         logger.warning("Failed to remove lockfile %s: %s", path, exc)
+
+    for path in lock_dirs_to_remove:
+      try:
+        os.rmdir(path)
+      except FileNotFoundError:
+        pass
+      except OSError as exc:
+        errors.append((path, exc))
+        logger.warning("Failed to remove lock directory %s: %s", path, exc)
 
     return errors
 
@@ -204,11 +233,15 @@ class SignalTrap:
 def main(argv: Optional[Sequence[str]] = None) -> int:
   """Run signal_trap demo worker CLI for testing and process management."""
   parser = argparse.ArgumentParser(
-      description="POSIX Signal Trap Worker (SCAR-SYS-07)"
+      description="POSIX Signal Trap Worker (SCAR-SYS-07, SCAR-SYS-08)"
   )
   parser.add_argument(
       "--lockfile",
       help="Path to lockfile to create and protect with SignalTrap",
+  )
+  parser.add_argument(
+      "--lock-dir",
+      help="Path to lock directory to create and protect with SignalTrap",
   )
   parser.add_argument(
       "--ready-file",
@@ -225,6 +258,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
       with open(lock_path, "w", encoding="utf-8") as f:
         f.write(str(os.getpid()))
       trap.register_lockfile(lock_path)
+
+    if args.lock_dir:
+      dir_path = os.path.abspath(args.lock_dir)
+      parent_dir = os.path.dirname(dir_path)
+      if parent_dir:
+        os.makedirs(parent_dir, exist_ok=True)
+      os.mkdir(dir_path)
+      trap.register_lock_dir(dir_path)
 
     if args.ready_file:
       ready_path = os.path.abspath(args.ready_file)

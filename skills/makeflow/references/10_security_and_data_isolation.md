@@ -76,3 +76,13 @@ Long-running workers and daemons must catch termination signals to release lockf
 3. Use `scripts/signal_trap.py` with `SignalTrap` to register signal handlers and cleanup callbacks.
 4. Execute cleanup callbacks in reverse registration order (LIFO), and isolate exceptions so one failing callback does not halt remaining cleanups.
 5. Register lockfile paths with `register_lockfile` to ensure automatic file removal upon termination signal or context exit.
+
+## 8. Atomic Directory-Based Mutual Exclusion Locks (`SCAR-SYS-08`)
+
+Concurrent processes must acquire exclusive locks atomically to prevent race conditions:
+
+1. When synchronizing processes with the filesystem, create a lock directory with `os.mkdir`.
+2. Do not use regular file existence checks or non-atomic file creation for mutual exclusion.
+3. Catch `FileExistsError` to detect lock contention safely.
+4. Register lock directories with `SignalTrap.register_lock_dir` to ensure cleanup on exit or signal.
+5. Catch `FileNotFoundError` during cleanup to handle concurrent removal safely.

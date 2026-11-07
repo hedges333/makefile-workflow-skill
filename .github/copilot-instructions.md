@@ -15,6 +15,7 @@ Follow the Makefile Workflow lifecycle when assisting in this repository:
 11. Intercept POSIX signals (`SIGTERM` and `SIGINT`) in long-running workers and clean up lockfiles under `SCAR-SYS-07`.
 12. If shell commands require complex string escaping or multiple quoting layers, write the script to a file in a temporary directory under `SCAR-SH-01`.
 13. Encapsulate script and entry-point logic in testable classes using the BaseScript Template Method pattern under `SCAR-ARCH-05`.
+14. Use atomic directory creation (`mkdir`) for mutual exclusion locks under `SCAR-SYS-08`.
 
 ## Interactive Model Switch Reminder
 
