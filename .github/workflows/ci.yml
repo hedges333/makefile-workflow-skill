@@ -22,6 +22,9 @@ jobs:
     - name: Check cross-agent compatibility
       run: python3 scripts/test_cross_agent_compatibility.py
 
+    - name: Test arbitrary CWD subprocess timeout
+      run: python3 -m unittest -v scripts/test_compat_cwd.py
+
     - name: Test MCP server JSON-RPC
       run: python3 scripts/test_mcp_server.py
 

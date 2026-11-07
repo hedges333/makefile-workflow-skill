@@ -7,7 +7,7 @@ INSTALL_DIR = $(HOME)/.gemini/config/plugins/$(PLUGIN_NAME)
 PYTHON ?= python3
 REPO_ROOT ?= $(MKFILE_DIR)
 
-.PHONY: all validate install uninstall test test-static test-safe-copy test-env-preflight test-signal-trap test-mcp test-compat test-base-script test-terminal-title test-hooks test-reflex test-tdd-guard check-plugin-files check-skill-budget help
+.PHONY: all validate install uninstall test test-static test-safe-copy test-env-preflight test-signal-trap test-mcp test-compat test-compat-cwd test-base-script test-terminal-title test-hooks test-reflex test-tdd-guard check-plugin-files check-skill-budget help
 
 all: validate test
 
@@ -21,6 +21,7 @@ help:
 	@echo "  make test-signal-trap   - Test POSIX signal trapping and worker cleanup (SCAR-SYS-07)"
 	@echo "  make test-mcp           - Test Model Context Protocol (MCP) server over stdio"
 	@echo "  make test-compat        - Check Claude, Cursor, Copilot, and ChatGPT adapters"
+	@echo "  make test-compat-cwd    - Test arbitrary CWD subprocess timeout (GH-62)"
 	@echo "  make test-base-script   - Test BaseScript execution lifecycle (SCAR-ARCH-05)"
 	@echo "  make test-hooks         - Test SessionStart and PreToolUse hook scripts"
 	@echo "  make test-reflex        - Test Vector 4 Reflex emitter and workflow gates (SCAR-ARCH-06)"
@@ -109,6 +110,15 @@ test-compat:
 		--rejected "Breaking adapter, scar routing, pause gate, or manifest invariants." \
 		--reflex "Read the reported compatibility errors above, align the affected file, and re-run make test-compat."
 
+test-compat-cwd:
+	@echo "Testing arbitrary CWD subprocess timeout..."
+	@$(PYTHON) -m unittest "$(SCRIPTS_DIR)/test_compat_cwd.py" -v || $(PYTHON) "$(SCRIPTS_DIR)/emit_reflex.py" \
+		--scar-id TEST-08 \
+		--code COMPAT_CWD_SUITE_FAILED \
+		--trigger "scripts/test_compat_cwd.py failed." \
+		--rejected "Failing arbitrary CWD timeout or exception handling unit tests." \
+		--reflex "Run $(PYTHON) -m unittest -v scripts/test_compat_cwd.py, fix failing tests, and re-run make test-compat-cwd."
+
 test-base-script:
 	@echo "Testing BaseScript execution lifecycle..."
 	@$(PYTHON) "$(SCRIPTS_DIR)/test_base_script.py" -v || $(PYTHON) "$(SCRIPTS_DIR)/emit_reflex.py" \
@@ -154,7 +164,7 @@ test-tdd-guard:
 		--rejected "Weakening witness-red sealing, verify-green replay, or forensic collision logging." \
 		--reflex "Run $(PYTHON) -m unittest -v -f scripts/test_tdd_guard.py, fix the failing guard check, and re-run make test-tdd-guard."
 
-test: test-static test-safe-copy test-env-preflight test-signal-trap test-compat test-base-script test-terminal-title test-mcp test-hooks test-reflex test-tdd-guard
+test: test-static test-safe-copy test-env-preflight test-signal-trap test-compat test-compat-cwd test-base-script test-terminal-title test-mcp test-hooks test-reflex test-tdd-guard
 	@echo "Testing file structure and skill context budget..."
 	@$(PYTHON) "$(SCRIPTS_DIR)/workflow_gates.py" --repo-root "$(REPO_ROOT)" plugin-files
 	@$(PYTHON) "$(SCRIPTS_DIR)/workflow_gates.py" --repo-root "$(REPO_ROOT)" skill-budget
