@@ -907,10 +907,12 @@ def _has_push_force_config(configs):
 
 
 def _detect_target_90(cmd, state_dir=None):
-  """Detects whether command is a Target 90 history ledger operation."""
+  """Detects whether command is a Target 90 history ledger or local scar operation."""
   is_history_msg = (
       "docs(history):" in cmd
+      or "docs(scars):" in cmd
       or ".workflow/history" in cmd
+      or ".workflow/scars" in cmd
       or "history.json" in cmd
       or "history.md" in cmd
   )

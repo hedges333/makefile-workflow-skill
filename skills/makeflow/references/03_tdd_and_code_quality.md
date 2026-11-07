@@ -4,11 +4,12 @@ This manual covers test-driven development (TDD, writing tests before production
 
 ## 1. Review Before Edit (`SCAR-PROC-104`)
 
-Follow three rules before you modify any source file:
+Follow four rules before you modify any source file:
 
 1. Read the file, its imports, its type signatures, and its comments first (`SCAR-PROC-104`).
 2. Make minimal, confident edits that solve the ticket. Do not rewrite an entire module when a three-line fix works.
 3. Leave unrelated defects or style issues untouched, and note them for a separate ticket.
+4. Read and enforce applicable Tier 1 core scars in `skills/makeflow/references/scars/` and Tier 2 project-local scars in `.workflow/scars/`.
 
 ## 2. Red-Green-Refactor TDD Loop
 
