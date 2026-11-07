@@ -938,5 +938,26 @@
     "closes_issue": true,
     "tests_added": 6,
     "scars_earned": []
+  },
+  {
+    "id": "GH-92",
+    "issue_url": "https://github.com/hedges333/makeflow-skill/issues/92",
+    "title": "Codify SCAR-PROC-106 for predetermined subagent tool mounting",
+    "request": "Add SCAR-PROC-106 to process scars spoke and synthetic scars catalog, and update expected scar count from 34 to 35 in cross-agent compatibility suite.",
+    "branch": "feat/92-codify-scar-proc-106",
+    "subprojects": [
+      "skills",
+      "scripts"
+    ],
+    "started_at": "2026-11-07T02:26:00Z",
+    "completed_at": "2026-11-07T02:40:00Z",
+    "commit_sha": "1c47a4d",
+    "pr_number": 94,
+    "pr_url": "https://github.com/hedges333/makeflow-skill/pull/94",
+    "closes_issue": true,
+    "tests_added": 1,
+    "scars_earned": [
+      "SCAR-PROC-106: Predetermined Subagent Tool Mounting via options and tools Blocks"
+    ]
   }
 ]
