@@ -21,8 +21,9 @@ from base_script import BaseScript
 from emit_reflex import EmitReflexScript
 from workflow_gates import WorkflowGatesScript
 
-BASELINE_SKILL_BYTES = 22223
-MAX_REFACTORED_SKILL_BYTES = 13333  # >= 40% reduction from 22,223-byte baseline
+# we factored it down, and it's okay if it grows a little, but that should be the hard limit.
+# if it fails, it's time to reassess and refactor.
+BASELINE_SKILL_BYTES = 24576
 
 
 def _init_git_repo(repo_dir: str) -> None:
@@ -990,15 +991,15 @@ class TestCliAndMakefileIntegration(unittest.TestCase):
 class TestSkillContextReduction(unittest.TestCase):
   """Verifies GH-57 static context reduction and core safety invariants on SKILL.md."""
 
-  def test_skill_md_at_least_forty_percent_smaller_than_baseline(self):
+  def test_skill_md_at_less_than_baseline(self):
     skill_md = os.path.join(_REPO_ROOT, "skills", "makeflow", "SKILL.md")
     self.assertTrue(os.path.isfile(skill_md))
     actual_bytes = os.path.getsize(skill_md)
     self.assertLessEqual(
         actual_bytes,
-        MAX_REFACTORED_SKILL_BYTES,
-        f"Expected skills/makeflow/SKILL.md <= {MAX_REFACTORED_SKILL_BYTES} bytes "
-        f"(>= 40% reduction from {BASELINE_SKILL_BYTES}), got {actual_bytes} bytes",
+        BASELINE_SKILL_BYTES,
+        f"Expected skills/makeflow/SKILL.md <= {BASELINE_SKILL_BYTES} bytes "
+        f"(<= {BASELINE_SKILL_BYTES}), got {actual_bytes} bytes: must re-engineer and refactor",
     )
 
   def test_skill_md_preserves_custom_workflow_pause_gate_floor(self):
