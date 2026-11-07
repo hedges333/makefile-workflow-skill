@@ -1236,5 +1236,23 @@
     "scars_earned": [
       "SCAR-PROC-106: Predetermined Subagent Tool Mounting via tools Lists"
     ]
+  },
+  {
+    "id": "GH-62",
+    "issue_url": "https://github.com/hedges333/makeflow-skill/issues/62",
+    "title": "[ENHANCEMENT] Add explicit timeout to child subprocess in validate_arbitrary_cwd_execution",
+    "request": "Add an explicit timeout parameter (e.g. timeout=30) to subprocess.run in validate_arbitrary_cwd_execution to guard against indefinite hanging in degraded CI runners.",
+    "branch": "feat/62-subprocess-timeout",
+    "subprojects": [
+      "scripts"
+    ],
+    "started_at": "2026-11-06T22:42:00-08:00",
+    "completed_at": "2026-11-06T23:13:50-08:00",
+    "commit_sha": "e305ebf",
+    "pr_number": 115,
+    "pr_url": "https://github.com/hedges333/makeflow-skill/pull/115",
+    "closes_issue": true,
+    "tests_added": 5,
+    "scars_earned": []
   }
 ]
