@@ -61,3 +61,5 @@
 | 2026-11-06 | [GH-81](https://github.com/hedges333/makeflow-skill/issues/81) | Target 40 prompts user to switch model picker but dispatches critic without pausing | `fix/81-target-40-model-picker-pause` | [PR #111](https://github.com/hedges333/makeflow-skill/pull/111) | +1 | None |
 | 2026-11-06 | [GH-108](https://github.com/hedges333/makeflow-skill/issues/108) | Simplify subagent tool mounting and remove unresolvable MCP meta-tools from agent configs | `fix/108-simplify-subagent-tools` | [PR #114](https://github.com/hedges333/makeflow-skill/pull/114) | +1 | `SCAR-PROC-106` |
 | 2026-11-06 | [GH-62](https://github.com/hedges333/makeflow-skill/issues/62) | Add explicit timeout to child subprocess in validate_arbitrary_cwd_execution | `feat/62-subprocess-timeout` | [PR #115](https://github.com/hedges333/makeflow-skill/pull/115) | +5 | None |
+| 2026-11-06 | [GH-54](https://github.com/hedges333/makeflow-skill/issues/54) | Investigate fgrandon red-green bypass prevention | `feat/54-red-green-bypass-prevention` | [PR #116](https://github.com/hedges333/makeflow-skill/pull/116) | +7 | `SCAR-TEST-12` |
+

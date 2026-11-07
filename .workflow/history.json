@@ -1254,5 +1254,26 @@
     "closes_issue": true,
     "tests_added": 5,
     "scars_earned": []
+  },
+  {
+    "id": "GH-54",
+    "issue_url": "https://github.com/hedges333/makeflow-skill/issues/54",
+    "title": "[FEAT] investigate fgrandon red-green bypass prevention",
+    "request": "Cryptographically pin Git HEAD commit SHA via 'git rev-parse --verify HEAD' during witness-red, enforce HEAD immutability during verify-green and verify-citation, and stream baseline specification citations from immutable Git blobs via 'git -c core.quotepath=false show', rejecting uncommitted scratch files with UNCOMMITTED_WITNESS_FILE and blank or comment lines with TRIVIAL_WITNESS_LINE.",
+    "branch": "feat/54-red-green-bypass-prevention",
+    "subprojects": [
+      "scripts",
+      "skills"
+    ],
+    "started_at": "2026-11-06T22:45:00-08:00",
+    "completed_at": "2026-11-06T23:30:00-08:00",
+    "commit_sha": "a5b61b0",
+    "pr_number": 116,
+    "pr_url": "https://github.com/hedges333/makeflow-skill/pull/116",
+    "closes_issue": true,
+    "tests_added": 7,
+    "scars_earned": [
+      "SCAR-TEST-12: Cryptographically Anchored TDD Receipts and Immutable Git Blob Citations"
+    ]
   }
 ]
