@@ -1025,5 +1025,24 @@
     "scars_earned": [
       "SCAR-PROC-107: Full Discussion and Comment Thread Ingestion at Intake"
     ]
+  },
+  {
+    "id": "GH-89",
+    "issue_url": "https://github.com/hedges333/makeflow-skill/issues/89",
+    "title": "Include detailed Non-Blocking Observations (NBO) summary in Target 42 blocker triage prompt",
+    "request": "Enhance the Target 42 (triaged-blockers) chat presentation instructions so that when an adversarial review returns BLOCKERS > 0 alongside Non-Blocking Observations (NBOs), the supervisor presents a detailed NBO summary and disposition table in chat in addition to the Blocker Digest.",
+    "branch": "feat/89-t42-nbo-summary",
+    "subprojects": [
+      "skills",
+      "scripts"
+    ],
+    "started_at": "2026-11-06T18:50:47-08:00",
+    "completed_at": "2026-11-06T19:24:37-08:00",
+    "commit_sha": "4363373",
+    "pr_number": 98,
+    "pr_url": "https://github.com/hedges333/makeflow-skill/pull/98",
+    "closes_issue": true,
+    "tests_added": 1,
+    "scars_earned": []
   }
 ]
