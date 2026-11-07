@@ -76,6 +76,9 @@ Long-running workers and daemons must catch termination signals to release lockf
 3. Use `scripts/signal_trap.py` with `SignalTrap` to register signal handlers and cleanup callbacks.
 4. Execute cleanup callbacks in reverse registration order (LIFO), and isolate exceptions so one failing callback does not halt remaining cleanups.
 5. Register lockfile paths with `register_lockfile` to ensure automatic file removal upon termination signal or context exit.
+6. Register child subprocesses with `register_subprocess` to terminate them gracefully before escalating to kill.
+7. Reap dead child processes non-blockingly with `SignalTrap.reap_zombies` using `waitpid` with `WNOHANG`.
+8. If a repeated signal arrives during shutdown, exit immediately with `os._exit` to prevent stuck workers.
 
 ## 8. Atomic Directory-Based Mutual Exclusion Locks (`SCAR-SYS-08`)
 
