@@ -17,9 +17,9 @@ This reference manual documents Git operations and shell execution scars (`SCAR-
 ### SCAR-SH-01: Prefer Temporary Script Files Over Complex Shell Quoting
 
 - **Wound**: An agent attempts complex multiline or quoted shell invocations (`bash -c "..."` or inline pipes), leading to syntax errors, unescaped variable expansion, or corrupted arguments.
-- **Trap**: Trying to escape layers of quotes inline inside shell command strings instead of writing the logic to an executable script file.
-- **Permanent Reflex**: If shell commands require complex string escaping or multiple quoting layers, write the script to a file in a temporary directory (or scratch directory) and execute that file directly. Prefer Dart when available, falling back to Python.
-- **Socratic Probe**: Does this command involve fragile nested quotes or shell escapes that should be extracted into a temporary script?
+- **Trap**: Trying to escape quote layers inline inside shell command strings, or relying on `chmod +x` file execution permissions on `noexec` mounts.
+- **Permanent Reflex**: If shell commands require complex string escaping or multiple quoting layers, write the script to a file in a temporary directory. Pass the script path to the runtime interpreter command (`dart /path/to/script.dart` or `python3 /path/to/script.py`). Prefer Dart when available, falling back to Python. Explicit interpreter invocation bypasses `noexec` mount restrictions and eliminates reliance on `chmod +x` executable file permissions.
+- **Socratic Probe**: Does this command involve fragile nested quotes that need a temporary script file? Will invoking the runtime interpreter bypass `noexec` restrictions and avoid `chmod +x` permission issues?
 
 ### SCAR-SH-03: Shell Redirection and Comment Stripping
 
