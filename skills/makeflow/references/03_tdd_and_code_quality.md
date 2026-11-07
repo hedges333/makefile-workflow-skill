@@ -35,6 +35,8 @@ Execute every code change in three ordered phases.
 
 The `witness-red` gate writes `.workflow/state/30_tdd_receipt.json` with a cryptographic seal (a tamper-detection hash) over Git `HEAD`, `test_cmd`, and all test files. The tree hash covers untracked fixtures such as `conftest.py` and ignores cache folders such as `__pycache__` and `.pytest_cache`. The `verify-green` gate compares the receipt seal, Git `HEAD`, and test tree hash before it replays the sealed command. Tampering attempts return a Vector 4 Reflex (a runtime recovery directive) with exit code `2` and append to `forensic_log`.
 
+The `verify-citation` gate reads cited specification lines directly from immutable Git blobs at witnessed `HEAD`. If a cited file does not exist in the witnessed `HEAD` commit, the gate rejects it with `UNCOMMITTED_WITNESS_FILE`. If a citation points to a blank line or comment line, the gate rejects it with `TRIVIAL_WITNESS_LINE`. Both violations return exit code `2` and roll back Green verification.
+
 ### Phase 3: Refactor
 
 1. Remove duplicate logic and keep function interfaces clear.

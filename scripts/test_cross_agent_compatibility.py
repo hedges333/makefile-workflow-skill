@@ -816,6 +816,9 @@ def _check_scar_test_12_section(scar_section, source_rel):
       "verify-green",
       "30_tdd_receipt.json",
       "forensic_log",
+      "verify-citation",
+      "UNCOMMITTED_WITNESS_FILE",
+      "TRIVIAL_WITNESS_LINE",
   ):
     if invariant not in scar_section:
       sec_errors.append(
@@ -1117,12 +1120,51 @@ def validate_tdd_guard_scar():
           f"{guard_test_rel} must not hardcode 'python3' in subprocess calls"
       )
 
+  tdd_doc_rel = "skills/makeflow/references/03_tdd_and_code_quality.md"
+  tdd_doc_path = repo_path(tdd_doc_rel)
+  if os.path.exists(tdd_doc_path):
+    with open(tdd_doc_path, "r", encoding="utf-8") as f:
+      tdd_doc_text = f.read()
+    for req_token in ("verify-citation", "UNCOMMITTED_WITNESS_FILE", "TRIVIAL_WITNESS_LINE"):
+      if req_token not in tdd_doc_text:
+        errors.append(f"{tdd_doc_rel} must document '{req_token}'")
+
+  tdd_guard_py = repo_path("scripts/tdd_guard.py")
+  if os.path.exists(tdd_guard_py):
+    with open(tdd_guard_py, "r", encoding="utf-8") as f:
+      guard_code = f.read()
+    for req_token in ("verify-citation", "UNCOMMITTED_WITNESS_FILE", "TRIVIAL_WITNESS_LINE"):
+      if req_token not in guard_code:
+        errors.append(f"scripts/tdd_guard.py must implement '{req_token}'")
+
   # Negative Falsification Checks
   mock_corrupted = "### SCAR-TEST-12: Receipts\n- **Wound**: Tampered\n"
   corrupted_errs = _check_scar_test_12_section(mock_corrupted, testing_spoke_rel)
   if not any("Permanent Reflex" in e for e in corrupted_errs):
     errors.append(
         "Falsification failed: corrupted SCAR-TEST-12 should lack Permanent Reflex"
+    )
+  mock_missing_citation = (
+      "### SCAR-TEST-12: Receipts\n"
+      "- **Wound**: Tampered\n"
+      "- **Trap**: Trap\n"
+      "- **Permanent Reflex**: witness-red verify-green 30_tdd_receipt.json forensic_log\n"
+      "- **Socratic Probe**: Probe\n"
+  )
+  missing_cit_errs = _check_scar_test_12_section(
+      mock_missing_citation, testing_spoke_rel
+  )
+  if not any("verify-citation" in e for e in missing_cit_errs):
+    errors.append(
+        "Falsification failed: missing verify-citation should be detected"
+    )
+  if not any("UNCOMMITTED_WITNESS_FILE" in e for e in missing_cit_errs):
+    errors.append(
+        "Falsification failed: missing UNCOMMITTED_WITNESS_FILE should be detected"
+    )
+  if not any("TRIVIAL_WITNESS_LINE" in e for e in missing_cit_errs):
+    errors.append(
+        "Falsification failed: missing TRIVIAL_WITNESS_LINE should be detected"
     )
   mock_misrouted = (
       "| `SCAR-TEST-12` | Cryptographically Anchored TDD Receipts | Testing |"

@@ -1586,6 +1586,705 @@ class TestTddGuardScript(unittest.TestCase):
       )
       self.assertEqual(rc_pass, 0, err_pass.getvalue())
 
+  def test_git_head_uses_verify_flag(self):
+    with mock.patch("subprocess.run", wraps=subprocess.run) as mock_run:
+      guard = TddGuardScript()
+      guard.repo_root = _REPO_ROOT
+      sha, err = guard._git_head()
+      self.assertIsNotNone(sha)
+      self.assertEqual(err, "")
+      mock_run.assert_called_with(
+          ["git", "rev-parse", "--verify", "HEAD"],
+          cwd=_REPO_ROOT,
+          capture_output=True,
+          text=True,
+          errors="replace",
+          check=False,
+          timeout=15,
+      )
+
+  def test_citation_verification_blob_streaming_and_working_tree_immunity(self):
+    with tempfile.TemporaryDirectory() as tmpdir:
+      _init_fixture_repo(tmpdir)
+      specs_dir = os.path.join(tmpdir, "specs")
+      os.makedirs(specs_dir, exist_ok=True)
+      spec1 = os.path.join(specs_dir, "requirements.txt")
+      with open(spec1, "w", encoding="utf-8") as f:
+        f.write("# Requirements\nFEATURE_ENABLED = true\n# More comments\n")
+      spec2 = os.path.join(specs_dir, "special 🚀 spec.txt")
+      with open(spec2, "w", encoding="utf-8") as f:
+        f.write("# Unicode and spaces\nSETTING = 42\n")
+
+      subprocess.run(
+          ["git", "add", "specs"],
+          cwd=tmpdir,
+          check=True,
+          capture_output=True,
+          text=True,
+      )
+      subprocess.run(
+          ["git", "commit", "-q", "-m", "chore: add specification witnesses"],
+          cwd=tmpdir,
+          check=True,
+          capture_output=True,
+          text=True,
+      )
+
+      # witness-red
+      self.assertEqual(
+          TddGuardScript().execute(
+              args=[
+                  "--repo-root",
+                  tmpdir,
+                  "witness-red",
+                  "--test-dir",
+                  "tests",
+                  "--cmd",
+                  _unit_test_cmd(),
+              ],
+              stdout=io.StringIO(),
+              stderr=io.StringIO(),
+          ),
+          0,
+      )
+
+      # Working-tree tampering: modify spec1 to be comments, and delete spec2 from disk!
+      with open(spec1, "w", encoding="utf-8") as f:
+        f.write("# Tampered working-tree file\n# All comments\n")
+      os.remove(spec2)
+
+      # verify-citation must stream from Git blob at witnessed_head_sha and succeed (exit 0)
+      out = io.StringIO()
+      err = io.StringIO()
+      rc1 = TddGuardScript().execute(
+          args=[
+              "--repo-root",
+              tmpdir,
+              "verify-citation",
+              "--cite",
+              "specs/requirements.txt:2",
+          ],
+          stdout=out,
+          stderr=err,
+      )
+      self.assertEqual(rc1, 0, err.getvalue())
+
+      # Repeatable --cite with spaces and unicode path streaming
+      err_rep = io.StringIO()
+      rc_rep = TddGuardScript().execute(
+          args=[
+              "--repo-root",
+              tmpdir,
+              "verify-citation",
+              "--cite",
+              "specs/requirements.txt:2",
+              "--cite",
+              "specs/special 🚀 spec.txt:2",
+          ],
+          stdout=io.StringIO(),
+          stderr=err_rep,
+      )
+      self.assertEqual(rc_rep, 0, err_rep.getvalue())
+
+      # CITE environment variable via --make-env (newline, comma, semicolon delimited)
+      for cite_env in [
+          "specs/requirements.txt:2\nspecs/special 🚀 spec.txt:2",
+          "specs/requirements.txt:2,specs/special 🚀 spec.txt:2",
+          "specs/requirements.txt:2; specs/special 🚀 spec.txt:2",
+      ]:
+        with mock.patch.dict(os.environ, {"CITE": cite_env}):
+          err_env = io.StringIO()
+          rc_env = TddGuardScript().execute(
+              args=[
+                  "--repo-root",
+                  tmpdir,
+                  "verify-citation",
+                  "--make-env",
+              ],
+              stdout=io.StringIO(),
+              stderr=err_env,
+          )
+          self.assertEqual(rc_env, 0, err_env.getvalue())
+
+      # verify-green with --cite
+      _fix_calc_bug(tmpdir)
+      err_green = io.StringIO()
+      rc_green = TddGuardScript().execute(
+          args=[
+              "--repo-root",
+              tmpdir,
+              "verify-green",
+              "--cite",
+              "specs/requirements.txt:2",
+              "--cite",
+              "specs/special 🚀 spec.txt:2",
+          ],
+          stdout=io.StringIO(),
+          stderr=err_green,
+      )
+      self.assertEqual(rc_green, 0, err_green.getvalue())
+      with open(_receipt_path(tmpdir), "r", encoding="utf-8") as f:
+        rec = json.load(f)
+      self.assertTrue(rec["verified_green"])
+
+  def test_uncommitted_witness_file_rejection_and_rollback(self):
+    with tempfile.TemporaryDirectory() as tmpdir:
+      _init_fixture_repo(tmpdir)
+      # witness-red
+      self.assertEqual(
+          TddGuardScript().execute(
+              args=[
+                  "--repo-root",
+                  tmpdir,
+                  "witness-red",
+                  "--test-dir",
+                  "tests",
+                  "--cmd",
+                  _unit_test_cmd(),
+              ],
+              stdout=io.StringIO(),
+              stderr=io.StringIO(),
+          ),
+          0,
+      )
+      # Fix calc bug and pass verify-green so verified_green is True
+      _fix_calc_bug(tmpdir)
+      self.assertEqual(
+          TddGuardScript().execute(
+              args=["--repo-root", tmpdir, "verify-green"],
+              stdout=io.StringIO(),
+              stderr=io.StringIO(),
+          ),
+          0,
+      )
+      with open(_receipt_path(tmpdir), "r", encoding="utf-8") as f:
+        self.assertTrue(json.load(f)["verified_green"])
+
+      # (a) Untracked scratch file on disk
+      scratch = os.path.join(tmpdir, "scratch.txt")
+      with open(scratch, "w", encoding="utf-8") as f:
+        f.write("ACTIVE = 1\n")
+      err_scratch = io.StringIO()
+      rc_scratch = TddGuardScript().execute(
+          args=[
+              "--repo-root",
+              tmpdir,
+              "verify-citation",
+              "--cite",
+              "scratch.txt:1",
+          ],
+          stdout=io.StringIO(),
+          stderr=err_scratch,
+      )
+      self.assertEqual(rc_scratch, 2)
+      self.assertIn(
+          "[SCAR-ID: TEST-12] UNCOMMITTED_WITNESS_FILE",
+          err_scratch.getvalue(),
+      )
+      with open(_receipt_path(tmpdir), "r", encoding="utf-8") as f:
+        rec1 = json.load(f)
+      self.assertFalse(rec1["verified_green"])
+      self.assertTrue(
+          any(
+              e.get("violation_code") == "UNCOMMITTED_WITNESS_FILE"
+              for e in rec1.get("forensic_log", [])
+          )
+      )
+
+      # (b) Non-existent file
+      err_missing = io.StringIO()
+      rc_missing = TddGuardScript().execute(
+          args=[
+              "--repo-root",
+              tmpdir,
+              "verify-citation",
+              "--cite",
+              "specs/missing.txt:1",
+          ],
+          stdout=io.StringIO(),
+          stderr=err_missing,
+      )
+      self.assertEqual(rc_missing, 2)
+      self.assertIn(
+          "[SCAR-ID: TEST-12] UNCOMMITTED_WITNESS_FILE",
+          err_missing.getvalue(),
+      )
+
+      # (c) File committed in a later mid-phase commit when --allow-head-move is passed
+      late_file = os.path.join(tmpdir, "late.txt")
+      with open(late_file, "w", encoding="utf-8") as f:
+        f.write("LATE_STMT = True\n")
+      subprocess.run(
+          ["git", "add", "late.txt"],
+          cwd=tmpdir,
+          check=True,
+          capture_output=True,
+          text=True,
+      )
+      subprocess.run(
+          ["git", "commit", "-q", "-m", "chore: late commit"],
+          cwd=tmpdir,
+          check=True,
+          capture_output=True,
+          text=True,
+      )
+      err_late = io.StringIO()
+      rc_late = TddGuardScript().execute(
+          args=[
+              "--repo-root",
+              tmpdir,
+              "verify-citation",
+              "--allow-head-move",
+              "--cite",
+              "late.txt:1",
+          ],
+          stdout=io.StringIO(),
+          stderr=err_late,
+      )
+      self.assertEqual(rc_late, 2)
+      self.assertIn(
+          "[SCAR-ID: TEST-12] UNCOMMITTED_WITNESS_FILE",
+          err_late.getvalue(),
+      )
+
+      # (d) Directory / tree path (e.g. src:1)
+      err_tree = io.StringIO()
+      rc_tree = TddGuardScript().execute(
+          args=[
+              "--repo-root",
+              tmpdir,
+              "verify-citation",
+              "--allow-head-move",
+              "--cite",
+              "src:1",
+          ],
+          stdout=io.StringIO(),
+          stderr=err_tree,
+      )
+      self.assertEqual(rc_tree, 2)
+      self.assertIn(
+          "[SCAR-ID: TEST-12] UNCOMMITTED_WITNESS_FILE",
+          err_tree.getvalue(),
+      )
+
+      # (e) Traversal path or absolute path
+      for bad_path in ("../outside.py:1", "/etc/passwd:1"):
+        err_trav = io.StringIO()
+        rc_trav = TddGuardScript().execute(
+            args=[
+                "--repo-root",
+                tmpdir,
+                "verify-citation",
+                "--allow-head-move",
+                "--cite",
+                bad_path,
+            ],
+            stdout=io.StringIO(),
+            stderr=err_trav,
+        )
+        self.assertEqual(rc_trav, 2)
+        self.assertIn(
+            "[SCAR-ID: TEST-12] UNCOMMITTED_WITNESS_FILE",
+            err_trav.getvalue(),
+        )
+
+      # (f) verify-green with uncommitted citation also fails with UNCOMMITTED_WITNESS_FILE
+      err_vg = io.StringIO()
+      rc_vg = TddGuardScript().execute(
+          args=[
+              "--repo-root",
+              tmpdir,
+              "verify-green",
+              "--allow-head-move",
+              "--cite",
+              "scratch.txt:1",
+          ],
+          stdout=io.StringIO(),
+          stderr=err_vg,
+      )
+      self.assertEqual(rc_vg, 2)
+      self.assertIn(
+          "[SCAR-ID: TEST-12] UNCOMMITTED_WITNESS_FILE",
+          err_vg.getvalue(),
+      )
+
+  def test_trivial_witness_line_rejection_and_rollback(self):
+    with tempfile.TemporaryDirectory() as tmpdir:
+      _init_fixture_repo(tmpdir)
+      spec_lines = [
+          "# Python comment",          # line 1
+          "// C++ style comment",       # line 2
+          "/* Block comment start",     # line 3
+          " * Block comment middle",    # line 4
+          " */",                        # line 5
+          "-- SQL comment",             # line 6
+          "<!-- HTML comment -->",      # line 7
+          "    ",                       # line 8 (whitespace)
+          "",                           # line 9 (blank)
+          "ACTIVE_STATEMENT = True",    # line 10
+      ]
+      spec_file = os.path.join(tmpdir, "spec.txt")
+      with open(spec_file, "w", encoding="utf-8") as f:
+        f.write("\n".join(spec_lines) + "\n")
+      subprocess.run(
+          ["git", "add", "spec.txt"],
+          cwd=tmpdir,
+          check=True,
+          capture_output=True,
+          text=True,
+      )
+      subprocess.run(
+          ["git", "commit", "-q", "-m", "chore: add spec with comments"],
+          cwd=tmpdir,
+          check=True,
+          capture_output=True,
+          text=True,
+      )
+
+      # witness-red
+      self.assertEqual(
+          TddGuardScript().execute(
+              args=[
+                  "--repo-root",
+                  tmpdir,
+                  "witness-red",
+                  "--test-dir",
+                  "tests",
+                  "--cmd",
+                  _unit_test_cmd(),
+              ],
+              stdout=io.StringIO(),
+              stderr=io.StringIO(),
+          ),
+          0,
+      )
+
+      # Fix calc bug and pass verify-green
+      _fix_calc_bug(tmpdir)
+      self.assertEqual(
+          TddGuardScript().execute(
+              args=["--repo-root", tmpdir, "verify-green"],
+              stdout=io.StringIO(),
+              stderr=io.StringIO(),
+          ),
+          0,
+      )
+      with open(_receipt_path(tmpdir), "r", encoding="utf-8") as f:
+        self.assertTrue(json.load(f)["verified_green"])
+
+      # (a) Missing/empty citation in verify-citation
+      err_missing = io.StringIO()
+      rc_missing = TddGuardScript().execute(
+          args=["--repo-root", tmpdir, "verify-citation"],
+          stdout=io.StringIO(),
+          stderr=err_missing,
+      )
+      self.assertEqual(rc_missing, 2)
+      self.assertIn(
+          "[SCAR-ID: TEST-12] TRIVIAL_WITNESS_LINE", err_missing.getvalue()
+      )
+      with open(_receipt_path(tmpdir), "r", encoding="utf-8") as f:
+        self.assertFalse(json.load(f)["verified_green"])
+
+      # (b) Malformed citation strings
+      malformed_citations = [
+          "spec.txt",         # missing colon
+          "spec.txt:",        # empty line part
+          "spec.txt:abc",     # non-integer line
+          "spec.txt:0",       # line <= 0
+          "spec.txt:-1",      # negative line
+          "spec.txt:999",     # line > total_lines
+      ]
+      for mal_cite in malformed_citations:
+        err_mal = io.StringIO()
+        rc_mal = TddGuardScript().execute(
+            args=[
+                "--repo-root",
+                tmpdir,
+                "verify-citation",
+                "--cite",
+                mal_cite,
+            ],
+            stdout=io.StringIO(),
+            stderr=err_mal,
+        )
+        self.assertEqual(rc_mal, 2, f"Expected 2 for cite={mal_cite}")
+        self.assertIn(
+            "[SCAR-ID: TEST-12] TRIVIAL_WITNESS_LINE",
+            err_mal.getvalue(),
+        )
+
+      # (c) Lines 1 through 9 are blank or comment lines
+      for line_no in range(1, 10):
+        err_triv = io.StringIO()
+        rc_triv = TddGuardScript().execute(
+            args=[
+                "--repo-root",
+                tmpdir,
+                "verify-citation",
+                "--cite",
+                f"spec.txt:{line_no}",
+            ],
+            stdout=io.StringIO(),
+            stderr=err_triv,
+        )
+        self.assertEqual(
+            rc_triv, 2, f"Expected line {line_no} to be rejected as trivial"
+        )
+        self.assertIn(
+            "[SCAR-ID: TEST-12] TRIVIAL_WITNESS_LINE",
+            err_triv.getvalue(),
+        )
+
+      # (d) Active code statement at line 10 succeeds
+      err_ok = io.StringIO()
+      rc_ok = TddGuardScript().execute(
+          args=[
+              "--repo-root",
+              tmpdir,
+              "verify-citation",
+              "--cite",
+              "spec.txt:10",
+          ],
+          stdout=io.StringIO(),
+          stderr=err_ok,
+      )
+      self.assertEqual(rc_ok, 0, err_ok.getvalue())
+
+  def test_head_moved_during_red_phase_in_verify_citation(self):
+    with tempfile.TemporaryDirectory() as tmpdir:
+      _init_fixture_repo(tmpdir)
+      spec_file = os.path.join(tmpdir, "spec.txt")
+      with open(spec_file, "w", encoding="utf-8") as f:
+        f.write("ACTIVE = 1\n")
+      subprocess.run(
+          ["git", "add", "spec.txt"],
+          cwd=tmpdir,
+          check=True,
+          capture_output=True,
+          text=True,
+      )
+      subprocess.run(
+          ["git", "commit", "-q", "-m", "chore: add spec"],
+          cwd=tmpdir,
+          check=True,
+          capture_output=True,
+          text=True,
+      )
+
+      # witness-red
+      self.assertEqual(
+          TddGuardScript().execute(
+              args=[
+                  "--repo-root",
+                  tmpdir,
+                  "witness-red",
+                  "--test-dir",
+                  "tests",
+                  "--cmd",
+                  _unit_test_cmd(),
+              ],
+              stdout=io.StringIO(),
+              stderr=io.StringIO(),
+          ),
+          0,
+      )
+
+      # Move HEAD by committing a new file
+      with open(os.path.join(tmpdir, "other.txt"), "w", encoding="utf-8") as f:
+        f.write("other\n")
+      subprocess.run(
+          ["git", "add", "other.txt"],
+          cwd=tmpdir,
+          check=True,
+          capture_output=True,
+          text=True,
+      )
+      subprocess.run(
+          ["git", "commit", "-q", "-m", "chore: move head"],
+          cwd=tmpdir,
+          check=True,
+          capture_output=True,
+          text=True,
+      )
+
+      # verify-citation without --allow-head-move fails with HEAD_MOVED_DURING_RED_PHASE
+      err_moved = io.StringIO()
+      rc_moved = TddGuardScript().execute(
+          args=[
+              "--repo-root",
+              tmpdir,
+              "verify-citation",
+              "--cite",
+              "spec.txt:1",
+          ],
+          stdout=io.StringIO(),
+          stderr=err_moved,
+      )
+      self.assertEqual(rc_moved, 2)
+      self.assertIn(
+          "[SCAR-ID: TEST-12] HEAD_MOVED_DURING_RED_PHASE",
+          err_moved.getvalue(),
+      )
+      with open(_receipt_path(tmpdir), "r", encoding="utf-8") as f:
+        rec = json.load(f)
+      self.assertFalse(rec["verified_green"])
+      self.assertTrue(
+          any(
+              e.get("violation_code") == "HEAD_MOVED_DURING_RED_PHASE"
+              for e in rec.get("forensic_log", [])
+          )
+      )
+
+      # verify-citation with --allow-head-move passes
+      err_allowed = io.StringIO()
+      rc_allowed = TddGuardScript().execute(
+          args=[
+              "--repo-root",
+              tmpdir,
+              "verify-citation",
+              "--allow-head-move",
+              "--cite",
+              "spec.txt:1",
+          ],
+          stdout=io.StringIO(),
+          stderr=err_allowed,
+      )
+      self.assertEqual(rc_allowed, 0, err_allowed.getvalue())
+
+      # verify-citation with ALLOW_HEAD_MOVE=1 and --make-env passes
+      with mock.patch.dict(
+          os.environ, {"ALLOW_HEAD_MOVE": "1", "CITE": "spec.txt:1"}
+      ):
+        err_env = io.StringIO()
+        rc_env = TddGuardScript().execute(
+            args=[
+                "--repo-root",
+                tmpdir,
+                "verify-citation",
+                "--make-env",
+            ],
+            stdout=io.StringIO(),
+            stderr=err_env,
+        )
+        self.assertEqual(rc_env, 0, err_env.getvalue())
+
+  def test_synthesized_state_makefile_citation_targets(self):
+    with tempfile.TemporaryDirectory() as tmpdir:
+      _init_fixture_repo(tmpdir)
+      spec_file = os.path.join(tmpdir, "spec.txt")
+      with open(spec_file, "w", encoding="utf-8") as f:
+        f.write("ACTIVE = 1\n")
+      subprocess.run(
+          ["git", "add", "spec.txt"],
+          cwd=tmpdir,
+          check=True,
+          capture_output=True,
+          text=True,
+      )
+      subprocess.run(
+          ["git", "commit", "-q", "-m", "chore: add spec"],
+          cwd=tmpdir,
+          check=True,
+          capture_output=True,
+          text=True,
+      )
+
+      init_code = WorkflowGatesScript().execute(
+          args=["--repo-root", tmpdir, "init-makefile"],
+          stdout=io.StringIO(),
+          stderr=io.StringIO(),
+      )
+      self.assertEqual(init_code, 0)
+
+      # Verify Makefile content contains CITE export and verify-citation target
+      mk_path = os.path.join(tmpdir, ".workflow", "state", "Makefile")
+      with open(mk_path, "r", encoding="utf-8") as f:
+        mk_content = f.read()
+      self.assertIn("CITE =", mk_content)
+      self.assertIn("export TEST_DIR TEST_CMD ALLOW_HEAD_MOVE CITE", mk_content)
+      self.assertIn("verify-citation:", mk_content)
+
+      # witness-red via Make
+      cmd = _unit_test_cmd()
+      p_red = subprocess.run(
+          [
+              "make",
+              "-s",
+              "-f",
+              ".workflow/state/Makefile",
+              "witness-red",
+              "TEST_DIR=tests",
+              f"TEST_CMD={cmd}",
+              f"PYTHON={sys.executable}",
+          ],
+          cwd=tmpdir,
+          capture_output=True,
+          text=True,
+          check=False,
+      )
+      self.assertEqual(p_red.returncode, 0, p_red.stderr)
+
+      # verify-citation via Make with valid citation
+      p_cite = subprocess.run(
+          [
+              "make",
+              "-s",
+              "-f",
+              ".workflow/state/Makefile",
+              "verify-citation",
+              "CITE=spec.txt:1",
+              f"PYTHON={sys.executable}",
+          ],
+          cwd=tmpdir,
+          capture_output=True,
+          text=True,
+          check=False,
+      )
+      self.assertEqual(p_cite.returncode, 0, p_cite.stderr)
+
+      # verify-citation via Make with invalid citation (uncommitted scratch)
+      with open(os.path.join(tmpdir, "scratch.txt"), "w", encoding="utf-8") as f:
+        f.write("KEY = 1\n")
+      p_cite_bad = subprocess.run(
+          [
+              "make",
+              "-s",
+              "-f",
+              ".workflow/state/Makefile",
+              "verify-citation",
+              "CITE=scratch.txt:1",
+              f"PYTHON={sys.executable}",
+          ],
+          cwd=tmpdir,
+          capture_output=True,
+          text=True,
+          check=False,
+      )
+      self.assertEqual(p_cite_bad.returncode, 2)
+      self.assertIn(
+          "[SCAR-ID: TEST-12] UNCOMMITTED_WITNESS_FILE", p_cite_bad.stderr
+      )
+
+      # Fix calc bug and run verify-green via Make with CITE
+      _fix_calc_bug(tmpdir)
+      p_green = subprocess.run(
+          [
+              "make",
+              "-s",
+              "-f",
+              ".workflow/state/Makefile",
+              "verify-green",
+              "CITE=spec.txt:1",
+              f"PYTHON={sys.executable}",
+          ],
+          cwd=tmpdir,
+          capture_output=True,
+          text=True,
+          check=False,
+      )
+      self.assertEqual(p_green.returncode, 0, p_green.stderr)
+
 
 if __name__ == "__main__":
   unittest.main()

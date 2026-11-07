@@ -169,8 +169,9 @@ class WorkflowGatesScript(BaseScript):
         "TEST_DIR =\n"
         "TEST_CMD =\n"
         "ALLOW_HEAD_MOVE =\n"
-        "export TEST_DIR TEST_CMD ALLOW_HEAD_MOVE\n\n"
-        ".PHONY: check-intake check-approved-tree check-commit-msg witness-red verify-green\n\n"
+        "CITE =\n"
+        "export TEST_DIR TEST_CMD ALLOW_HEAD_MOVE CITE\n\n"
+        ".PHONY: check-intake check-approved-tree check-commit-msg witness-red verify-green verify-citation\n\n"
         "check-intake:\n"
         f"\t@$(PYTHON) {gates_script} --repo-root {quoted_root} intake\n\n"
         "check-approved-tree:\n"
@@ -180,7 +181,9 @@ class WorkflowGatesScript(BaseScript):
         "witness-red:\n"
         f"\t@$(PYTHON) {guard_script} --repo-root {quoted_root} witness-red --make-env\n\n"
         "verify-green:\n"
-        f"\t@$(PYTHON) {guard_script} --repo-root {quoted_root} verify-green --make-env\n"
+        f"\t@$(PYTHON) {guard_script} --repo-root {quoted_root} verify-green --make-env\n\n"
+        "verify-citation:\n"
+        f"\t@$(PYTHON) {guard_script} --repo-root {quoted_root} verify-citation --make-env\n"
     )
     try:
       os.makedirs(state_dir, exist_ok=True)
