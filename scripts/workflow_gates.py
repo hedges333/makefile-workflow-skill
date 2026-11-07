@@ -146,17 +146,28 @@ class WorkflowGatesScript(BaseScript):
     state_dir = os.path.join(self.repo_root, ".workflow", "state")
     mk_path = os.path.join(state_dir, "Makefile")
     gates_script = shlex.quote(os.path.abspath(__file__)).replace("$", "$$")
+    guard_script = shlex.quote(
+        os.path.join(_SCRIPTS_DIR, "tdd_guard.py")
+    ).replace("$", "$$")
     quoted_root = shlex.quote(self.repo_root).replace("$", "$$")
     content = (
-        "# Synthesized by workflow_gates.py init-makefile (SCAR-ARCH-06)\n"
-        "PYTHON ?= python3\n\n"
-        ".PHONY: check-intake check-approved-tree check-commit-msg\n\n"
+        "# Synthesized by workflow_gates.py init-makefile (SCAR-ARCH-06, SCAR-TEST-12)\n"
+        "PYTHON ?= python3\n"
+        "TEST_DIR =\n"
+        "TEST_CMD =\n"
+        "ALLOW_HEAD_MOVE =\n"
+        "export TEST_DIR TEST_CMD ALLOW_HEAD_MOVE\n\n"
+        ".PHONY: check-intake check-approved-tree check-commit-msg witness-red verify-green\n\n"
         "check-intake:\n"
         f"\t@$(PYTHON) {gates_script} --repo-root {quoted_root} intake\n\n"
         "check-approved-tree:\n"
         f"\t@$(PYTHON) {gates_script} --repo-root {quoted_root} approved-tree\n\n"
         "check-commit-msg:\n"
-        f"\t@$(PYTHON) {gates_script} --repo-root {quoted_root} commit-msg\n"
+        f"\t@$(PYTHON) {gates_script} --repo-root {quoted_root} commit-msg\n\n"
+        "witness-red:\n"
+        f"\t@$(PYTHON) {guard_script} --repo-root {quoted_root} witness-red --make-env\n\n"
+        "verify-green:\n"
+        f"\t@$(PYTHON) {guard_script} --repo-root {quoted_root} verify-green --make-env\n"
     )
     try:
       os.makedirs(state_dir, exist_ok=True)

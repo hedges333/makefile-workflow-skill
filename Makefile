@@ -7,7 +7,7 @@ INSTALL_DIR = $(HOME)/.gemini/config/plugins/$(PLUGIN_NAME)
 PYTHON ?= python3
 REPO_ROOT ?= $(MKFILE_DIR)
 
-.PHONY: all validate install uninstall test test-static test-safe-copy test-env-preflight test-signal-trap test-mcp test-compat test-base-script test-hooks test-reflex check-plugin-files check-skill-budget help
+.PHONY: all validate install uninstall test test-static test-safe-copy test-env-preflight test-signal-trap test-mcp test-compat test-base-script test-hooks test-reflex test-tdd-guard check-plugin-files check-skill-budget help
 
 all: validate test
 
@@ -24,6 +24,7 @@ help:
 	@echo "  make test-base-script   - Test BaseScript execution lifecycle (SCAR-ARCH-05)"
 	@echo "  make test-hooks         - Test SessionStart and PreToolUse hook scripts"
 	@echo "  make test-reflex        - Test Vector 4 Reflex emitter and workflow gates (SCAR-ARCH-06)"
+	@echo "  make test-tdd-guard     - Test cryptographically anchored TDD receipts (SCAR-TEST-12)"
 	@echo "  make check-plugin-files - Check required plugin manifests and core skill files"
 	@echo "  make check-skill-budget - Check SKILL.md context size ceiling (SCAR-PROC-99)"
 	@echo "  make install            - Install plugin into ~/.gemini/config/plugins/$(PLUGIN_NAME)"
@@ -135,7 +136,16 @@ test-reflex:
 		--rejected "Breaking Vector 4 Reflex output contracts, gate exit codes, or SKILL.md budget." \
 		--reflex "Run $(PYTHON) -m unittest -v -f scripts/test_emit_reflex.py, fix the failing gate or SKILL.md size, and re-test."
 
-test: test-static test-safe-copy test-env-preflight test-signal-trap test-compat test-base-script test-mcp test-hooks test-reflex
+test-tdd-guard:
+	@echo "Testing cryptographically anchored TDD receipts..."
+	@$(PYTHON) "$(SCRIPTS_DIR)/test_tdd_guard.py" -v || $(PYTHON) "$(SCRIPTS_DIR)/emit_reflex.py" \
+		--scar-id TEST-12 \
+		--code TDD_GUARD_SUITE_FAILED \
+		--trigger "scripts/test_tdd_guard.py failed." \
+		--rejected "Weakening witness-red sealing, verify-green replay, or forensic collision logging." \
+		--reflex "Run $(PYTHON) -m unittest -v -f scripts/test_tdd_guard.py, fix the failing guard check, and re-run make test-tdd-guard."
+
+test: test-static test-safe-copy test-env-preflight test-signal-trap test-compat test-base-script test-mcp test-hooks test-reflex test-tdd-guard
 	@echo "Testing file structure and skill context budget..."
 	@$(PYTHON) "$(SCRIPTS_DIR)/workflow_gates.py" --repo-root "$(REPO_ROOT)" plugin-files
 	@$(PYTHON) "$(SCRIPTS_DIR)/workflow_gates.py" --repo-root "$(REPO_ROOT)" skill-budget

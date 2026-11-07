@@ -697,6 +697,131 @@ def validate_vector4_reflex_gates_scar():
   return errors
 
 
+def _check_scar_test_12_section(scar_section, source_rel):
+  """Validates SCAR-TEST-12 Four-Part Anatomy fields and core invariants."""
+  sec_errors = []
+  for field in ("Wound", "Trap", "Permanent Reflex", "Socratic Probe"):
+    field_match = re.search(
+        rf"\*\*{re.escape(field)}\*\*:\s*([^\n]+)", scar_section
+    )
+    if not field_match or not field_match.group(1).strip():
+      sec_errors.append(
+          f"{source_rel} SCAR-TEST-12 missing non-empty '**{field}**:'"
+      )
+  for invariant in (
+      "witness-red",
+      "verify-green",
+      "30_tdd_receipt.json",
+      "forensic_log",
+  ):
+    if invariant not in scar_section:
+      sec_errors.append(
+          f"{source_rel} SCAR-TEST-12 missing invariant '{invariant}'"
+      )
+  return sec_errors
+
+
+def validate_tdd_guard_scar():
+  """Validates cryptographically anchored TDD receipts and SCAR-TEST-12 (GH-53)."""
+  errors = []
+
+  testing_spoke_rel = "skills/makeflow/references/scars/testing.md"
+  testing_spoke = repo_path(testing_spoke_rel)
+  if not os.path.exists(testing_spoke):
+    errors.append(f"Missing {testing_spoke_rel}")
+  else:
+    with open(testing_spoke, "r", encoding="utf-8") as f:
+      test_text = f.read()
+    if "### SCAR-TEST-12" not in test_text:
+      errors.append(f"{testing_spoke_rel} must document SCAR-TEST-12")
+    else:
+      scar_section = (
+          test_text.split("### SCAR-TEST-12")[1].split("### SCAR-")[0]
+      )
+      errors.extend(_check_scar_test_12_section(scar_section, testing_spoke_rel))
+
+  cat_rel = "skills/makeflow/references/09_synthetic_scars_catalog.md"
+  cat_path = repo_path(cat_rel)
+  if not os.path.exists(cat_path):
+    errors.append(f"Missing {cat_rel}")
+  else:
+    with open(cat_path, "r", encoding="utf-8") as f:
+      cat_text = f.read()
+    if "SCAR-TEST-12" not in cat_text:
+      errors.append(f"{cat_rel} must index SCAR-TEST-12")
+    if not check_scar_catalog_routing(cat_text, "SCAR-TEST-12", "testing.md"):
+      errors.append(f"{cat_rel} must route SCAR-TEST-12 to scars/testing.md")
+
+  for doc_rel in (
+      "skills/makeflow/references/03_tdd_and_code_quality.md",
+      "agents/tdd-worker.md",
+      "skills/makeflow/SKILL.md",
+  ):
+    doc_path = repo_path(doc_rel)
+    if not os.path.exists(doc_path):
+      errors.append(f"Missing {doc_rel}")
+    else:
+      with open(doc_path, "r", encoding="utf-8") as f:
+        doc_text = f.read()
+      for req_token in ("SCAR-TEST-12", "witness-red", "verify-green"):
+        if req_token not in doc_text:
+          errors.append(f"{doc_rel} must document '{req_token}'")
+
+  mk_rel = "Makefile"
+  mk_path = repo_path(mk_rel)
+  if not os.path.exists(mk_path):
+    errors.append(f"Missing {mk_rel}")
+  else:
+    with open(mk_path, "r", encoding="utf-8") as f:
+      mk_text = f.read()
+    if "test-tdd-guard:" not in mk_text:
+      errors.append(f"{mk_rel} must define 'test-tdd-guard:' target")
+    if (
+        "test:" not in mk_text
+        or "test-tdd-guard" not in mk_text.split("test:")[1].split("\n")[0]
+    ):
+      errors.append(
+          f"{mk_rel} 'test:' target must list 'test-tdd-guard' prerequisite"
+      )
+
+  for script_rel in ("scripts/tdd_guard.py", "scripts/test_tdd_guard.py"):
+    script_path = repo_path(script_rel)
+    if not os.path.exists(script_path):
+      errors.append(f"Missing {script_rel}")
+
+  guard_test_rel = "scripts/test_tdd_guard.py"
+  guard_test_path = repo_path(guard_test_rel)
+  if os.path.exists(guard_test_path):
+    with open(guard_test_path, "r", encoding="utf-8") as f:
+      gt_text = f.read()
+    if "sys.executable" not in gt_text:
+      errors.append(
+          f"{guard_test_rel} must use sys.executable for child subprocesses"
+      )
+    if '["python3"' in gt_text or "['python3'" in gt_text:
+      errors.append(
+          f"{guard_test_rel} must not hardcode 'python3' in subprocess calls"
+      )
+
+  # Negative Falsification Checks
+  mock_corrupted = "### SCAR-TEST-12: Receipts\n- **Wound**: Tampered\n"
+  corrupted_errs = _check_scar_test_12_section(mock_corrupted, testing_spoke_rel)
+  if not any("Permanent Reflex" in e for e in corrupted_errs):
+    errors.append(
+        "Falsification failed: corrupted SCAR-TEST-12 should lack Permanent Reflex"
+    )
+  mock_misrouted = (
+      "| `SCAR-TEST-12` | Cryptographically Anchored TDD Receipts | Testing |"
+      " [`scars/process.md`](./scars/process.md) |"
+  )
+  if check_scar_catalog_routing(mock_misrouted, "SCAR-TEST-12", "testing.md"):
+    errors.append(
+        "Falsification failed: misrouted SCAR-TEST-12 catalog row was accepted"
+    )
+
+  return errors
+
+
 def parse_frontmatter(content):
   """Parses YAML frontmatter from markdown file content."""
   if not content.startswith("---"):
@@ -1547,8 +1672,8 @@ def validate():
       if r09_text and not check_scar_catalog_routing(r09_text, scar_id, sf):
         errors.append(f"{ref_09_rel} Master Routing Table must strictly route {scar_id} to scars/{sf}")
 
-  if total_scars_found != 33:
-    errors.append(f"Expected 33 synthetic scars across category spokes, found {total_scars_found}")
+  if total_scars_found != 34:
+    errors.append(f"Expected 34 synthetic scars across category spokes, found {total_scars_found}")
 
   testing_spoke_rel = os.path.join(scars_dir_rel, "testing.md")
   testing_spoke = repo_path(testing_spoke_rel)
@@ -2147,6 +2272,15 @@ def validate():
   errors.extend(subagent_tool_errors)
   if not subagent_tool_errors:
     print("✔ Subagent tool mounting permissions (GH-83) verified.")
+
+  # Cryptographically Anchored TDD Receipts Invariants (GH-53, SCAR-TEST-12)
+  tdd_guard_errors = validate_tdd_guard_scar()
+  errors.extend(tdd_guard_errors)
+  if not tdd_guard_errors:
+    print(
+        "✔ Cryptographically anchored TDD receipts invariants (GH-53, SCAR-TEST-12)"
+        " verified."
+    )
 
   if errors:
     print(f"\n❌ Validation failed with {len(errors)} error(s):")
