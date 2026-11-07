@@ -894,5 +894,28 @@
     "closes_issue": true,
     "tests_added": 18,
     "scars_earned": []
+  },
+  {
+    "id": "GH-53",
+    "issue_url": "https://github.com/hedges333/makeflow-skill/issues/53",
+    "title": "Investigate fgrandon TDD target hardening and anchor verification receipts",
+    "request": "Anchor Red-to-Green TDD verification targets with cryptographically sealed receipts in scripts/tdd_guard.py to prevent metric-lawyer reward hacking, command swapping, autoload fixture injection, and mid-phase commits.",
+    "branch": "feat/53-tdd-target-hardening",
+    "subprojects": [
+      "scripts",
+      "skills",
+      "agents",
+      "docs"
+    ],
+    "started_at": "2026-11-06T23:38:00Z",
+    "completed_at": "2026-11-07T01:21:00Z",
+    "commit_sha": "b45c088",
+    "pr_number": 90,
+    "pr_url": "https://github.com/hedges333/makeflow-skill/pull/90",
+    "closes_issue": true,
+    "tests_added": 18,
+    "scars_earned": [
+      "SCAR-TEST-12: Cryptographically Anchored TDD Receipts and Metric Lawyer Defense"
+    ]
   }
 ]
