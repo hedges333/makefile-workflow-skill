@@ -8,6 +8,7 @@ This reference manual documents universal architecture and software design patte
 | :--- | :--- | :--- |
 | `SCAR-ARCH-05` | Testable Object-Oriented Script Template (BaseScript Pattern) | Script Lifecycles & In-Memory Testability |
 | `SCAR-ARCH-06` | Just-in-Time Vector 4 Reflex Gates | Context Budget & Runtime Recovery |
+| `SCAR-ARCH-07` | Anti-Speculative Defenses and Caller Grounding | Architecture & Caller Invariants |
 
 ---
 
@@ -24,3 +25,10 @@ This reference manual documents universal architecture and software design patte
 - **Trap**: Writing prose prohibitions in skill prompts for conditions that deterministic `Make` targets or Python gate scripts can detect at runtime.
 - **Permanent Reflex**: Synthesize `.workflow/state/Makefile` via `workflow_gates.py` and invoke `make -f .workflow/state/Makefile` gates paired with `emit_reflex.py` (`SCAR-ARCH-05`). Emit `[SCAR-ID: <CATEGORY>-<NUMBER>] <VIOLATION_CODE>` with `TRIGGER`, `REJECTED`, and `REFLEX` on `stderr` and exit with code `2`.
 - **Socratic Probe**: Can a deterministic `Make` or Python gate trap this failure at runtime with exit code `2` instead of static `SKILL.md` prose?
+
+### SCAR-ARCH-07: Anti-Speculative Defenses and Caller Grounding
+
+- **Wound**: Speculative regex heuristics and defensive parser branches added complexity, caused false positives on real tickets, and stalled reviews over non-existent caller patterns.
+- **Trap**: Designing or critiquing code around hypothetical "what if" scenarios before verifying who calls the code and whether the problem exists in practice.
+- **Permanent Reflex**: Ground every implementation branch and review finding in an observed failure or a concrete caller contract. If a caller is internal and deterministic, reject speculative flag-shuffling or heuristic fallbacks. Balance "the problem could occur" against "the problem will occur": address certain failures, but defer hypothetical problems until a bug is observed or reported.
+- **Socratic Probe**: Have you identified a specific, existing use case or real caller contract that makes this change necessary?

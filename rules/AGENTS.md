@@ -86,6 +86,7 @@ Keep each code change small and within ticket scope.
 4. Run fail-fast targeted test loops (`SCAR-PROC-104`, `SCAR-TEST-09`): Execute targeted subproject test commands in tight loops with fail-fast flags (`pytest path/to/test.py::test_name -v -x` or script equivalent) until green before running full regression suites.
 5. Use an ORM (a library that maps database rows to objects) by default. If large datasets slow down the ORM, encapsulate parameterized SQL or NoSQL queries behind repository methods.
 6. If you find unrelated defects during a ticket, do not edit them. Record them in ticket notes for a separate task.
+7. Anti-speculative defenses and caller grounding (`SCAR-ARCH-07`): Defend only against inputs and states reachable by verified, real callers. Do not add speculative defense layers, multi-source regex heuristics, or unrequested CLI flag-order handling for internal scripts invoked only by deterministic targets. Balance "the problem could occur" against "the problem will occur": if an edge case is certain to occur for actual callers, address it; if it is merely hypothetical problem-hunting without observed failures, defer defense until a bug is observed or reported.
 
 ### 3.1 Temporary Script and Automation Rules (`SCAR-SH-01`, `SCAR-TOOL-07`, `SCAR-ARCH-05`)
 
