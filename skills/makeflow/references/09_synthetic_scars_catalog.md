@@ -64,6 +64,7 @@ Agents must use Socratic Probes during:
 | `SCAR-PROC-105` | Explicit Critic Six Pillars Manual Path | Process | [`scars/process.md`](./scars/process.md) |
 | `SCAR-PROC-106` | Predetermined Subagent Tool Mounting via options and tools Blocks | Process | [`scars/process.md`](./scars/process.md) |
 | `SCAR-PROC-107` | Full Discussion and Comment Thread Ingestion at Intake | Process | [`scars/process.md`](./scars/process.md) |
+| `SCAR-PROC-108` | Critic Observation Triage and Anti-Proliferation Protocol | Process | [`scars/process.md`](./scars/process.md) |
 | `SCAR-PROC-138` | Yield on Repeated Timer Conflicts | Process | [`scars/process.md`](./scars/process.md) |
 | `SCAR-TEST-05` | Isolated Test Environments | Testing | [`scars/testing.md`](./scars/testing.md) |
 | `SCAR-TEST-08` | Two-Tier Test Isolation | Testing | [`scars/testing.md`](./scars/testing.md) |

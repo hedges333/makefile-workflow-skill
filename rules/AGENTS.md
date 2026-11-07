@@ -87,6 +87,19 @@ When ingesting an assigned issue at Target 10:
 3. Consolidate discussion updates into `.workflow/state/10_ticket.md` before drafting the Target 20 plan.
 4. If comments exist on the issue, do not rely on the initial issue description alone.
 
+### 1.8 Critic Observation Triage and Anti-Proliferation Protocol (SCAR-PROC-108)
+
+To prevent ticket backlog inflation from review observations:
+
+1. Before proposing a new ticket, search open issues with `gh issue list`.
+2. Link the observation to any existing issue to prevent duplicate tickets.
+3. If an observation is very related to active ticket scope, treat it as a blocker for `tdd-worker`.
+4. If an observation is somewhat related, offer the user a choice to roll up or file a ticket.
+5. If an observation is totally unrelated, propose a new ticket after deduplication.
+6. If an observation has negligible risk or outsized complexity, perform conscious dismissal and document technical rationale without filing an issue.
+7. Wait for explicit human confirmation at the human escalation gate before creating any issue.
+8. Autonomous ticket creation is strictly prohibited.
+
 ## 2. Production Data Protection Rules
 
 Never connect tests or agent commands to live systems.

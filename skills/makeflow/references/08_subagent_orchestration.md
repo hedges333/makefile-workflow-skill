@@ -61,3 +61,14 @@ Do not prompt subagents with flat imperative commands alone. Frame dispatch prom
    > *"Does this staged Merkle tree diff conform to the Six Pillars in skills/makeflow/references/04_six_pillars_adversarial_review.md and both Tier 1 (`skills/makeflow/references/scars/`) and Tier 2 (`.workflow/scars/`) scars? If this diff causes a production outage, what is the most likely failure point? Did changing an existing test mask a real regression?"* (`SCAR-PROC-105`)
 4. **`triage-worker` (Target 70)**:
    > *"Did continuous integration checks pass, and did bots or contributors file comments that need to be triaged? If comments exist, does each finding require an Accept, Defend, Defer, or Acknowledge action without expanding ticket scope?"*
+
+### 5.3 Critic Observation Triage and Relationship-Based Rollup Guidance
+
+When handling review findings from `adversarial-critic`, the supervisor must adhere to the 4-step triage protocol (`SCAR-PROC-108`):
+1. **Existing Issue Deduplication**: Query open issues (`gh issue list`) before recommending any new issue to prevent duplicate backlog tickets.
+2. **Scope Relationship and Rollup**: Classify observations relative to active ticket scope:
+   - **Very Related**: Triage as a blocker for `tdd-worker`.
+   - **Somewhat Related**: Present the human operator with a choice between rolling up the fix into the current change or filing a ticket.
+   - **Totally Unrelated**: Propose filing a new ticket after deduplication.
+3. **Conscious Dismissal**: Dismiss observations with negligible risk or outsized complexity, documenting the engineering rationale without filing an issue.
+4. **Human Escalation Gate**: Prohibit autonomous ticket creation. Wait for explicit human declaration before opening any issue.
