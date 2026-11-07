@@ -54,6 +54,9 @@ class WorkflowGatesScript(BaseScript):
     self.max_bytes: int = DEFAULT_SKILL_MAX_BYTES
     self.commit_msg_file: Optional[str] = None
     self.subagent_role: Optional[str] = None
+    self.ticket: Optional[str] = None
+    self.project: Optional[str] = None
+    self.title: Optional[str] = None
 
   def parse_args(self, args: Optional[List[str]] = None) -> None:
     super().parse_args(args)
@@ -91,11 +94,17 @@ class WorkflowGatesScript(BaseScript):
     p_sub.add_argument("--role", dest="subagent_role", default=None)
     p_sub.add_argument("--json", action="store_true", dest="sub_json")
 
+    p_title = subparsers.add_parser("terminal-title", add_help=False)
+    p_title.add_argument("--ticket", default=None)
+    p_title.add_argument("--project", default=None)
+    p_title.add_argument("--title", default=None)
+    p_title.add_argument("--json", action="store_true", dest="sub_json")
+
     ns = parser.parse_args(self.raw_args)
     if not ns.gate:
       parser.error(
           "Specify a gate subcommand: init-makefile, plugin-files, skill-budget, "
-          "intake, approved-tree, commit-msg, or subagent-def."
+          "intake, approved-tree, commit-msg, subagent-def, or terminal-title."
       )
 
     self.repo_root = os.path.abspath(ns.repo_root)
@@ -109,6 +118,10 @@ class WorkflowGatesScript(BaseScript):
       self.commit_msg_file = ns.commit_msg_file
     elif ns.gate == "subagent-def":
       self.subagent_role = getattr(ns, "subagent_role", None)
+    elif ns.gate == "terminal-title":
+      self.ticket = getattr(ns, "ticket", None)
+      self.project = getattr(ns, "project", None)
+      self.title = getattr(ns, "title", None)
 
   def _fail(
       self, scar_id: str, code: str, trigger: str, rejected: str, reflex: str
@@ -282,6 +295,12 @@ class WorkflowGatesScript(BaseScript):
             rejected="Starting a new ticket while prior 10_..80_ state cards remain active.",
             reflex="Archive or unlink 10_..80_ cards per state.completedCardAction before writing 10_ticket.md.",
         )
+
+    try:
+      from terminal_title import set_terminal_title
+      set_terminal_title(repo_root=self.repo_root)
+    except Exception:
+      pass
 
     return 0
 
@@ -555,6 +574,26 @@ class WorkflowGatesScript(BaseScript):
 
     return 0
 
+  def _gate_terminal_title(self) -> int:
+    try:
+      from terminal_title import TerminalTitleScript
+      sub_args = ["set", "--repo-root", self.repo_root]
+      if self.ticket:
+        sub_args.extend(["--ticket", self.ticket])
+      if self.project:
+        sub_args.extend(["--project", self.project])
+      if self.title:
+        sub_args.extend(["--title", self.title])
+      if self.as_json:
+        sub_args.append("--json")
+      return TerminalTitleScript().execute(
+          args=sub_args,
+          stdout=self.stdout,
+          stderr=self.stderr,
+      )
+    except Exception as exc:
+      return 1
+
   def run(self) -> int:
     if self.gate == "init-makefile":
       return self._init_makefile()
@@ -570,6 +609,8 @@ class WorkflowGatesScript(BaseScript):
       return self._check_commit_msg()
     if self.gate == "subagent-def":
       return self._gate_subagent_def()
+    if self.gate == "terminal-title":
+      return self._gate_terminal_title()
     raise ValueError(f"Unsupported gate: {self.gate}")
 
 
