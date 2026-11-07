@@ -341,6 +341,12 @@ def main():
           f"Makefile Workflow found {len(state_files)} state card(s) in {state_dir}. "
           "Read all state cards at Target 00 (read-init-d) before taking new action."
       )
+      ws_root = workspace_paths[0] if workspace_paths else os.getcwd()
+      try:
+        from terminal_title import set_terminal_title
+        set_terminal_title(repo_root=ws_root)
+      except Exception:
+        pass
     else:
       notes.append(
           "Makefile Workflow: Workspace is clean and ready for Target 10 intake."

@@ -7,7 +7,7 @@ INSTALL_DIR = $(HOME)/.gemini/config/plugins/$(PLUGIN_NAME)
 PYTHON ?= python3
 REPO_ROOT ?= $(MKFILE_DIR)
 
-.PHONY: all validate install uninstall test test-static test-safe-copy test-env-preflight test-signal-trap test-mcp test-compat test-base-script test-hooks test-reflex test-tdd-guard check-plugin-files check-skill-budget help
+.PHONY: all validate install uninstall test test-static test-safe-copy test-env-preflight test-signal-trap test-mcp test-compat test-base-script test-terminal-title test-hooks test-reflex test-tdd-guard check-plugin-files check-skill-budget help
 
 all: validate test
 
@@ -118,6 +118,15 @@ test-base-script:
 		--rejected "Calling process-terminating sys.exit inside script business logic." \
 		--reflex "Preserve BaseScript execute/setup/run/cleanup stream isolation and re-run make test-base-script."
 
+test-terminal-title:
+	@echo "Testing terminal title detection and setting..."
+	@$(PYTHON) -m unittest "$(SCRIPTS_DIR)/test_terminal_title.py" -v || $(PYTHON) "$(SCRIPTS_DIR)/emit_reflex.py" \
+		--scar-id ARCH-05 \
+		--code TERMINAL_TITLE_SUITE_FAILED \
+		--trigger "scripts/test_terminal_title.py failed." \
+		--rejected "Failing terminal capability detection or title escape formatting." \
+		--reflex "Run $(PYTHON) -m unittest -v scripts/test_terminal_title.py, fix failing tests, and re-run make test-terminal-title."
+
 test-hooks:
 	@echo "Testing SessionStart and PreToolUse hooks..."
 	@$(PYTHON) "$(SCRIPTS_DIR)/test_hooks.py" || $(PYTHON) "$(SCRIPTS_DIR)/emit_reflex.py" \
@@ -145,7 +154,7 @@ test-tdd-guard:
 		--rejected "Weakening witness-red sealing, verify-green replay, or forensic collision logging." \
 		--reflex "Run $(PYTHON) -m unittest -v -f scripts/test_tdd_guard.py, fix the failing guard check, and re-run make test-tdd-guard."
 
-test: test-static test-safe-copy test-env-preflight test-signal-trap test-compat test-base-script test-mcp test-hooks test-reflex test-tdd-guard
+test: test-static test-safe-copy test-env-preflight test-signal-trap test-compat test-base-script test-terminal-title test-mcp test-hooks test-reflex test-tdd-guard
 	@echo "Testing file structure and skill context budget..."
 	@$(PYTHON) "$(SCRIPTS_DIR)/workflow_gates.py" --repo-root "$(REPO_ROOT)" plugin-files
 	@$(PYTHON) "$(SCRIPTS_DIR)/workflow_gates.py" --repo-root "$(REPO_ROOT)" skill-budget
