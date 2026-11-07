@@ -91,7 +91,7 @@ At turn start or after context compaction (automatic chat history compression), 
 Memento state files (numbered markdown progress cards on disk) preserve task progress across sessions (`references/00`, `references/01`, `references/13`).
 
 1. At Target 00, read `.workflow/state/*.md` in lexical order and load `.workflow/config.json` via `workflow_get_config`.
-2. Label GitHub issues `GH-<N>` and local tasks `LOCAL-<N>` (or list `P0`..`P3` backlog items in Mode B).
+2. Label GitHub issues `GH-<N>` and local tasks `LOCAL-<N>` (or list `P0`..`P3` in Mode B). Ingest comments with `gh issue view <n> --comments` (`SCAR-PROC-107`).
 3. Exclude `.workflow/state/` and `.workflow/archive/` in `.git/info/exclude` and clear stale `10_`..`80_` cards.
 4. Run `python3 <plugin_root>/scripts/workflow_gates.py --repo-root . init-makefile` (`<plugin_root>` is two directories above `SKILL.md`).
 5. Run `make -f .workflow/state/Makefile check-intake` before you create a branch.
