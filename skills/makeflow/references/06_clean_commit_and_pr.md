@@ -14,7 +14,7 @@ Never push a branch that conflicts with the remote default branch.
    ```bash
    git merge-tree $(git merge-base HEAD origin/main) HEAD origin/main
    ```
-3. If `git merge-tree` reports conflict markers, stop at once. Rebase onto `origin/main`, re-run tests, and repeat Target 40 review before pushing.
+3. If `git merge-tree` reports conflict markers, stop tool calls immediately without altering Git state (`SCAR-GIT-25`). Print the conflicting files and upstream conflict details in chat. Pause and await explicit operator direction before any rebase or merge action.
 
 ## 2. Human Push Approval Gate
 

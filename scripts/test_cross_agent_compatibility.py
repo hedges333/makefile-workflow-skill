@@ -1815,6 +1815,164 @@ def validate_hosting_mode_and_pure_git_invariants():
   return errors
 
 
+def check_pre_push_conflict_text(commit_text):
+  """Checks pre-push merge check instructions for autonomous rebase prohibition and human pause gate."""
+  errors = []
+  sec1_match = re.search(
+      r"(?m)^##\s+1\.\s+Pre-Push Merge Check\b.*?(?=^##\s+2\b|\Z)",
+      commit_text,
+      re.DOTALL,
+  )
+  sec1_text = sec1_match.group(0) if sec1_match else commit_text
+
+  # Autonomous rebase check: must not command autonomous rebase
+  autonomous_patterns = [
+      r"(?i)\brebase\s+onto\s+`?origin/main`?",
+      r"(?i)\bstop at once\.\s*rebase\b",
+      r"(?i)\bautonomously\s+rebase\b",
+  ]
+  for pat in autonomous_patterns:
+    if re.search(pat, sec1_text):
+      errors.append("must not command autonomous git rebase on conflict")
+      break
+
+  # Mandatory instructions on conflict
+  required_phrases = [
+      ("stop tool calls immediately without altering git state", "command stopping tool calls immediately without altering Git state"),
+      ("scar-git-25", "cite SCAR-GIT-25 on conflict detection"),
+      ("conflicting files", "command reporting conflicting files in chat"),
+      ("operator direction", "require explicit operator direction before rebase or merge"),
+  ]
+  sec1_lower = sec1_text.lower()
+  for token, desc in required_phrases:
+    if token not in sec1_lower:
+      errors.append(f"must {desc}")
+
+  return errors
+
+
+def check_scar_git_20_text(spoke_text):
+  """Checks SCAR-GIT-20 text for detection-only scope, autonomous rebase prohibition, and SCAR-GIT-25 governance."""
+  errors = []
+  if "### SCAR-GIT-20" not in spoke_text:
+    errors.append("missing SCAR-GIT-20")
+    return errors
+
+  section = spoke_text.split("### SCAR-GIT-20")[1].split("### SCAR-")[0]
+  sec_lower = section.lower()
+
+  if "in-memory" not in sec_lower or "conflict detection" not in sec_lower:
+    errors.append("SCAR-GIT-20 must define pre-push check as an in-memory conflict detection check")
+
+  if not any(phrase in sec_lower for phrase in [
+      "never rebase autonomously",
+      "forbid autonomous rebase",
+      "prohibit autonomous rebase",
+      "without human approval",
+  ]):
+    errors.append("SCAR-GIT-20 must forbid autonomous rebase")
+
+  if "scar-git-25" not in sec_lower:
+    errors.append("SCAR-GIT-20 must reference SCAR-GIT-25")
+  if not any(phrase in sec_lower for phrase in ["operator approval", "human approval"]):
+    errors.append("SCAR-GIT-20 must mandate operator approval before rebase or merge")
+  if "altering git state" not in sec_lower and "alter git state" not in sec_lower:
+    errors.append("SCAR-GIT-20 must mention altering Git state")
+
+  return errors
+
+
+def validate_pre_push_conflict_and_rebase_invariants():
+  """Validates pre-push conflict handling and autonomous rebase prohibition invariants (GH-95, SCAR-GIT-20, SCAR-GIT-25).
+
+  Verifies:
+  1. skills/makeflow/references/06_clean_commit_and_pr.md does not command
+     autonomous git rebase, commands stopping tool calls immediately without
+     altering Git state, reporting conflicting files in chat, and pausing for
+     explicit operator direction under SCAR-GIT-25.
+  2. skills/makeflow/references/scars/git_and_shell.md defines SCAR-GIT-20 as
+     an in-memory conflict detection check, forbids autonomous rebase, and
+     mandates explicit human operator approval under SCAR-GIT-25 before altering
+     Git state.
+  3. Negative falsification tests ensure corrupted instructions are caught.
+  """
+  errors = []
+
+  # 1. 06_clean_commit_and_pr.md
+  commit_rel = "skills/makeflow/references/06_clean_commit_and_pr.md"
+  commit_path = repo_path(commit_rel)
+  if not os.path.exists(commit_path):
+    errors.append(f"Missing {commit_rel}")
+  else:
+    with open(commit_path, "r", encoding="utf-8") as f:
+      commit_text = f.read()
+    commit_errors = check_pre_push_conflict_text(commit_text)
+    for err in commit_errors:
+      errors.append(f"{commit_rel} {err}")
+
+  # 2. scars/git_and_shell.md
+  spoke_rel = "skills/makeflow/references/scars/git_and_shell.md"
+  spoke_path = repo_path(spoke_rel)
+  if not os.path.exists(spoke_path):
+    errors.append(f"Missing {spoke_rel}")
+  else:
+    with open(spoke_path, "r", encoding="utf-8") as f:
+      spoke_text = f.read()
+    scar_errors = check_scar_git_20_text(spoke_text)
+    for err in scar_errors:
+      errors.append(f"{spoke_rel} {err}")
+
+  # 3. Negative Falsification
+  bad_pr_text = (
+      "## 1. Pre-Push Merge Check (`SCAR-GIT-20`)\n"
+      "3. If `git merge-tree` reports conflict markers, stop at once. Rebase onto `origin/main`.\n"
+      "## 2. Human Push Approval Gate\n"
+  )
+  bad_pr_errors = check_pre_push_conflict_text(bad_pr_text)
+  if not bad_pr_errors or not any("autonomous" in e for e in bad_pr_errors):
+    errors.append(
+        "Negative falsification failed: autonomous rebase instruction in clean"
+        " commit doc was not rejected"
+    )
+
+  incomplete_pr_text = (
+      "## 1. Pre-Push Merge Check (`SCAR-GIT-20`)\n"
+      "3. If `git merge-tree` reports conflict markers, stop tool calls"
+      " immediately without altering Git state. Print conflicting files.\n"
+      "## 2. Human Push Approval Gate\n"
+  )
+  inc_pr_errors = check_pre_push_conflict_text(incomplete_pr_text)
+  if not any("scar-git-25" in e.lower() for e in inc_pr_errors):
+    errors.append(
+        "Negative falsification failed: missing SCAR-GIT-25 in clean commit"
+        " doc was not rejected"
+    )
+  if not any("operator direction" in e.lower() for e in inc_pr_errors):
+    errors.append(
+        "Negative falsification failed: missing operator direction in clean"
+        " commit doc was not rejected"
+    )
+
+  bad_scar_text = (
+      "### SCAR-GIT-20: Pre-Push Merge Check\n"
+      "- **Permanent Reflex**: Run `git merge-tree` and rebase onto main.\n"
+      "### SCAR-GIT-25\n"
+  )
+  bad_scar_errors = check_scar_git_20_text(bad_scar_text)
+  if not bad_scar_errors or not any("in-memory" in e for e in bad_scar_errors):
+    errors.append(
+        "Negative falsification failed: missing in-memory detection in"
+        " SCAR-GIT-20 was not rejected"
+    )
+  if not any("scar-git-25" in e.lower() for e in bad_scar_errors):
+    errors.append(
+        "Negative falsification failed: missing SCAR-GIT-25 reference in"
+        " SCAR-GIT-20 was not rejected"
+    )
+
+  return errors
+
+
 def validate_arbitrary_cwd_execution():
   """Validates arbitrary cwd execution without breaking relative path lookups."""
   if os.environ.get("_COMPAT_CHILD") == "1":
@@ -2972,6 +3130,15 @@ def validate():
   if not nbo_errors:
     print(
         "✔ Target 42 Non-Blocking Observations summary invariants (GH-89)"
+        " verified."
+    )
+
+  # Pre-Push Conflict and Rebase Invariants (GH-95, SCAR-GIT-20, SCAR-GIT-25)
+  pre_push_errors = validate_pre_push_conflict_and_rebase_invariants()
+  errors.extend(pre_push_errors)
+  if not pre_push_errors:
+    print(
+        "✔ Pre-push conflict and rebase invariants (GH-95, SCAR-GIT-20, SCAR-GIT-25)"
         " verified."
     )
 

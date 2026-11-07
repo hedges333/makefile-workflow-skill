@@ -31,9 +31,9 @@ This reference manual documents Git operations and shell execution scars (`SCAR-
 ### SCAR-GIT-20: Pre-Push Merge Check
 
 - **Wound**: An agent pushes a branch that conflicts with `main`, breaks CI, and requires history rewrites.
-- **Trap**: Assuming that passing local unit tests means a clean merge with `origin/main`.
-- **Permanent Reflex**: Run `git fetch origin main` and `git merge-tree $(git merge-base HEAD origin/main) HEAD origin/main` before every push.
-- **Socratic Probe**: Even if local tests pass, has the remote target branch moved ahead since you branched? Will testing `git merge-tree` before pushing ensure your changes merge cleanly without breaking CI?
+- **Trap**: Assuming that passing local unit tests means a clean merge with `origin/main`, or attempting an autonomous `git rebase` without human approval when conflicts appear.
+- **Permanent Reflex**: Run `git fetch origin main` and `git merge-tree $(git merge-base HEAD origin/main) HEAD origin/main` before every push as an in-memory conflict detection check. Never rebase autonomously. If conflicts exist, stop immediately without altering Git state. Require explicit human operator approval under `SCAR-GIT-25` before any rebase or merge action.
+- **Socratic Probe**: Even if local tests pass, has the remote target branch moved ahead since you branched? Will running `git merge-tree` detect upstream conflicts in memory without altering Git state, and do you require operator approval under `SCAR-GIT-25` before rebasing?
 
 ### SCAR-GIT-25: Destructive Working-Tree and History Guards
 
