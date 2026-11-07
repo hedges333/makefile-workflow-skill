@@ -53,14 +53,16 @@ When launching the `adversarial-critic` subagent at Target 40:
 2. Instruct the subagent to audit the diff against that manual and format findings under the canonical six headings.
 3. Never substitute an informal prompt summary for the explicit manual reference.
 
-### 1.5 Subagent Frontmatter Tool Permissions (GH-83)
+### 1.5 Predetermined Subagent Tool Mounting (GH-83)
 
-In Antigravity CLI (agy 1.5.2+), subagents receive read-only tools by default.
+In Antigravity CLI (agy 1.5.2+), subagents require explicit tool mounting.
 
-1. Declare tool permissions explicitly in `agents/*.md` YAML frontmatter.
-2. Grant `enable_write_tools: true` to `tdd-worker`, `adversarial-critic`, and `triage-worker`.
-3. Set `enable_mcp_tools: true` for `triage-worker` and `archaeology-worker`.
-4. Set `enable_subagent_tools: false` for all worker agents to prevent nested subagent loops.
+1. Declare deterministic tool permissions in `agents/*.md` using an `options:` block and a `tools:` list.
+2. Grant `EnableWriteTools: true` to `tdd-worker`, `adversarial-critic`, and `triage-worker`.
+3. Set `EnableMCPTools: true` for `triage-worker` and `archaeology-worker`.
+4. Set `EnableSubagentTools: false` for all worker roles to prevent nested subagent loops.
+5. If you need the exact tool argument dictionary, execute `python3 scripts/workflow_gates.py subagent-def --role <role> --json`.
+6. If you register a subagent dynamically, call `define_subagent` with the arguments emitted by `subagent-def`.
 
 ## 2. Production Data Protection Rules
 

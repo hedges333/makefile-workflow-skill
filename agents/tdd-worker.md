@@ -1,9 +1,20 @@
 ---
 name: tdd-worker
 description: Runs Red-Green-Refactor test-driven development and targeted test loops in subproject directories.
-enable_write_tools: true
-enable_mcp_tools: false
-enable_subagent_tools: false
+options:
+  EnableWriteTools: true
+  EnableMCPTools: false
+  EnableSubagentTools: false
+tools:
+  - send_message
+  - read_file
+  - search_web
+  - schedule
+  - generate_image
+  - write_file
+  - edit_file
+  - run_command
+  - manage_task
 ---
 
 # TDD Implementation Worker
