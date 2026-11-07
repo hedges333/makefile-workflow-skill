@@ -8,7 +8,7 @@ Chat sessions end, but the repository remains. The Request History Ledger record
 
 1. Every ticket completed through the Makefile Workflow.
 2. Branch names, commit hashes, pull request links, and added test counts.
-3. Synthetic Scars (process rules learned from past failures) earned during each task.
+3. Synthetic Scars (process rules learned from past failures) earned during each task. The `scars_earned` list records merged core scar IDs and project-local `.workflow/scars/` entries. Never make unreviewed core catalog edits on `main` at Target 90.
 4. Next local task numbers when creating branches for ad-hoc chat requests.
 
 ## 2. File Locations and Formats

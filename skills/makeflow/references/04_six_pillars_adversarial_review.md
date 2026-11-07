@@ -182,6 +182,7 @@ Test-Driven Development (TDD) is the core discipline of this workflow. The criti
 - **Socratic Probe**: What is the strongest objection an external reviewer could raise against this diff?
 
 ### 6. Immune Defenses & Crash Antibodies
+- **Two-Tier Scar Audit**: Audit the diff against Tier 1 core scars in `skills/makeflow/references/scars/` and Tier 2 project-local scars in `.workflow/scars/`.
 - **Sensitive Runtime Boundaries**: Did the diff touch asynchronous streams, event loops, lifecycles, memory, or cache storage?
 - **Asynchronous 4-Tuple Contract**:
   1. Re-check mounted or open state after asynchronous suspensions.

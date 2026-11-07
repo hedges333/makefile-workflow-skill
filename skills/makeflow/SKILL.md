@@ -80,7 +80,7 @@ At turn start or after context compaction (automatic chat history compression), 
 | `70` | PR open, CI or bots active | `bot-quiescence` | Poll CI and bots, write `70_bot_triage.md`, triage comments. |
 | `75` | CI green, zero open comments | `ready-to-land` | Print CI summary and 7-criteria table, pause for `human-landing-approval`. |
 | `80` | Landing approved | `land` | Squash-merge, delete ticket branch, fast-forward default branch. |
-| `90` | Merged and branch deleted | `finish` | Record scars, update `.workflow/history.*`, mark `99_next_action.md` complete. |
+| `90` | Merged and branch deleted | `finish` | Record merged scar IDs in `.workflow/history.*` and local scars in `.workflow/scars/`, mark `99_next_action.md` complete. |
 
 ---
 
@@ -156,7 +156,7 @@ Read `references/07`, `references/09`, and `references/12` for triage and ledger
 3. Write `70_bot_triage.md`. If accepted bot findings require code edits, return to Target 30.
 4. At Target 75, print CI status and the 7-criteria policy table, then pause for `human-landing-approval`.
 5. At Target 80, run `gh pr merge <PR> --squash --delete-branch` and fast-forward `main`. In Pure Git Mode, run `git merge --squash` on `main` instead.
-6. At Target 90, record Synthetic Scars (lessons from past failures) and update `.workflow/history.json` and `.workflow/history.md`. If direct push is permitted, push `origin main`. Clean `10_`..`80_` cards per `state.completedCardAction` and mark `99_next_action.md` `COMPLETE`.
+6. At Target 90, record merged scar IDs in `.workflow/history.json` and `.workflow/history.md` without editing core catalog files on `main`. In external projects, record project-local lessons in `.workflow/scars/`. If direct push is permitted, push `origin main`. Clean `10_`..`80_` cards per `state.completedCardAction` and mark `99_next_action.md` `COMPLETE`.
 
 ---
 

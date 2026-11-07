@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import unittest
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PRE_TOOL = os.path.join(REPO_ROOT, "scripts", "pre_tool_guard.py")
@@ -993,8 +994,88 @@ def test_plugin_directory_isolation():
   print("✔ Plugin directory state isolation assertions passed.")
 
 
+class TestTarget90ScarsHook(unittest.TestCase):
+  """Unit tests for Target 90 .workflow/scars/ and docs(scars): detection (GH-93)."""
+
+  def test_detect_target_90_recognizes_workflow_scars_and_docs_scars(self):
+    guard_mod = _load_module("pre_tool_guard", PRE_TOOL)
+    with tempfile.TemporaryDirectory() as ws_dir:
+      state_dir = os.path.join(ws_dir, ".workflow", "state")
+      os.makedirs(state_dir)
+      with open(
+          os.path.join(state_dir, "99_next_action.md"), "w", encoding="utf-8"
+      ) as f:
+        f.write("# 99_next_action\n- Active Target: Target 90 (finish)\n")
+
+      is_hist_1, is_t90_1 = guard_mod._detect_target_90(
+          "git commit -m 'docs(scars): record project lesson' .workflow/scars/local.md",
+          state_dir=state_dir,
+      )
+      self.assertTrue(is_hist_1)
+      self.assertTrue(is_t90_1)
+
+      is_hist_2, is_t90_2 = guard_mod._detect_target_90(
+          "git commit -m 'chore: add local scar' .workflow/scars/auth.md",
+          state_dir=state_dir,
+      )
+      self.assertTrue(is_hist_2)
+      self.assertTrue(is_t90_2)
+
+      is_hist_3, is_t90_3 = guard_mod._detect_target_90(
+          "git commit -m 'docs(scars): add project scar'",
+          state_dir=state_dir,
+      )
+      self.assertTrue(is_hist_3)
+      self.assertTrue(is_t90_3)
+
+      # Negative check: normal feature commit does not match history/scars message
+      is_hist_4, _ = guard_mod._detect_target_90(
+          "git commit -m 'feat: add login'",
+          state_dir=state_dir,
+      )
+      self.assertFalse(is_hist_4)
+
+  def test_pre_tool_guard_allows_target_90_scars_commit_gate(self):
+    with (
+        tempfile.TemporaryDirectory() as ws_dir,
+        tempfile.TemporaryDirectory() as hook_cwd,
+    ):
+      state_dir = os.path.join(ws_dir, ".workflow", "state")
+      os.makedirs(state_dir)
+      with open(
+          os.path.join(state_dir, "99_next_action.md"), "w", encoding="utf-8"
+      ) as f:
+        f.write(
+            "# Next Action: COMPLETE (make finish satisfied)\n"
+            "- Active Target: Target 90 (finish)\n"
+        )
+
+      for cmd in (
+          "git commit -m 'docs(scars): record local scar' .workflow/scars/local.md",
+          "git commit -m 'chore: add project scar' .workflow/scars/db.md",
+      ):
+        res = run_hook(
+            PRE_TOOL,
+            {
+                "workspacePaths": [ws_dir],
+                "toolCall": {
+                    "name": "run_command",
+                    "args": {"CommandLine": cmd},
+                },
+            },
+            cwd=hook_cwd,
+        )
+        self.assertEqual(res["decision"], "force_ask")
+        self.assertIn("Target 90 History Ledger Gate", res["reason"])
+        self.assertNotIn("Target 50 Commit Gate", res["reason"])
+
+
 if __name__ == "__main__":
   test_pre_tool_guard()
   test_session_start()
   test_hook_mcp_parity()
   test_plugin_directory_isolation()
+  suite = unittest.defaultTestLoader.loadTestsFromTestCase(TestTarget90ScarsHook)
+  runner = unittest.TextTestRunner(verbosity=2, failfast=True)
+  if not runner.run(suite).wasSuccessful():
+    sys.exit(1)

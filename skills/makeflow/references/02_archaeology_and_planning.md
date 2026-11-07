@@ -20,7 +20,8 @@ Do not plan code edits from guesswork. Inspect the repository first to gather fa
 8. If the target subproject has no test runner or test directory, prepare a smoke test template.
 9. Classify the underlying failure mechanism and evaluate testing feasibility and execution burden balance (< 100 ms execution budget, hermetic fixtures) (`SCAR-TEST-11`).
 10. Discover repository-scoped hosting mode (`SCAR-GIT-30`). Check `git remote get-url origin`, `gh` binary, `gh auth status`, and `gh repo view`. If origin does not point to GitHub or CLI checks fail, record `HOSTING_MODE: PURE_GIT`.
-11. Write `.workflow/state/15_archaeology_receipt.md` and advance to Target 20.
+11. Discover applicable Tier 1 core scars in `skills/makeflow/references/scars/` and Tier 2 project-local scars in `.workflow/scars/`.
+12. Write `.workflow/state/15_archaeology_receipt.md` and advance to Target 20.
 
 ## 2. Target 20: Plan File Creation (`20_plan.md`)
 
@@ -35,6 +36,7 @@ Do not draft implementation plans from passive checklists. Before writing `.work
 3. **Existing Test Modifications**: If an existing test must change, does the change reflect a true contract update rather than masking a bug?
 4. **Comprehensive Coverage**: Do new tests reproduce the conditions and desired behavior addressed by the change request ticket?
 5. **Minimal Scoped Edits (`SCAR-PROC-104`)**: If you keep changes narrow and leave unrelated defects for future tickets, will regressions be less likely?
+6. **Two-Tier Scar Discovery**: Did you check Tier 1 core scars (`skills/makeflow/references/scars/`) and Tier 2 project-local scars (`.workflow/scars/`) for relevant failure reflexes?
 
 ### 2.2 Socratic Invariant Audit Table
 

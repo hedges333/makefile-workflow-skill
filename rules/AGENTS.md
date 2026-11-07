@@ -64,6 +64,20 @@ In Antigravity CLI (agy 1.5.2+), subagents require explicit tool mounting.
 5. If you need the exact tool argument dictionary, execute `python3 scripts/workflow_gates.py subagent-def --role <role> --json`.
 6. If you register a subagent dynamically, call `define_subagent` with the arguments emitted by `subagent-def`.
 
+### 1.6 Synthetic Scar Creation Lifecycle and Two-Tier Discovery
+
+Synthetic Scars use a two-tier storage and discovery lifecycle:
+
+1. Tier 1 core scars live in `skills/makeflow/references/scars/` and `skills/makeflow/references/polyglot/`.
+2. Tier 2 project-local scars live in `.workflow/scars/` (for example `.workflow/scars/local.md`).
+3. If a core scar is a ticket deliverable, scope it in Target 15 and plan it in Target 20.
+4. Author and test core scars with `tdd-worker` at Target 30 on a feature branch, and review in Target 40.
+5. Target 90 never creates or modifies core catalog files on `main`.
+6. At Target 90, record only merged scar IDs in `.workflow/history.json` and `.workflow/history.md`.
+7. Inside `makeflow-skill`, record incidental session lessons in ticket notes for a future feature request ticket.
+8. Inside external user projects, offer to record project-specific lessons in `.workflow/scars/local.md` at Target 90.
+9. During Target 15, Target 20, Target 30, and Target 40, inspect both `skills/makeflow/references/scars/` and `.workflow/scars/`.
+
 ## 2. Production Data Protection Rules
 
 Never connect tests or agent commands to live systems.

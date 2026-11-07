@@ -2,7 +2,12 @@
 
 This manual serves as the Master Routing Index for all Synthetic Scars (engineering rules codified from past operational failures).
 
-## 1. Hub-and-Spoke Architecture
+## 1. Hub-and-Spoke and Two-Tier Architecture
+
+Synthetic Scars operate across a Two-Tier Architecture:
+
+1. **Tier 1 (Core Built-In Scars)**: Universal engineering rules live in `skills/makeflow/references/scars/` and `skills/makeflow/references/polyglot/`.
+2. **Tier 2 (Project-Local Scars)**: Workspace-specific domain rules live in `.workflow/scars/` (for example `.workflow/scars/local.md` or `.workflow/scars/*.md`).
 
 To scale the synthetic scar catalog to hundreds of community contributions without hitting context limits (`SCAR-PROC-99`) or causing Git merge conflicts, scars are organized into a **Hub-and-Spoke** architecture:
 
@@ -37,7 +42,7 @@ references/
 
 ### Socratic Reflex Protocol
 
-Rules alone can be mechanically recited without changing reasoning behavior. To prevent cognitive bypass, every synthetic scar includes a **Socratic Probe**—a focused diagnostic inquiry.
+Rules alone can be mechanically recited without changing reasoning behavior. To prevent cognitive bypass, every synthetic scar includes a **Socratic Probe** (a focused diagnostic inquiry).
 
 Agents must use Socratic Probes during:
 1. **Target 15 & Target 20 (Archaeology & Planning)**: Interrogate design assumptions against catalog failure modes before writing code.
@@ -97,12 +102,20 @@ Agents must use Socratic Probes during:
 
 ---
 
-## 3. Recording New Scars at Target 90
+## 3. Scar Creation Lifecycle and Target 90 Rules
 
-During Target 90 cleanup, record lessons from the active ticket:
+### 3.1 Ticket-Scoped Core Scars (Tier 1)
 
-1. Check the session for user corrections, rejected reviews, or CI surprises.
-2. Open the matching domain spoke in `skills/makeflow/references/scars/` or language guide in `skills/makeflow/references/polyglot/`.
-3. Append the new scar at the end of the file with the next sequential integer using the Wound, Trap, Permanent Reflex, and Socratic Probe fields.
-4. Add the new entry to the Master Routing Table in this index.
-5. Record the scar ID in `.workflow/history.json` and `.workflow/history.md`.
+1. If a core scar is a ticket deliverable, scope it during archaeology at Target 15.
+2. Plan the spoke file, routing row, and unit tests in `.workflow/state/20_plan.md` at Target 20.
+3. Implement and test the scar with `tdd-worker` at Target 30 on a feature branch.
+4. Audit the scar diff with `adversarial-critic` at Target 40 before merging.
+5. Target 90 never creates or modifies core catalog files on `main`.
+6. At Target 90, record only merged scar IDs in `.workflow/history.json` and `.workflow/history.md`.
+
+### 3.2 Incidental Retrospective Lessons and Project-Local Scars (Tier 2)
+
+1. Inside the `makeflow-skill` repository, record incidental session lessons in ticket notes as candidates for a future feature request ticket.
+2. Inside external user projects, offer to record project-specific lessons in `.workflow/scars/local.md` (or `.workflow/scars/*.md`) during Target 90.
+3. Format each project-local scar with the Wound, Trap, Permanent Reflex, and Socratic Probe fields.
+4. Record earned project-local scar IDs in `.workflow/history.json` and `.workflow/history.md`.
