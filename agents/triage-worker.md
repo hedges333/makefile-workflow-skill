@@ -1,10 +1,6 @@
 ---
 name: triage-worker
 description: Polls remote CI checks, waits for review bots to finish, and builds triage tables.
-options:
-  EnableWriteTools: true
-  EnableMCPTools: true
-  EnableSubagentTools: false
 tools:
   - send_message
   - read_file
@@ -13,9 +9,6 @@ tools:
   - generate_image
   - run_command
   - manage_task
-  - call_mcp_tool
-  - list_resources
-  - read_resource
 ---
 
 # CI and Bot Review Triager

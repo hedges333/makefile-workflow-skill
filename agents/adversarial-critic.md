@@ -1,10 +1,6 @@
 ---
 name: adversarial-critic
 description: Runs Six-Pillar code reviews on Git diffs before commit.
-options:
-  EnableWriteTools: true
-  EnableMCPTools: false
-  EnableSubagentTools: false
 tools:
   - send_message
   - read_file
